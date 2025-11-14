@@ -11,3 +11,4 @@ if (!hash_equals($hash, $signature)) { http_response_code(403); exit('Invalid si
 
 $output = shell_exec('bash /home/wadishukran.com/public_html/deploy.sh 2>&1');
 echo "<pre>$output</pre>";
+
