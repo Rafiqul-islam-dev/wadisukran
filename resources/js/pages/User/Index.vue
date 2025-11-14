@@ -3,10 +3,11 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-const _props = defineProps({
-    users: Array,
-    roles: Array,
-});
+const { users, roles } = defineProps<{
+    users: Array<any>;
+    roles: Array<any>;
+}>();
+
 
 const showModal = ref(false);
 const isEditing = ref(false);

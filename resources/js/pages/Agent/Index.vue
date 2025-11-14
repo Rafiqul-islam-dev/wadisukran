@@ -3,9 +3,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-const _props = defineProps({
-    agents: Array,
-});
+const { agents } = defineProps<{
+    agents: Array<any>;
+}>();
 
 const showModal = ref(false);
 const isEditing = ref(false);

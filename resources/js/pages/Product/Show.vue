@@ -2,10 +2,9 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 
-const _props = defineProps({
-    product: Object,
-});
-
+const { product } = defineProps<{
+    product: Array<any>;
+}>();
 
 function formatPrizes(prizes) {
     return Object.entries(prizes).map(([key, value]) => ({ key, value }));
