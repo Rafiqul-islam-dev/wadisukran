@@ -1,5 +1,5 @@
 <?php
-$secret = 'Wadi$hukran_2025_SECRET';
+$secret = 'VpsWadi$hukr4n2025!';
 
 $input = file_get_contents('php://input');
 $signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
