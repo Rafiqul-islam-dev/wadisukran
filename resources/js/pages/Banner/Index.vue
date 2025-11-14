@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-const props = defineProps({
+const _props = defineProps({
     banners: Array,
 });
 

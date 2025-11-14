@@ -2,24 +2,16 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 
-const props = defineProps({
+const _props = defineProps({
     product: Object,
 });
 
-function editProduct() {
-    router.get(`/products/${props.product.id}/edit`);
-}
-
-function deleteProduct() {
-    if (confirm('Are you sure you want to delete this product?')) {
-        router.delete(`/products/${props.product.id}`);
-    }
-}
 
 function formatPrizes(prizes) {
     return Object.entries(prizes).map(([key, value]) => ({ key, value }));
 }
 </script>
+
 
 <template>
     <AppLayout>

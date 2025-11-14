@@ -3,7 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 
-const props = defineProps({
+const _props = defineProps({
     products: Array,
 });
 
@@ -145,9 +145,6 @@ function deleteProduct(id) {
     }
 }
 
-function formatPrizes(prizes) {
-    return Object.entries(prizes).map(([key, value]) => `${key}: ${value}`).join(', ');
-}
 
 function getEffectiveDrawDate(product) {
     if (!product.is_daily) {
