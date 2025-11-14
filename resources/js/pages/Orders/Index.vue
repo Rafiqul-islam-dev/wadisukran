@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
