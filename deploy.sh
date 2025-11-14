@@ -10,6 +10,10 @@ composer install --no-dev --optimize-autoloader
 echo "===== Running migrations ====="
 php artisan migrate --force
 
+# Build frontend assets
+npm install
+npm run build
+
 echo "===== Clearing caches ====="
 php artisan config:clear
 php artisan cache:clear
