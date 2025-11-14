@@ -175,7 +175,7 @@ function formatDrawTime(time) {
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Product Management</h1>
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Product Management System</h1>
                     <p class="text-gray-600">Manage daily games and lottery products</p>
                 </div>
                 <button @click="openModal(null)"
