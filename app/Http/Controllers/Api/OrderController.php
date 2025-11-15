@@ -186,11 +186,12 @@ class OrderController extends Controller
                 ->where('user_id', auth()->id());
 
             // Optional date filtering
-            if ($request->has('from') && $request->has('to')) {
-                $from = Carbon::parse($request->input('from'))->startOfDay();
-                $to = Carbon::parse($request->input('to'))->endOfDay();
+            if ($request->filled('from') && $request->filled('to')) {
+                $from = Carbon::parse($request->from)->format('Y-m-d');
+                $to   = Carbon::parse($request->to)->format('Y-m-d');
 
-                $query->whereBetween('sales_date', [$from, $to]);
+                $query->whereDate('sales_date', '>=', $from)
+                    ->whereDate('sales_date', '<=', $to);
             }
 
             $orders = $query->get();
