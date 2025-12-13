@@ -4,9 +4,12 @@ import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, Folder, Key, LayoutGrid, Shield, UserCog, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+
+const page_path = usePage().url;
+
 
 const mainNavItems: NavItem[] = [
     {
@@ -85,14 +88,25 @@ const mainNavItems: NavItem[] = [
         icon: Folder,
         items: [
             {
-                title: 'Role',
-                href: '/roles',
-                icon: Users,
-            },
-            {
                 title: 'Add User',
                 href: '/users',
                 icon: Users,
+            }
+        ],
+    },
+    {
+        title: 'Role & Permissions',
+        icon: Shield,
+        items: [
+            {
+                title: 'Role',
+                href: '/roles',
+                icon: UserCog,
+            },
+            {
+                title: 'Permission',
+                href: '/permissions',
+                icon: Key,
             }
         ],
     },
@@ -117,7 +131,7 @@ const mainNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <NavMain :items="mainNavItems" :current-path="page_path" />
         </SidebarContent>
 
         <SidebarFooter>

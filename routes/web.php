@@ -9,6 +9,7 @@ use App\Http\Controllers\Banner\AppBannerController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Role\PermissionController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -32,12 +33,19 @@ Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('age
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-
     // Role Management Routes
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
     Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
     Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
     Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+
+    // Permissions
+    Route::prefix('permissions')->name('permissions.')->group(function () {
+        Route::get('/', [PermissionController::class, 'index'])->name('index');
+        Route::post('/store', [PermissionController::class, 'store'])->name('store');
+        Route::post('/update/{permission}', [PermissionController::class, 'update'])->name('update');
+        Route::delete('/delete/{permission}', [PermissionController::class, 'delete'])->name('delete');
+    });
 
     // User Management Routes
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -69,8 +77,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('search', [AppBannerController::class, 'search'])
             ->name('search');
     });
-
-
-
-
 });
