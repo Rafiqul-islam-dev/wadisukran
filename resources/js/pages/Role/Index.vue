@@ -101,7 +101,7 @@ function handleSubmit() {
 
 <template>
     <AppLayout>
-        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>

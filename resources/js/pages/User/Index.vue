@@ -8,6 +8,8 @@ const { users, roles } = defineProps<{
     roles: Array<any>;
 }>();
 
+console.log(roles)
+
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -115,7 +117,7 @@ function getRoleColor(roleName) {
 
 <template>
     <AppLayout>
-        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
@@ -224,7 +226,7 @@ function getRoleColor(roleName) {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.status === 'active' ? 'bg-green-500' : 'bg-red-500'"></div>
@@ -299,19 +301,17 @@ function getRoleColor(roleName) {
                         :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
 
                     <!-- Modal Container -->
-                    <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="flex items-center justify-center p-4">
                         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl transform transition-all duration-300 ease-out"
                             :class="modalVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'">
 
                             <!-- Modal Header -->
                             <div
-                                class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-2xl">
+                                class="flex justify-between items-center p-3 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-2xl">
                                 <div>
                                     <h2 class="text-2xl font-bold text-gray-900">
                                         {{ isEditing ? 'Edit User' : 'Add New User' }}
                                     </h2>
-                                    <p class="text-gray-600 mt-1">{{ isEditing ? 'Update user information and role' :
-                                        'Create a new user account with role assignment' }}</p>
                                 </div>
                                 <button @click="closeModal"
                                     class="text-gray-400 hover:text-gray-600 transition duration-200 p-2 hover:bg-white hover:rounded-full">
@@ -324,20 +324,7 @@ function getRoleColor(roleName) {
 
                             <!-- Modal Body -->
                             <form @submit.prevent="submitForm" class="p-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- Personal Information -->
-                                    <div class="md:col-span-2">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
-                                                </path>
-                                            </svg>
-                                            Personal Information
-                                        </h3>
-                                    </div>
-
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name
                                             *</label>
@@ -362,33 +349,11 @@ function getRoleColor(roleName) {
                                             placeholder="Enter phone number" />
                                     </div>
 
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                                        <select v-model="form.status"
-                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
                                         <textarea v-model="form.address" rows="2"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300 resize-none"
                                             placeholder="Enter full address"></textarea>
-                                    </div>
-
-                                    <!-- Role Assignment -->
-                                    <div class="md:col-span-2 border-t border-gray-200 pt-6">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                                                </path>
-                                            </svg>
-                                            Role Assignment
-                                        </h3>
                                     </div>
 
                                     <div class="md:col-span-2">
@@ -423,8 +388,8 @@ function getRoleColor(roleName) {
                                     </div>
 
                                     <!-- Password Section -->
-                                    <div class="md:col-span-2 border-t border-gray-200 pt-6">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                    <div class="md:col-span-2 border-t border-gray-200 pt-3">
+                                        <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                                             <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -499,4 +464,4 @@ function getRoleColor(roleName) {
             </Teleport>
         </div>
     </AppLayout>
-</template> 0
+</template>

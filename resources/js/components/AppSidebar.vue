@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Key, LayoutGrid, Shield, UserCog, Users } from 'lucide-vue-next';
+import { BookOpen, Folder, Key, LayoutGrid, Shield, User, UserCog, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -82,17 +82,10 @@ const mainNavItems: NavItem[] = [
             }
         ],
     },
-
     {
-        title: 'User',
-        icon: Folder,
-        items: [
-            {
-                title: 'Add User',
-                href: '/users',
-                icon: Users,
-            }
-        ],
+        title: 'Users',
+        href: '/users',
+        icon: User
     },
     {
         title: 'Role & Permissions',
@@ -123,7 +116,7 @@ const mainNavItems: NavItem[] = [
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
-                        <AppLogo />
+                            <AppLogo />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

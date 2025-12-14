@@ -34,7 +34,7 @@ Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('age
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Role Management Routes
-    Route::prefix('roles')->name('roles.')->group(function() {
+    Route::prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
         Route::post('/store', [RoleController::class, 'store'])->name('store');
         Route::post('/update/{role}', [RoleController::class, 'update'])->name('update');
@@ -50,11 +50,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // User Management Routes
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::post('/users', [UserController::class, 'store'])->name('users.store');
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::post('/store', [UserController::class, 'store'])->name('store');
+        Route::post('/update/{user}', [UserController::class, 'update'])->name('update');
+        Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status');
+        Route::delete('/update/{user}', [UserController::class, 'delete'])->name('delete');
+    });
 
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);

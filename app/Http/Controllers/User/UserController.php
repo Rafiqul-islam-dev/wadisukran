@@ -3,14 +3,21 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
-use App\Models\Role;
+use App\Services\UserService;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    protected $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     public function index()
     {
         $users = User::with('role')->get()->map(function ($user) {
@@ -30,7 +37,11 @@ class UserController extends Controller
             ];
         });
 
-        $roles = Role::all(['id', 'name', 'description', 'permissions']);
+        $roles = Role::orderBy('name')
+            ->where('name', '!=', 'agent')
+            ->with(['permissions'])
+            ->get();
+
 
         return Inertia::render('User/Index', [
             'users' => $users,
@@ -38,25 +49,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'role_id' => 'required|exists:roles,id',
-            'password' => 'required|string|min:8|confirmed',
-            'status' => 'required|in:active,inactive',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('users', 'public');
-        }
-
-        User::create($validated);
-
+        $validated = $request->validated();
+        $this->userService->createUser($validated);
         return redirect()->back()->with('success', 'User created successfully!');
     }
 
