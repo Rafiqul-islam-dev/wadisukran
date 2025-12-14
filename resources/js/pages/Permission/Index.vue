@@ -12,6 +12,7 @@ import DropdownMenuTrigger from '@/components/ui/dropdown-menu/DropdownMenuTrigg
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-vue-next';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { toast } from 'vue-sonner';
 
 const isModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
@@ -62,8 +63,9 @@ const handleSubmit = () => {
             forceFormData: true,
             onSuccess: () => {
                 form.reset()
-                router.reload({ only: ['permissions'] });
                 closeModal();
+                toast.success('Permission created successfully.')
+                router.reload({ only: ['permissions'] });
             },
         })
     }
@@ -73,24 +75,26 @@ const handleSubmit = () => {
             onSuccess: () => {
                 form.reset()
                 editingPermission.value = null;
-                router.reload({ only: ['permissions'] });
                 closeModal();
+                toast.success('Permission updated successfully.')
+                router.reload({ only: ['permissions'] });
             },
         })
     }
 };
 
 const confirmDelete = () => {
-        if (deletingPermission.value) {
-            router.delete(route('permissions.delete', deletingPermission.value.id), {
-                onSuccess: () => {
-                    isDeleteModalOpen.value = false;
-                    deletingPermission.value = null;
-                    // router.reload({ only: ['permissions'] });
-                },
-            });
-        }
-    };
+    if (deletingPermission.value) {
+        router.delete(route('permissions.delete', deletingPermission.value.id), {
+            onSuccess: () => {
+                isDeleteModalOpen.value = false;
+                deletingPermission.value = null;
+                toast.success('Permission deleted successfully.')
+                // router.reload({ only: ['permissions'] });
+            },
+        });
+    }
+};
 
 const buttonText = computed(() =>
     editingPermission.value ? "Update Permission" : "Create Permission"
@@ -104,10 +108,10 @@ const buttonText = computed(() =>
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Permissions</h1>
+                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Permissions</h1>
                 </div>
                 <button @click="openModal"
-                    class="bg-gradient-to-r cursor-pointer from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 font-semibold">
+                    class="bg-gradient-to-r text-sm lg:text-xl cursor-pointer from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -139,7 +143,8 @@ const buttonText = computed(() =>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem @click="editPermission(permission)">Edit</DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem class="text-destructive" @click="deletePermissionModal(permission)">
+                                        <DropdownMenuItem class="text-destructive"
+                                            @click="deletePermissionModal(permission)">
                                             Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -199,7 +204,7 @@ const buttonText = computed(() =>
             </DialogContent>
         </Dialog>
 
-         <!-- Delete Confirmation Dialog -->
+        <!-- Delete Confirmation Dialog -->
         <Dialog v-model:open="isDeleteModalOpen">
             <DialogContent>
                 <DialogHeader>

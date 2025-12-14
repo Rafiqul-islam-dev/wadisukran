@@ -34,10 +34,12 @@ Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('age
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Role Management Routes
-    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    Route::prefix('roles')->name('roles.')->group(function() {
+        Route::get('/', [RoleController::class, 'index'])->name('index');
+        Route::post('/store', [RoleController::class, 'store'])->name('store');
+        Route::post('/update/{role}', [RoleController::class, 'update'])->name('update');
+        Route::delete('/delete/{role}', [RoleController::class, 'delete'])->name('delete');
+    });
 
     // Permissions
     Route::prefix('permissions')->name('permissions.')->group(function () {
