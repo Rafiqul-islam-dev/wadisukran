@@ -139,11 +139,11 @@ function getRoleColor(roleName) {
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
-                    <p class="text-gray-600">Manage system users and their roles</p>
+                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
+                    <p class="text-gray-600 hidden md:block">Manage system users and their roles</p>
                 </div>
                 <button v-if="can('user create')" @click="openModal()"
-                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
+                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -179,12 +179,6 @@ function getRoleColor(roleName) {
                         </div>
                         <div class="space-y-2 text-sm">
                             <p><span class="font-medium text-gray-700">Phone:</span> {{ user.phone || 'N/A' }}</p>
-                            <p><span class="font-medium text-gray-700">Status:</span>
-                                <span :class="user.status === 'active' ? 'text-green-600' : 'text-red-600'"
-                                    class="font-medium">
-                                    {{ user.status }}
-                                </span>
-                            </p>
                         </div>
                         <div v-if="user.roles.length && user.roles[0].name != 'Super Admin'"
                             class="flex justify-between items-center mt-4">
