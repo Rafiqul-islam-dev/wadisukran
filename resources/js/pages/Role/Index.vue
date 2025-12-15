@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-vue-next';
 import { Permission } from '@/types/permission';
 import { toast } from 'vue-sonner';
+import { can } from '@/helpers/permissions';
 
 const props = defineProps<{
     permissions: Permission[]
@@ -107,7 +108,7 @@ function handleSubmit() {
                 <div>
                     <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Roles</h1>
                 </div>
-                <button @click="openModal()"
+                <button v-if="can('role create')" @click="openModal()"
                     class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -154,7 +155,7 @@ function handleSubmit() {
                         </div>
 
                         <div class="flex justify-end space-x-3">
-                            <button @click="editModal(role)"
+                            <button v-if="can('role update')" @click="editModal(role)"
                                 class="text-blue-600 hover:text-blue-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -164,7 +165,7 @@ function handleSubmit() {
                                 </svg>
                                 Edit
                             </button>
-                            <button @click="openDeleteModal(role)"
+                            <button v-if="can('role delete')" @click="openDeleteModal(role)"
                                 class="text-red-600 hover:text-red-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-red-50">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">

@@ -7,15 +7,13 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { BookOpen, Folder, Key, LayoutGrid, Shield, User, UserCog, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
-
 const page_path = usePage().url;
-
-
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/dashboard',
         icon: LayoutGrid,
+        permission: 'show dashboard'
     },
     {
         title: 'Agent',
@@ -25,8 +23,10 @@ const mainNavItems: NavItem[] = [
                 title: 'Agent List',
                 href: '/agents',
                 icon: Users,
+                permission: 'show agent list'
             },
         ],
+        permission: 'show agent list'
     },
     {
         title: 'Product',
@@ -36,8 +36,10 @@ const mainNavItems: NavItem[] = [
                 title: 'Product List',
                 href: '/products',
                 icon: Users,
+                permission: 'show product list'
             },
         ],
+        permission: 'show product list'
     },
     {
         title: 'App Banner',
@@ -47,8 +49,10 @@ const mainNavItems: NavItem[] = [
                 title: 'Banner List',
                 href: '/banners',
                 icon: Users,
+                permission: 'show banner list'
             },
         ],
+        permission: 'show banner list'
     },
     {
         title: 'Report',
@@ -58,18 +62,22 @@ const mainNavItems: NavItem[] = [
                 title: 'Daily Summary Report',
                 href: '/orders',
                 icon: Users,
+                permission: 'show daily summery report'
             },
             {
                 title: 'Cancel order',
                 href: '/cancel-report',
                 icon: Users,
+                permission: 'show cancel order'
             },
             {
                 title: 'Order History',
                 href: '/oder-history',
                 icon: Users,
+                permission: 'show order history'
             },
         ],
+        permission: 'show report'
     },
     {
         title: 'Settings',
@@ -79,13 +87,16 @@ const mainNavItems: NavItem[] = [
                 title: 'Company',
                 href: '/company-settings',
                 icon: Users,
+                permission: 'show company settings'
             }
         ],
+        permission: 'show settings'
     },
     {
         title: 'Users',
         href: '/users',
-        icon: User
+        icon: User,
+        permission: 'show users'
     },
     {
         title: 'Role & Permissions',
@@ -95,13 +106,16 @@ const mainNavItems: NavItem[] = [
                 title: 'Role',
                 href: '/roles',
                 icon: UserCog,
+                permission: 'show roles'
             },
             {
                 title: 'Permission',
                 href: '/permissions',
                 icon: Key,
+                permission: 'show permissions'
             }
         ],
+        permission: 'role permission'
     },
 
 ];
@@ -116,7 +130,7 @@ const mainNavItems: NavItem[] = [
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
-                            <AppLogo />
+                        <AppLogo />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

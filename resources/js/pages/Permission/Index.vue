@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-vue-next';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { toast } from 'vue-sonner';
+import { can } from '@/helpers/permissions';
 
 const isModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
@@ -110,7 +111,7 @@ const buttonText = computed(() =>
                 <div>
                     <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Permissions</h1>
                 </div>
-                <button @click="openModal"
+                <button v-if="can('permission create')" @click="openModal"
                     class="bg-gradient-to-r text-sm lg:text-xl cursor-pointer from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -141,9 +142,10 @@ const buttonText = computed(() =>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem @click="editPermission(permission)">Edit</DropdownMenuItem>
+                                        <DropdownMenuItem v-if="can('permission update')"
+                                            @click="editPermission(permission)">Edit</DropdownMenuItem>
                                         <DropdownMenuSeparator />
-                                        <DropdownMenuItem class="text-destructive"
+                                        <DropdownMenuItem v-if="can('permission delete')" class="text-destructive"
                                             @click="deletePermissionModal(permission)">
                                             Delete
                                         </DropdownMenuItem>

@@ -17,6 +17,7 @@ export interface NavItem {
     items?: NavItem[]; // Add this property for nested items
     disabled?: boolean;
     external?: boolean;
+    permission?: string;
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {

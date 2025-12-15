@@ -8,7 +8,7 @@ class UserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     public function rules(): array
@@ -20,8 +20,8 @@ class UserRequest extends FormRequest
             'phone' => 'nullable|string|max:20|unique:users,phone',
             'address' => 'nullable|string',
             'password' => 'required|string|min:8|confirmed',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'role' => 'string|exists:roles,name'
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'role' => 'required|string|exists:roles,name'
         ];
     }
 }

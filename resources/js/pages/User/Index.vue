@@ -1,107 +1,125 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
+import { toast } from 'vue-sonner';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { can } from '@/helpers/permissions';
 
-const { users, roles } = defineProps<{
+const { users, roles, permissions } = defineProps<{
     users: Array<any>;
     roles: Array<any>;
+    permissions: string;
 }>();
 
-console.log(roles)
-
+console.log(permissions)
 
 const showModal = ref(false);
+const showDeleteModal = ref(false);
+const deletingUser = ref(null);
 const isEditing = ref(false);
-const modalVisible = ref(false);
-const form = ref({
-    id: null,
+const editingUser = ref(null);
+const form = useForm({
+    user_type: 'admin',
     name: '',
     email: '',
     phone: '',
     address: '',
-    role_id: '',
     password: '',
     password_confirmation: '',
     photo: null,
-    status: 'active',
+    role: ''
 });
 
-async function openModal(user) {
-    if (user) {
-        isEditing.value = true;
-        form.value = {
-            ...user,
-            photo: null,
-            password: '',
-            password_confirmation: '',
-            role_id: user.role?.id || ''
-        };
-    } else {
-        isEditing.value = false;
-        form.value = {
-            id: null,
-            name: '',
-            email: '',
-            phone: '',
-            address: '',
-            role_id: '',
-            password: '',
-            password_confirmation: '',
-            photo: null,
-            status: 'active',
-        };
-    }
+function openModal() {
     showModal.value = true;
-    await nextTick();
-    modalVisible.value = true;
 }
 
-async function closeModal() {
-    modalVisible.value = false;
-    await new Promise(resolve => setTimeout(resolve, 300));
+const editModal = (user) => {
+    isEditing.value = true;
+    editingUser.value = user;
+    form.name = user.name;
+    form.email = user.email;
+    form.phone = user.phone;
+    form.address = user.address;
+    form.role = user.roles.length ? user.roles[0].name : '';
+    showModal.value = true;
+}
+
+function closeModal() {
+    editingUser.value = null;
+    isEditing.value = false;
+    form.name = '';
+    form.email = '';
+    form.phone = '';
+    form.address = '';
+    form.role = '';
+    form.password = '';
+    form.password_confirmation = '';
     showModal.value = false;
 }
 
 function handleFileUpload(event) {
-    form.value.photo = event.target.files[0];
+    form.photo = event.target.files[0];
 }
 
 function submitForm() {
-    const formData = new FormData();
-    Object.keys(form.value).forEach((key) => {
-        if (key === 'photo' && form.value.photo) {
-            formData.append('photo', form.value.photo);
-        } else if (form.value[key] !== null && form.value[key] !== '') {
-            formData.append(key, form.value[key]);
-        }
-    });
-
-    if (isEditing.value) {
-        router.put(`/users/${form.value.id}`, formData, {
+    if (isEditing && editingUser.value) {
+        console.log(form)
+        form.post(route('users.update', editingUser.value.id), {
+            forceFormData: true,
             onSuccess: () => {
+                form.reset()
+                editingUser.value = null;
+                closeModal();
+                toast.success('User updated successfully.')
+            },
+        })
+    }
+    else {
+        form.post(route('users.store'), {
+            forceFormData: true,
+            onSuccess: () => {
+                form.reset()
+                toast.success('User created successfully.')
+                router.reload({ only: ['users'] });
                 closeModal();
             },
-        });
-    } else {
-        router.post('/users', formData, {
-            onSuccess: () => {
-                closeModal();
-            },
-        });
+        })
     }
 }
 
-function deleteUser(id) {
-    if (confirm('Are you sure you want to delete this user?')) {
-        router.delete(`/users/${id}`);
+function deleteUser(user) {
+    showDeleteModal.value = true;
+    deletingUser.value = user;
+}
+const confirmDelete = () => {
+    if (deletingUser.value) {
+        router.delete(route('users.delete', deletingUser.value.id), {
+            onSuccess: () => {
+                showDeleteModal.value = false;
+                deletingUser.value = null;
+                toast.success('User deleted successfully.')
+            },
+        });
     }
 }
 
 function toggleUserStatus(user) {
-    const newStatus = user.status === 'active' ? 'inactive' : 'active';
-    router.patch(`/users/${user.id}/status`, { status: newStatus });
+    router.get(
+        route('users.status-change', user.id),
+        {},
+        {
+            preserveScroll: true,
+            replace: true,
+            onSuccess: () => {
+                toast.success('User status updated.');
+            },
+        }
+    );
 }
+
 
 function getRoleColor(roleName) {
     const colors = {
@@ -124,7 +142,7 @@ function getRoleColor(roleName) {
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
                     <p class="text-gray-600">Manage system users and their roles</p>
                 </div>
-                <button @click="openModal(null)"
+                <button v-if="can('user create')" @click="openModal()"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -148,7 +166,7 @@ function getRoleColor(roleName) {
                                     <span class="text-white font-bold text-xl">{{ user.name.charAt(0) }}</span>
                                 </div>
                                 <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white"
-                                    :class="user.status === 'active' ? 'bg-green-500' : 'bg-red-500'"></div>
+                                    :class="user.is_active === true ? 'bg-green-500' : 'bg-red-500'"></div>
                             </div>
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
@@ -168,14 +186,15 @@ function getRoleColor(roleName) {
                                 </span>
                             </p>
                         </div>
-                        <div class="flex justify-between items-center mt-4">
+                        <div v-if="user.roles.length && user.roles[0].name != 'Super Admin'"
+                            class="flex justify-between items-center mt-4">
                             <button @click="toggleUserStatus(user)"
                                 :class="user.status === 'active' ? 'text-red-600 hover:text-red-800 hover:bg-red-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'"
                                 class="font-medium transition duration-200 px-3 py-1 rounded-lg">
                                 {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
                             </button>
                             <div class="space-x-2">
-                                <button @click="openModal(user)"
+                                <button @click="editModal(user)"
                                     class="text-blue-600 hover:text-blue-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
                                     Edit
                                 </button>
@@ -229,7 +248,7 @@ function getRoleColor(roleName) {
                                                     }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
-                                                :class="user.status === 'active' ? 'bg-green-500' : 'bg-red-500'"></div>
+                                                :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
                                         </div>
                                         <div class="ml-4">
                                             <div class="font-semibold text-gray-900">{{ user.name }}</div>
@@ -243,29 +262,24 @@ function getRoleColor(roleName) {
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        :class="getRoleColor(user.role?.name)">
-                                        {{ user.role?.name || 'No Role' }}
+                                        :class="getRoleColor(user.role?.name)" v-for="role in user.roles">
+                                        {{ role?.name || 'No Role' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <div class="w-3 h-3 rounded-full mr-2"
-                                            :class="user.status === 'active' ? 'bg-green-500' : 'bg-red-500'"></div>
-                                        <span class="font-medium"
-                                            :class="user.status === 'active' ? 'text-green-700' : 'text-red-700'">
-                                            {{ user.status }}
-                                        </span>
+                                        <button
+                                            @click="user.roles[0]?.name != 'Super Admin' ? (can('user status change') ? toggleUserStatus(user) : '') : ''"
+                                            :class="user.status !== 'active' ? 'text-red-600 hover:text-red-800 hover:bg-red-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'"
+                                            class="font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:shadow-md text-sm">
+                                            {{ user.status === 'active' ? 'Active' : 'Deactive' }}
+                                        </button>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-gray-700">{{ user.address || 'N/A' }}</td>
                                 <td class="px-6 py-4">
-                                    <div class="flex space-x-2">
-                                        <button @click="toggleUserStatus(user)"
-                                            :class="user.status === 'active' ? 'text-red-600 hover:text-red-800 hover:bg-red-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'"
-                                            class="font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:shadow-md text-sm">
-                                            {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
-                                        </button>
-                                        <button @click="openModal(user)"
+                                    <div v-if="user.roles[0]?.name != 'Super Admin'" class="flex space-x-2">
+                                        <button v-if="can('user update')" @click="editModal(user)"
                                             class="text-blue-600 hover:text-blue-800 font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:bg-blue-50 hover:shadow-md">
                                             <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -275,7 +289,7 @@ function getRoleColor(roleName) {
                                             </svg>
                                             Edit
                                         </button>
-                                        <button @click="deleteUser(user.id)"
+                                        <button v-if="can('user delete')" @click="deleteUser(user)"
                                             class="text-red-600 hover:text-red-800 font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:bg-red-50 hover:shadow-md">
                                             <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -298,12 +312,12 @@ function getRoleColor(roleName) {
                 <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
                     <!-- Backdrop -->
                     <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
-                        :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
+                        :class="showModal ? 'opacity-50' : 'opacity-0'"></div>
 
                     <!-- Modal Container -->
                     <div class="flex items-center justify-center p-4">
                         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl transform transition-all duration-300 ease-out"
-                            :class="modalVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'">
+                            :class="showModal ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'">
 
                             <!-- Modal Header -->
                             <div
@@ -331,6 +345,9 @@ function getRoleColor(roleName) {
                                         <input v-model="form.name" type="text"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                             placeholder="Enter full name" required />
+                                        <p v-if="form.errors.name" class="text-red-600 text-sm">
+                                            {{ form.errors.name }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -339,6 +356,9 @@ function getRoleColor(roleName) {
                                         <input v-model="form.email" type="email"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                             placeholder="Enter email address" required />
+                                        <p v-if="form.errors.email" class="text-red-600 text-sm">
+                                            {{ form.errors.email }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -347,6 +367,9 @@ function getRoleColor(roleName) {
                                         <input v-model="form.phone" type="tel"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                             placeholder="Enter phone number" />
+                                        <p v-if="form.errors.phone" class="text-red-600 text-sm">
+                                            {{ form.errors.phone }}
+                                        </p>
                                     </div>
 
                                     <div class="md:col-span-2">
@@ -354,22 +377,28 @@ function getRoleColor(roleName) {
                                         <textarea v-model="form.address" rows="2"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300 resize-none"
                                             placeholder="Enter full address"></textarea>
+                                        <p v-if="form.errors.address" class="text-red-600 text-sm">
+                                            {{ form.errors.address }}
+                                        </p>
                                     </div>
 
                                     <div class="md:col-span-2">
+                                        <p v-if="form.errors.role" class="text-red-600 text-sm">
+                                            {{ form.errors.role }}
+                                        </p>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Select Role
                                             *</label>
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                            <div v-for="role in roles" :key="role.id" class="relative cursor-pointer"
-                                                @click="form.role_id = role.id">
-                                                <input type="radio" :value="role.id" v-model="form.role_id"
+                                            <div v-for="role in roles" :key="role.name" class="relative cursor-pointer"
+                                                @click="form.role = role.name">
+                                                <input type="radio" :value="role.name" v-model="form.role"
                                                     :id="`role_${role.id}`" class="sr-only" />
                                                 <label :for="`role_${role.id}`"
                                                     class="block p-4 border-2 rounded-xl transition-all duration-200 hover:bg-gray-50 cursor-pointer"
-                                                    :class="form.role_id == role.id ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-gray-200'">
+                                                    :class="form.role == role.name ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-gray-200'">
                                                     <div class="flex items-center justify-between mb-2">
                                                         <h4 class="font-semibold text-gray-900">{{ role.name }}</h4>
-                                                        <div v-if="form.role_id == role.id" class="text-indigo-600">
+                                                        <div v-if="form.role == role.id" class="text-indigo-600">
                                                             <svg class="w-5 h-5" fill="currentColor"
                                                                 viewBox="0 0 20 20">
                                                                 <path fill-rule="evenodd"
@@ -407,6 +436,9 @@ function getRoleColor(roleName) {
                                         <input v-model="form.password" type="password"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                             placeholder="Enter password" :required="!isEditing" />
+                                        <p v-if="form.errors.password" class="text-red-600 text-sm">
+                                            {{ form.errors.password }}
+                                        </p>
                                     </div>
 
                                     <div>
@@ -415,11 +447,17 @@ function getRoleColor(roleName) {
                                         </label>
                                         <input v-model="form.password_confirmation" type="password"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
-                                            placeholder="Confirm password" :required="!isEditing || form.password" />
+                                            placeholder="Confirm password" />
+                                        <p v-if="form.errors.password_confirmation" class="text-red-600 text-sm">
+                                            {{ form.errors.password_confirmation }}
+                                        </p>
                                     </div>
 
                                     <!-- Profile Photo -->
                                     <div class="md:col-span-2 border-t border-gray-200 pt-6">
+                                        <p v-if="form.errors.photo" class="text-red-600 text-sm">
+                                            {{ form.errors.photo }}
+                                        </p>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Profile
                                             Photo</label>
                                         <div
@@ -462,6 +500,27 @@ function getRoleColor(roleName) {
                     </div>
                 </div>
             </Teleport>
+            <!-- Delete Confirmation Dialog -->
+            <Dialog v-model:open="showDeleteModal">
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you sure?</DialogTitle>
+                        <DialogDescription>
+                            This user
+                            <span v-if="deletingUser" class="font-semibold">"{{ deletingUser?.name }}"</span>
+                            will be deleted.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" @click="showDeleteModal = false">
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" @click="confirmDelete">
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     </AppLayout>
 </template>

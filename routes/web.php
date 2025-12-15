@@ -32,7 +32,7 @@ Route::put('/agents/{agent}', [AgentController::class, 'update'])->name('agents.
 Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     // Role Management Routes
     Route::prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
@@ -54,8 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::post('/store', [UserController::class, 'store'])->name('store');
         Route::post('/update/{user}', [UserController::class, 'update'])->name('update');
-        Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status');
-        Route::delete('/update/{user}', [UserController::class, 'delete'])->name('delete');
+        Route::get('/status-change/{user}', [UserController::class, 'updateStatus'])->name('status-change');
+        Route::delete('/delete/{user}', [UserController::class, 'delete'])->name('delete');
     });
 
     Route::resource('banners', AppBannerController::class);
