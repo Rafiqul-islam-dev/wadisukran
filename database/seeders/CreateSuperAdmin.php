@@ -11,9 +11,6 @@ use Spatie\Permission\Models\Role;
 
 class CreateSuperAdmin extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         $required_permissions = [

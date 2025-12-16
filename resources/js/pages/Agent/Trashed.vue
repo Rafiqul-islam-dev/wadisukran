@@ -137,6 +137,9 @@ const confirmDelete = () => {
                                     TRN</th>
                                 <th
                                     class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    Deleted at</th>
+                                <th
+                                    class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                                     Actions</th>
                             </tr>
                         </thead>
@@ -151,7 +154,7 @@ const confirmDelete = () => {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -178,6 +181,13 @@ const confirmDelete = () => {
                                         : 'N/A'
                                 }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ user.agent?.trn || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ user.deleted_at
+                                    ? new Date(user.deleted_at).toLocaleDateString('en-GB', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: '2-digit'
+                                    })
+                                    : 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
                                         <button v-if="can('agent restore')" @click="restoreAgent(user.id)"

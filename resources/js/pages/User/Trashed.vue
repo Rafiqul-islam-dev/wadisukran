@@ -124,6 +124,9 @@ const restoreUser = (id) => {
                                     join Date</th>
                                 <th
                                     class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    Deleted at</th>
+                                <th
+                                    class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                                     Actions</th>
                             </tr>
                         </thead>
@@ -163,6 +166,15 @@ const restoreUser = (id) => {
                                 <td class="px-6 py-4 text-gray-700"> {{
                                     user.join_date
                                         ? new Date(user.join_date).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: '2-digit'
+                                        })
+                                        : 'N/A'
+                                }}</td>
+                                <td class="px-6 py-4 text-gray-700"> {{
+                                    user.deleted_at
+                                        ? new Date(user.deleted_at).toLocaleDateString('en-GB', {
                                             day: '2-digit',
                                             month: 'short',
                                             year: '2-digit'
