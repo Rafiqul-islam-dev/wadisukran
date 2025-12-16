@@ -4,19 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Agent extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'join_date',
-        'address',
-        'trn',
+        'user_id',
         'username',
-        'email',
-        'photo',
+        'trn',
     ];
 
     protected $dates = ['join_date'];

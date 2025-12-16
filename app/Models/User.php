@@ -26,7 +26,8 @@ class User extends Authenticatable
         'photo',
         'status',
         'role_id',
-        'user_type'
+        'user_type',
+        'join_date'
     ];
 
     protected $appends = ['avatar', 'is_active'];
@@ -40,6 +41,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+   public function agent()
+{
+    return $this->hasOne(Agent::class, 'user_id');
+}
+
 
 
     public function hasPermission($permission)

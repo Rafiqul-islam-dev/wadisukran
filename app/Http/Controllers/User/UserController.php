@@ -21,7 +21,7 @@ class UserController extends Controller
     }
     public function index()
     {
-        $users = User::where('user_type', 'admin')->with('roles:id,name')->get();
+        $users = User::where('user_type', 'admin')->with('roles:id,name')->latest()->get();
 
         $roles = Role::orderBy('name')
             ->whereNotIn('name', ['agent', 'Super Admin'])
@@ -71,5 +71,40 @@ class UserController extends Controller
         $this->userService->delete($user);
 
         return back()->with('User deleted successfully');
+    }
+
+    public function trashed_users()
+    {
+        $users = User::onlyTrashed()->where('user_type', 'admin')->with('roles:id,name')->latest('deleted_at')->get();
+        return Inertia::render('User/Trashed', [
+            'users' => $users
+        ]);
+    }
+    public function restore_user($user)
+    {
+        try {
+            $user = User::onlyTrashed()->findOrFail($user);
+            $user->restore();
+
+            return back()->with('success', 'User restored successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public function permanent_delete_user($user){
+        try {
+            $user = User::onlyTrashed()->findOrFail($user);
+            if($user->photo){
+                if(file_exists(public_path($user->photo))){
+                    unlink(public_path($user->photo));
+                }
+            }
+            $user->forceDelete();
+
+            return back()->with('success', 'User deleted successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

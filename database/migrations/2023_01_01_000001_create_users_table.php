@@ -24,6 +24,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
             $table->rememberToken();
+            $table->timestamp('join_date');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -47,7 +47,7 @@ class CreateSuperAdmin extends Seeder
             "user update"
         ];
 
-        foreach($required_permissions as $permission){
+        foreach ($required_permissions as $permission) {
             Permission::updateOrCreate([
                 'name' => $permission,
                 'guard_name' => 'web'

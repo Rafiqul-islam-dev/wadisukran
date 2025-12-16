@@ -1,19 +1,16 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
 
-const { users, roles, permissions } = defineProps<{
+const { users, roles } = defineProps<{
     users: Array<any>;
     roles: Array<any>;
-    permissions: string;
 }>();
-
-console.log(permissions)
 
 const showModal = ref(false);
 const showDeleteModal = ref(false);
@@ -29,7 +26,8 @@ const form = useForm({
     password: '',
     password_confirmation: '',
     photo: null,
-    role: ''
+    role: '',
+    join_date: ''
 });
 
 function openModal() {
@@ -43,6 +41,7 @@ const editModal = (user) => {
     form.email = user.email;
     form.phone = user.phone;
     form.address = user.address;
+    form.join_date = user.join_date;
     form.role = user.roles.length ? user.roles[0].name : '';
     showModal.value = true;
 }
@@ -53,6 +52,7 @@ function closeModal() {
     form.name = '';
     form.email = '';
     form.phone = '';
+    form.join_date = '';
     form.address = '';
     form.role = '';
     form.password = '';
@@ -119,21 +119,11 @@ function toggleUserStatus(user) {
         }
     );
 }
-
-
-function getRoleColor(roleName) {
-    const colors = {
-        'Admin': 'bg-red-100 text-red-700 border-red-200',
-        'Manager': 'bg-blue-100 text-blue-700 border-blue-200',
-        'User': 'bg-green-100 text-green-700 border-green-200',
-        'Editor': 'bg-purple-100 text-purple-700 border-purple-200',
-        'Viewer': 'bg-gray-100 text-gray-700 border-gray-200',
-    };
-    return colors[roleName] || 'bg-gray-100 text-gray-700 border-gray-200';
-}
 </script>
 
 <template>
+
+    <Head title="Users" />
     <AppLayout>
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
@@ -159,21 +149,21 @@ function getRoleColor(roleName) {
                     <div class="p-6">
                         <div class="flex items-center mb-4">
                             <div class="relative">
-                                <img v-if="user.photo" :src="user.photo" alt="User Photo"
+                                <img v-if="user.avatar" :src="user.avatar" alt="User Photo"
                                     class="w-16 h-16 object-cover rounded-full border-4 border-indigo-100 mr-4" />
                                 <div v-else
                                     class="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mr-4">
                                     <span class="text-white font-bold text-xl">{{ user.name.charAt(0) }}</span>
                                 </div>
-                                <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white"
-                                    :class="user.is_active === true ? 'bg-green-500' : 'bg-red-500'"></div>
+                                <div class="absolute bottom-1 right-3 w-4 h-4 rounded-full border-2 border-white"
+                                    :class="user.is_active === true ? 'bg-green-500' : 'bg-gray-400'"></div>
                             </div>
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
                                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
-                                <span class="inline-block px-2 py-1 rounded-full text-xs font-medium border mt-1"
-                                    :class="getRoleColor(user.role?.name)">
-                                    {{ user.role?.name || 'No Role' }}
+                                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
+                                    v-for="role in user.roles">
+                                    {{ role?.name || 'No Role' }}
                                 </span>
                             </div>
                         </div>
@@ -188,11 +178,11 @@ function getRoleColor(roleName) {
                                 {{ user.status === 'active' ? 'Deactivate' : 'Activate' }}
                             </button>
                             <div class="space-x-2">
-                                <button @click="editModal(user)"
+                                <button v-if="can('user update')" @click="editModal(user)"
                                     class="text-blue-600 hover:text-blue-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
                                     Edit
                                 </button>
-                                <button @click="deleteUser(user.id)"
+                                <button v-if="can('user delete')" @click="deleteUser(user)"
                                     class="text-red-600 hover:text-red-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-red-50">
                                     Delete
                                 </button>
@@ -225,6 +215,9 @@ function getRoleColor(roleName) {
                                     Address</th>
                                 <th
                                     class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    join Date</th>
+                                <th
+                                    class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                                     Actions</th>
                             </tr>
                         </thead>
@@ -234,12 +227,12 @@ function getRoleColor(roleName) {
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="relative">
-                                            <img v-if="user.photo" :src="user.photo" alt="User Photo"
+                                            <img v-if="user.avatar" :src="user.avatar" alt="User Photo"
                                                 class="w-12 h-12 object-cover rounded-full border-4 border-indigo-100 shadow-md" />
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -256,7 +249,7 @@ function getRoleColor(roleName) {
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        :class="getRoleColor(user.role?.name)" v-for="role in user.roles">
+                                        v-for="role in user.roles">
                                         {{ role?.name || 'No Role' }}
                                     </span>
                                 </td>
@@ -271,6 +264,15 @@ function getRoleColor(roleName) {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-gray-700">{{ user.address || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700"> {{
+                                    user.join_date
+                                        ? new Date(user.join_date).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: '2-digit'
+                                        })
+                                        : 'N/A'
+                                }}</td>
                                 <td class="px-6 py-4">
                                     <div v-if="user.roles[0]?.name != 'Super Admin'" class="flex space-x-2">
                                         <button v-if="can('user update')" @click="editModal(user)"
@@ -363,6 +365,15 @@ function getRoleColor(roleName) {
                                             placeholder="Enter phone number" />
                                         <p v-if="form.errors.phone" class="text-red-600 text-sm">
                                             {{ form.errors.phone }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Join Date</label>
+                                        <input v-model="form.join_date" type="date"
+                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
+                                            placeholder="Enter phone number" />
+                                        <p v-if="form.errors.join_date" class="text-red-600 text-sm">
+                                            {{ form.errors.join_date }}
                                         </p>
                                     </div>
 
@@ -502,7 +513,7 @@ function getRoleColor(roleName) {
                         <DialogDescription>
                             This user
                             <span v-if="deletingUser" class="font-semibold">"{{ deletingUser?.name }}"</span>
-                            will be deleted.
+                            will be permanently deleted.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

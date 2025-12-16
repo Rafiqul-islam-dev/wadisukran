@@ -21,7 +21,8 @@ class UserRequest extends FormRequest
             'address' => 'nullable|string',
             'password' => 'required|string|min:8|confirmed',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
-            'role' => 'required|string|exists:roles,name'
+            'role' => 'required|string|exists:roles,name',
+            'join_date' => 'required|date'
         ];
     }
 }

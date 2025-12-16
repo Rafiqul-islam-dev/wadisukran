@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Key, LayoutGrid, Shield, User, UserCog, Users } from 'lucide-vue-next';
+import { BookOpen, Folder, Key, LayoutGrid, List, Shield, Trash, User, UserCog, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 const page_path = usePage().url;
 const mainNavItems: NavItem[] = [
@@ -96,6 +96,20 @@ const mainNavItems: NavItem[] = [
         title: 'Users',
         href: '/users',
         icon: User,
+        items: [
+            {
+                title: 'User List',
+                href: '/users',
+                icon: List,
+                permission: 'show users'
+            },
+            {
+                title: 'Trashed Users',
+                href: '/users/trashed',
+                icon: Trash,
+                permission: 'show trashed users'
+            }
+        ],
         permission: 'show users'
     },
     {
@@ -130,7 +144,7 @@ const mainNavItems: NavItem[] = [
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
                         <Link :href="route('dashboard')">
-                        <AppLogo />
+                            <AppLogo />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -19,6 +19,7 @@ class PermissionController extends Controller
 
     public function index()
     {
+        // return Permission::pluck('name')->toArray();
         $permissions = Permission::withCount('roles')
             ->orderByDesc('updated_at')
             ->paginate(10);

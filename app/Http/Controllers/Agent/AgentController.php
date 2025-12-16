@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AgentRequest;
 use App\Models\Agent;
+use App\Models\User;
+use App\Services\AgentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
@@ -11,97 +14,52 @@ use Carbon\Carbon;
 
 class AgentController extends Controller
 {
+    protected $agentService;
+    function __construct(AgentService $agentService)
+    {
+        $this->agentService = $agentService;
+    }
     public function index()
     {
-        $agents = Agent::all()->map(function ($agent) {
-            return [
-                'id' => $agent->id,
-                'name' => $agent->name,
-                'join_date' => $agent->join_date instanceof Carbon
-                    ? $agent->join_date->format('Y-m-d')
-                    : Carbon::parse($agent->join_date)->format('Y-m-d'),
-                'address' => $agent->address,
-                'trn' => $agent->trn,
-                'username' => $agent->username,
-                'email' => $agent->email,
-                'photo' => $agent->photo ? Storage::url($agent->photo) : null,
-            ];
-        });
+        $users = User::where('user_type', 'agent')->whereHas('agent')->with('agent:user_id,username,trn')->latest()->get();
 
         return Inertia::render('Agent/Index', [
-            'agents' => $agents,
+            'users' => $users,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(AgentRequest $request)
+    {
+        $validated = $request->validated();
+
+        $this->agentService->createAgent($validated);
+
+        return back()->with('success', 'Agent created successfully.');
+    }
+
+    public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'address' => 'required|string|max:255',
-            'trn' => 'required|string|max:100|unique:agents,trn',
-            'username' => 'required|string|max:100|unique:agents,username',
-            'email' => 'required|email|max:255|unique:agents,email',
-            'photo' => 'nullable|image|max:2048',
+            'username' => 'required|string|unique:agents,username,'.$user->agent?->id,
+            'trn' => 'required|string|unique:agents,trn,'.$user->agent?->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
+            'address' => 'nullable|string',
+            'role' => 'required|string|exists:roles,name',
+            'password' => 'nullable|string|min:8|confirmed',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048'
         ]);
 
-        $agent = new Agent();
-        $agent->fill($validated);
+        $this->agentService->updateUser($user, $validated);
 
-        if ($request->hasFile('photo')) {
-            $agent->photo = $request->file('photo')->store('photos', 'public');
-        }
-
-        $agent->save();
-
-        return redirect()->route('agents.index')->with('success', 'Agent created successfully.');
+        return back()->with('success', 'Agent updated successfully.');
     }
 
-    public function show(Agent $agent)
+    public function delete(User $user)
     {
-        return response()->json([
-            'id' => $agent->id,
-            'name' => $agent->name,
-            'join_date' => $agent->join_date->format('Y-m-d'),
-            'address' => $agent->address,
-            'trn' => $agent->trn,
-            'username' => $agent->username,
-            'email' => $agent->email,
-            'photo' => $agent->photo ? Storage::url($agent->photo) : null,
-        ]);
-    }
+        $this->agentService->deleteAgent($user);
 
-    public function update(Request $request, Agent $agent)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'address' => 'required|string|max:255',
-            'trn' => 'required|string|max:100|unique:agents,trn,' . $agent->id,
-            'username' => 'required|string|max:100|unique:agents,username,' . $agent->id,
-            'email' => 'required|email|max:255|unique:agents,email,' . $agent->id,
-            'photo' => 'nullable|image|max:2048',
-        ]);
-
-        if ($request->hasFile('photo')) {
-            if ($agent->photo) {
-                Storage::disk('public')->delete($agent->photo);
-            }
-            $validated['photo'] = $request->file('photo')->store('photos', 'public');
-        }
-
-        $agent->update($validated);
-
-        return redirect()->route('agents.index')->with('success', 'Agent updated successfully.');
-    }
-
-    public function destroy(Agent $agent)
-    {
-        if ($agent->photo) {
-            Storage::disk('public')->delete($agent->photo);
-        }
-        $agent->delete();
-
-        return redirect()->route('agents.index')->with('success', 'Agent deleted successfully.');
+        return back()->with('Agent deleted successfully');
     }
 }

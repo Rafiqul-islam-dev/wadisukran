@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function createUser(array $data): string
+    public function createUser(array $data): User
     {
         if (isset($data['photo'])) {
             $data['photo'] = $this->uploadPhoto($data['photo']);
@@ -21,14 +21,15 @@ class UserService
             'password' => $data['password'],
             'phone' => $data['phone'],
             'address' => $data['address'],
-            'photo' => $data['photo']
+            'photo' => $data['photo'],
+            'join_date' => $data['join_date'] ?? now()
         ]);
 
         if (isset($data['role'])) {
             $user->syncRoles([$data['role']]);
         }
 
-        return 'User Created Successfully';
+        return $user;
     }
 
     protected function uploadPhoto($photo): string
@@ -72,6 +73,7 @@ class UserService
             'phone' => $data['phone'] ?? $user->phone,
             'address' => $data['address'] ?? $user->address,
             'photo' => $data['photo'] ?? $user->photo,
+            'join_date' => $data['join_date'] ?? $user->join_date,
         ]);
 
         if (isset($data['role'])) {
