@@ -121,18 +121,6 @@ function toggleUserStatus(user) {
         }
     );
 }
-
-
-function getRoleColor(roleName) {
-    const colors = {
-        'Admin': 'bg-red-100 text-red-700 border-red-200',
-        'Manager': 'bg-blue-100 text-blue-700 border-blue-200',
-        'User': 'bg-green-100 text-green-700 border-green-200',
-        'Editor': 'bg-purple-100 text-purple-700 border-purple-200',
-        'Viewer': 'bg-gray-100 text-gray-700 border-gray-200',
-    };
-    return colors[roleName] || 'bg-gray-100 text-gray-700 border-gray-200';
-}
 </script>
 
 <template>
@@ -235,7 +223,7 @@ function getRoleColor(roleName) {
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
                                         <div class="relative">
-                                            <img v-if="user.photo" :src="user.photo" alt="User Photo"
+                                            <img v-if="user.avatar" :src="user.avatar" alt="User Photo"
                                                 class="w-12 h-12 object-cover rounded-full border-4 border-indigo-100 shadow-md" />
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">

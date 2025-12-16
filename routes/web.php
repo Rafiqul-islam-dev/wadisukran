@@ -15,10 +15,6 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-
-
-
-
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
@@ -59,6 +55,9 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::post('/store', [AgentController::class, 'store'])->middleware('can:agent create')->name('store');
         Route::post('/update/{user}', [AgentController::class, 'update'])->middleware('can:agent update')->name('update');
         Route::delete('/delete/{user}', [AgentController::class, 'delete'])->middleware('can:agent delete')->name('delete');
+        Route::get('/trashed', [AgentController::class, 'trashed_agents'])->middleware('can:show trashed agents')->name('trashed');
+        Route::get('/restore/{user}', [AgentController::class, 'restore_agent'])->middleware('can:agent restore')->name('restore');
+        Route::delete('/permanent-delete/{user}', [AgentController::class, 'permanent_delete_agent'])->middleware('can:agent permanent delete')->name('permanent-delete');
     });
 
     Route::resource('banners', AppBannerController::class);

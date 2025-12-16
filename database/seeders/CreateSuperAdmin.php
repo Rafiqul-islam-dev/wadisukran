@@ -19,6 +19,8 @@ class CreateSuperAdmin extends Seeder
         $required_permissions = [
             "agent create",
             "agent delete",
+            "agent permanent delete",
+            "agent restore",
             "agent update",
             "permission create",
             "permission delete",
@@ -39,10 +41,14 @@ class CreateSuperAdmin extends Seeder
             "show report",
             "show roles",
             "show settings",
+            "show trashed agents",
+            "show trashed users",
             "show user list",
             "show users",
             "user create",
             "user delete",
+            "user permanent delete",
+            "user restore",
             "user status change",
             "user update"
         ];

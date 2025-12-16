@@ -25,6 +25,12 @@ const mainNavItems: NavItem[] = [
                 icon: Users,
                 permission: 'show agent list'
             },
+            {
+                title: 'Trashed Agents',
+                href: '/agents/trashed',
+                icon: Trash,
+                permission: 'show trashed agents'
+            },
         ],
         permission: 'show agent list'
     },
