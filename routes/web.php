@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::delete('/permanent-delete/{user}', [AgentController::class, 'permanent_delete_agent'])->middleware('can:agent permanent delete')->name('permanent-delete');
     });
 
+
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class);
