@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 class ProductController extends Controller
 {
+
     public function index()
     {
         $products = Product::orderBy('created_at', 'desc')->get()->map(function ($product) {
@@ -96,7 +97,7 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $request->file('image')->store('uploads/products', 'public');
         }
 
         $validated['type'] = 'product';

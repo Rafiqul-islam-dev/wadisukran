@@ -17,9 +17,11 @@ const form = ref({
     price: '',
     draw_date: '',
     draw_time: '',
+    draw_type: 'once',
+    regular_type: '',
     image: null,
     pick_number: '',
-    showing_type: 'prizes',
+    prize_type: 'bet',
     type_number: '',
     prizes: {},
     is_active: true,
@@ -37,7 +39,7 @@ async function openModal(product) {
             draw_time: product.draw_time.substring(0, 5), // Ensure HH:mm format
             image: null,
             pick_number: product.pick_number,
-            showing_type: product.showing_type,
+            prize_type: product.showing_type,
             type_number: product.type_number,
             prizes: product.prizes,
             is_active: product.is_active,
@@ -54,7 +56,8 @@ async function openModal(product) {
             draw_time: '',
             image: null,
             pick_number: '',
-            showing_type: 'prizes',
+            draw_type: 'once',
+            prize_type: 'bet',
             type_number: '',
             prizes: {},
             is_active: true,
@@ -417,7 +420,7 @@ function formatDrawTime(time) {
                             <form @submit.prevent="submitForm" class="p-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Left Column -->
-                                    <div class="space-y-6">
+                                    <div class="space-y-2">
                                         <!-- Title Input -->
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Product
@@ -435,27 +438,64 @@ function formatDrawTime(time) {
                                                 class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                 placeholder="0.00" required />
                                         </div>
-
-                                        <!-- Draw Date and Time -->
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
-                                                    Date</label>
-                                                <input v-model="form.draw_date" type="date"
-                                                    class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                                                    required />
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
-                                                    Time</label>
-                                                <input v-model="form.draw_time" type="time"
-                                                    class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                                                    required />
-                                            </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
+                                                Type</label>
+                                            <select v-model="form.draw_type" name="draw_type"
+                                                class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                id="">
+                                                <option value="once">Once</option>
+                                                <option value="regular">Regular</option>
+                                            </select>
                                         </div>
+                                        <template v-if="form.draw_type === 'regular'">
+                                            <div class="grid grid-cols-2 gap-4 mt-5 mb-5">
+                                                <div>
+                                                    <label class="flex items-center">
+                                                        <input v-model="form.regular_type" type="radio" value="daily"
+                                                            name="regular_type"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+                                                        <span class="ml-2 text-sm font-medium text-gray-700">
+                                                            Daily Draw
+                                                        </span>
+                                                    </label>
+                                                </div>
+
+                                                <div>
+                                                    <label class="flex items-center">
+                                                        <input v-model="form.regular_type" type="radio"
+                                                            name="regular_type" value="hourly"
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+                                                        <span class="ml-2 text-sm font-medium text-gray-700">
+                                                            Hourly Draw
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <template v-if="form.draw_type === 'once'">
+                                            <!-- Draw Date and Time -->
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
+                                                        Date</label>
+                                                    <input v-model="form.draw_date" type="date"
+                                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                        required />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
+                                                        Time</label>
+                                                    <input v-model="form.draw_time" type="time"
+                                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                        required />
+                                                </div>
+                                            </div>
+                                        </template>
+
 
                                         <!-- Game Settings -->
-                                        <div class="grid grid-cols-3 gap-4">
+                                        <div class="grid grid-cols-3 gap-1">
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Pick
                                                     Number</label>
@@ -471,34 +511,14 @@ function formatDrawTime(time) {
                                                     placeholder="9" required />
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Showing
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Prize
                                                     Type</label>
-                                                <select v-model="form.showing_type"
+                                                <select v-model="form.prize_type"
                                                     class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                     required>
-                                                    <option value="prizes">Prizes</option>
-                                                    <option value="number">Number</option>
+                                                    <option value="bet">Bet Based</option>
+                                                    <option value="number">Number Based</option>
                                                 </select>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status and Daily -->
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="flex items-center">
-                                                    <input v-model="form.is_active" type="checkbox"
-                                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
-                                                    <span class="ml-2 text-sm font-medium text-gray-700">Active
-                                                        Product</span>
-                                                </label>
-                                            </div>
-                                            <div>
-                                                <label class="flex items-center">
-                                                    <input v-model="form.is_daily" type="checkbox"
-                                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
-                                                    <span class="ml-2 text-sm font-medium text-gray-700">Daily
-                                                        Draw</span>
-                                                </label>
                                             </div>
                                         </div>
                                     </div>
@@ -517,7 +537,8 @@ function formatDrawTime(time) {
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                                                        </path>
                                                     </svg>
                                                 </button>
                                             </div>
@@ -543,25 +564,55 @@ function formatDrawTime(time) {
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Prizes
                                                 Configuration</label>
-                                            <div class="bg-gray-50 p-4 rounded-xl mb-4">
-                                                <div class="grid grid-cols-2 gap-3 mb-3">
-                                                    <input id="prize-key" type="text"
-                                                        placeholder="Prize Name (e.g., STRAIGHT)"
-                                                        class="border-2 border-gray-200 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-                                                    <input id="prize-value" type="text"
+                                            <div v-if="form.prize_type === 'bet'">
+                                                <div class="mb-2">
+                                                    <div class="flex justify-between">
+                                                        <label for="">STRAIGHT</label>
+                                                        <input type="number"
+                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                    </div>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <div class="flex justify-between">
+                                                        <label for="">RUMBLE</label>
+                                                        <input type="number"
+                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="flex justify-between">
+                                                        <label for="">CHANCE</label>
+                                                        <input type="number"
+                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-if="form.prize_type === 'number'" class="mb-4">
+                                                <div class="grid grid-cols-3 gap-3 mb-3">
+                                                    <select name=""
+                                                        class="border-2 border-gray-200 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                        id="prize-key">
+                                                        <option disabled value="">Select number</option>
+
+                                                        <option v-for="n in form.pick_number" :key="n" :value="n">
+                                                            {{ n }}
+                                                        </option>
+                                                    </select>
+                                                    <input id="prize-value" type="number"
                                                         placeholder="Prize Value (e.g., 3000.00 AED)"
                                                         class="border-2 border-gray-200 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                                    <button type="button" @click="addPrize"
+                                                        class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                                        Add Prize
+                                                    </button>
                                                 </div>
-                                                <button type="button" @click="addPrize"
-                                                    class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                                                    Add Prize
-                                                </button>
                                             </div>
-                                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                            <div v-if="form.prize_type === 'number'"
+                                                class="space-y-2 max-h-48 overflow-y-auto">
                                                 <div v-for="(value, key) in form.prizes" :key="key"
                                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
                                                     <div>
-                                                        <span class="font-medium text-gray-700">{{ key }}:</span>
+                                                        <span class="font-medium text-gray-700">{{ key }} Numbers : </span>
                                                         <span class="text-gray-600 ml-2">{{ value }}</span>
                                                     </div>
                                                     <button type="button" @click="removePrize(key)"

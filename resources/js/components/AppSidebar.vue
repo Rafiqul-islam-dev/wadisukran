@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, Key, LayoutGrid, List, Shield, Trash, User, UserCog, Users } from 'lucide-vue-next';
+import { BookOpen, Folder, Key, LayoutGrid, List, Option, Shield, Trash, User, UserCog, Users } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 const page_path = usePage().url;
 const mainNavItems: NavItem[] = [
@@ -43,6 +43,12 @@ const mainNavItems: NavItem[] = [
                 href: '/products',
                 icon: Users,
                 permission: 'show product list'
+            },
+            {
+                title: 'Categories',
+                href: '/categories',
+                icon: Option,
+                permission: 'show categories'
             },
         ],
         permission: 'show product list'

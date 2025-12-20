@@ -34,7 +34,10 @@ class Banner extends Model
      */
     public function getImageUrlAttribute($value)
     {
-        return $value ? url('storage/' . ltrim($value, '/')) : null;
+        if ($value) {
+            return static_asset($value);
+        }
+        return null;
     }
 
 

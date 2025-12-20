@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('photo')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
+            $table->integer('role_id')->nullable();
             $table->rememberToken();
             $table->timestamp('join_date');
             $table->timestamps();

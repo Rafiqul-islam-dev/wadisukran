@@ -13,27 +13,19 @@ class ProductRequest extends FormRequest
 
     public function rules()
     {
-        $rules = [
-            'title' => 'required|string|max:255',
+        return [
+            'title' => 'required|string|max:255|unique:products,title',
             'price' => 'required|numeric|min:0',
-            'draw_date' => 'required|date|after_or_equal:today',
+            'draw_date' => 'required|date',
             'draw_time' => 'required|date_format:H:i',
-            'pick_number' => 'required|integer|min:1|max:10',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'pick_number' => 'required|integer|min:1',
             'showing_type' => 'required|in:prizes,number',
             'type_number' => 'required|integer|min:1',
-            'prizes' => 'required|array|min:1',
-            'prizes.*' => 'required|string',
-            'is_active' => 'boolean'
+            'prizes' => 'required|array',
+            'is_active' => 'boolean',
+            'is_daily' => 'boolean'
         ];
-
-        // Image validation - required for create, optional for update
-        if ($this->isMethod('post')) {
-            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif|max:10240';
-        } else {
-            $rules['image'] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240';
-        }
-
-        return $rules;
     }
 
     public function messages()

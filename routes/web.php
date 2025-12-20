@@ -6,6 +6,7 @@ use App\Http\Controllers\Agent\AgentController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
+use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
@@ -61,6 +62,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     });
 
 
+    Route::middleware('can:show categories')->resource('categories', CategoryController::class);
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class);
