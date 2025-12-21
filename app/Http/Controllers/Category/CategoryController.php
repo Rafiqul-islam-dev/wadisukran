@@ -20,7 +20,7 @@ class CategoryController extends Controller
 
     public function index()
     {
-        $categories = Category::paginate(10);
+        $categories = Category::latest()->paginate(10);
 
         return Inertia::render('Category/Index', [
             'categories' => $categories
@@ -67,7 +67,17 @@ class CategoryController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|unique:categories,name,' . $id,
+            'description' => 'nullable|string'
+        ]);
+
+        Category::find($id)->update([
+            'name' => $request->name,
+            'description' => $request->description
+        ]);
+
+        return back();
     }
 
     /**
@@ -75,6 +85,14 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        Category::find($id)->delete();
+        return back();
+    }
+
+    public function status_change(Category $category)
+    {
+        $category->status = $category->status === 1 ? 0 : 1;
+        $category->save();
+        return back();
     }
 }

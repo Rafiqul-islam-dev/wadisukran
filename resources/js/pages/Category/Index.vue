@@ -1,39 +1,98 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 
-const { categories } = usePage().props;
-console.log(categories)
+const { categories } = defineProps<{
+    categories: Array<any>;
+}>();
 const form = useForm({
     name: '',
     description: ''
 });
 
 const addCategoryModal = ref(false);
+const deleteModal = ref(false);
+const isEditing = ref(false);
+const editingCategory = ref(null);
+const deletingCategory = ref(null);
 
 const closeModal = () => {
     addCategoryModal.value = false;
+    isEditing.value = false;
+    editingCategory.value = null;
+    form.name = '';
+    form.description = '';
+}
+
+const editCategory = (category) => {
+    form.name = category.name;
+    form.description = category.description;
+    isEditing.value = true;
+    editingCategory.value = category;
+    addCategoryModal.value = true;
 }
 
 const addCategory = () => {
     addCategoryModal.value = true;
 }
 const handleSubmit = () => {
-    form.post(route('categories.store'), {
-        forceFormData: true,
-        onSuccess: () => {
-            form.reset()
-            toast.success('Category created successfully.')
-            closeModal();
-        },
-    })
+    if (editingCategory.value) {
+        router.put(route('categories.update', editingCategory.value.id), { name: form.name, description: form.description }, {
+            onSuccess: () => {
+                toast.success('Category updated successfully.');
+                form.reset();
+                closeModal();
+            }
+        })
+    }
+    else {
+        form.post(route('categories.store'), {
+            forceFormData: true,
+            onSuccess: () => {
+                form.reset()
+                toast.success('Category created successfully.')
+                // router.reload({ only: ['categories'] });
+                closeModal();
+            },
+        })
+    }
+}
+
+const deleteCategory = (category) => {
+    deletingCategory.value = category;
+    deleteModal.value = true;
+}
+
+const confirmDelete = () => {
+    if (deletingCategory.value) {
+        router.delete(route('categories.destroy', deletingCategory.value?.id), {
+            forceFormData: true,
+            onSuccess: () => {
+                toast.success('Category deleted successfully');
+                deleteModal.value = false;
+            }
+        })
+    }
+}
+const statusChange = (id) => {
+    router.get(
+        route('categories.status-change', id),
+        {},
+        {
+            preserveScroll: true,
+            replace: true,
+            onSuccess: () => {
+                toast.success('Category status updated.');
+            },
+        }
+    );
 }
 
 </script>
@@ -73,11 +132,11 @@ const handleSubmit = () => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Status
+                                    Description
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Description
+                                    Status
                                 </th>
                                 <th
                                     class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -104,9 +163,9 @@ const handleSubmit = () => {
                                 <!-- Status -->
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        <button
+                                        <button @click="statusChange(category)"
                                             :class="category.status !== 1 ? 'text-red-600 hover:text-red-800 hover:bg-red-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'"
-                                            class="font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:shadow-md text-sm">
+                                            class="font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:shadow-md text-sm cursor-pointer">
                                             {{ category.status === 1 ? 'Active' : 'Inactive' }}
                                         </button>
                                     </div>
@@ -115,7 +174,7 @@ const handleSubmit = () => {
                                 <!-- Actions -->
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end space-x-2">
-                                        <button
+                                        <button @click="editCategory(category)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -125,7 +184,7 @@ const handleSubmit = () => {
                                             </svg>
                                             Edit
                                         </button>
-                                        <button
+                                        <button @click="deleteCategory(category)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 hover:text-red-700 transition-all duration-200">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -140,6 +199,19 @@ const handleSubmit = () => {
                             </tr>
                         </tbody>
                     </table>
+                    <div class="mt-4 flex justify-end py-5">
+                        <nav class="flex items-center space-x-1">
+                            <button v-for="(link, i) in categories.links" :key="i"
+                                @click="link.url && router.visit(link.url)" v-html="link.label" :disabled="!link.url"
+                                :class="[
+                                    'px-3 py-1 rounded border',
+                                    link.active
+                                        ? 'bg-gray-800 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100',
+                                    !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                                ]" />
+                        </nav>
+                    </div>
 
                     <!-- Empty State -->
                     <!-- <div class="text-center py-12">
@@ -166,17 +238,6 @@ const handleSubmit = () => {
 
         <!-- Add Category Dialog -->
         <Dialog v-model:open="addCategoryModal">
-            <DialogTrigger as-child>
-                <Button
-                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Add New Category
-                </button>
-            </DialogTrigger>
-
             <DialogContent class="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle class="text-2xl font-bold">Add New Category</DialogTitle>
@@ -212,6 +273,28 @@ const handleSubmit = () => {
                     <Button type="submit" @click="handleSubmit"
                         class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                         Save Category
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog v-model:open="deleteModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                    <DialogDescription>
+                        This Category
+                        <span v-if="deletingCategory" class="font-semibold">"{{ deletingCategory?.name }}"</span>
+                        will delete permanently.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteModal = false">
+                        Cancel
+                    </Button>
+                    <Button variant="destructive" @click="confirmDelete">
+                        Delete
                     </Button>
                 </DialogFooter>
             </DialogContent>

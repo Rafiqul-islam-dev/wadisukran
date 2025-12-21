@@ -63,6 +63,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
 
     Route::middleware('can:show categories')->resource('categories', CategoryController::class);
+    Route::get('categories/status-change/{category}', [CategoryController::class, 'status_change'])->name('categories.status-change');
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
     Route::resource('products', ProductController::class);
