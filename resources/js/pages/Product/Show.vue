@@ -21,7 +21,7 @@ function formatPrizes(prizes) {
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ product.title }}</h1>
                     <p class="text-gray-600">Product Details</p>
                 </div>
-               
+
             </div>
 
             <!-- Product Details Card -->
@@ -51,10 +51,6 @@ function formatPrizes(prizes) {
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Price:</span>
                                     <span class="font-semibold text-green-600">{{ product.price }} AED</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Type:</span>
-                                    <span class="font-medium text-gray-900 capitalize">{{ product.type }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Status:</span>
@@ -88,11 +84,15 @@ function formatPrizes(prizes) {
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Draw Information</h3>
                             <div class="space-y-3">
                                 <div class="flex justify-between">
+                                    <span class="text-gray-600">Draw Type:</span>
+                                    <span class="font-semibold text-gray-900">{{ product.draw_type }}</span>
+                                </div>
+                                <div class="flex justify-between" v-if="product.draw_date">
                                     <span class="text-gray-600">Draw Date:</span>
                                     <span class="font-semibold text-gray-900">{{ new
                                         Date(product.draw_date).toLocaleDateString() }}</span>
                                 </div>
-                                <div class="flex justify-between">
+                                <div class="flex justify-between" v-if="product.draw_time">
                                     <span class="text-gray-600">Draw Time:</span>
                                     <span class="font-semibold text-gray-900">{{ product.draw_time.substring(0, 8)
                                         }}</span>
@@ -109,12 +109,12 @@ function formatPrizes(prizes) {
                                     <span class="font-semibold text-gray-900">{{ product.pick_number }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Type Number:</span>
+                                    <span class="text-gray-600">Max Type Number:</span>
                                     <span class="font-semibold text-gray-900">{{ product.type_number }}</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">Showing Type:</span>
-                                    <span class="font-semibold text-gray-900 capitalize">{{ product.showing_type
+                                    <span class="text-gray-600">Prize Type:</span>
+                                    <span class="font-semibold text-gray-900 capitalize">{{ product.prize_type
                                         }}</span>
                                 </div>
                             </div>
@@ -124,10 +124,10 @@ function formatPrizes(prizes) {
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl">
                             <h3 class="text-lg font-semibold text-gray-900 mb-4">Prizes</h3>
                             <div class="space-y-3">
-                                <div v-for="prize in formatPrizes(product.prizes)" :key="prize.key"
+                                <div v-for="prize in product.prizes" :key="prize.key"
                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
-                                    <span class="font-medium text-gray-700">{{ prize.key }}:</span>
-                                    <span class="font-semibold text-green-600">{{ prize.value }}</span>
+                                    <span class="font-medium text-gray-700">{{ prize.name }} <span v-if="prize.type === 'number'">Number Matches</span> :</span>
+                                    <span class="font-semibold text-green-600">{{ prize.prize }} AED</span>
                                 </div>
                             </div>
                         </div>

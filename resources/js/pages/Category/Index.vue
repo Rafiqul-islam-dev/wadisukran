@@ -103,10 +103,10 @@ const statusChange = (id) => {
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Category Management</h1>
+                    <h1 class="text-sm md:text-4xl font-bold text-gray-900 mb-2">Category</h1>
                 </div>
                 <button @click="addCategory"
-                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold">
+                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold text-sm md:text-xl">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

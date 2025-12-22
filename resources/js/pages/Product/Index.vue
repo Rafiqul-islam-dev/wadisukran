@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
+import { toast } from 'vue-sonner';
 
 const { products } = defineProps<{
     products: Array<any>;
+    categories: Array<any>;
 }>();
 
 const showModal = ref(false);
 const isEditing = ref(false);
-const modalVisible = ref(false);
+const editingProduct = ref(null);
 const imagePreview = ref(null);
-const form = ref({
-    id: null,
+const form = useForm({
     title: '',
+    category_id: '',
     price: '',
     draw_date: '',
     draw_time: '',
@@ -23,64 +25,54 @@ const form = ref({
     pick_number: '',
     prize_type: 'bet',
     type_number: '',
-    prizes: {},
-    is_active: true,
-    is_daily: true
+    bet_prizes: [
+        { type: 'bet', name: 'straight', prize: 0 },
+        { type: 'bet', name: 'rumble', prize: 0 },
+        { type: 'bet', name: 'chance', prize: 0 }
+    ],
+    number_prizes: []
 });
 
-async function openModal(product) {
-    if (product) {
-        isEditing.value = true;
-        form.value = {
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            draw_date: product.draw_date, // Already in YYYY-MM-DD
-            draw_time: product.draw_time.substring(0, 5), // Ensure HH:mm format
-            image: null,
-            pick_number: product.pick_number,
-            prize_type: product.showing_type,
-            type_number: product.type_number,
-            prizes: product.prizes,
-            is_active: product.is_active,
-            is_daily: product.is_daily
-        };
-        imagePreview.value = product.image_url || null;
-    } else {
-        isEditing.value = false;
-        form.value = {
-            id: null,
-            title: '',
-            price: '',
-            draw_date: '',
-            draw_time: '',
-            image: null,
-            pick_number: '',
-            draw_type: 'once',
-            prize_type: 'bet',
-            type_number: '',
-            prizes: {},
-            is_active: true,
-            is_daily: true
-        };
-        imagePreview.value = null;
-    }
+const editProduct = (product) => {
+    isEditing.value = true;
+    editingProduct.value = product;
+    form.title = product.title;
+    form.category_id = product.category_id;
+    form.price = product.price;
+    form.draw_type = product.draw_type === 'once' ? 'once' : 'regular';
+    form.draw_date = product.draw_date
+    ? product.draw_date.substring(0, 10)
+    : '';
+    form.draw_time = product.draw_time;
+    form.regular_type = product.draw_type === 'hourly' || product.draw_type === 'daily' ? product.draw_type : '';
+    form.image = null;
+    imagePreview.value = product.image_url;
+    form.pick_number = product.pick_number;
+    form.prize_type = product.prize_type;
+    form.type_number = product.type_number;
+    form.bet_prizes = product.prize_type === 'bet' ? product.prizes : [
+        { type: 'bet', name: 'straight', prize: 0 },
+        { type: 'bet', name: 'rumble', prize: 0 },
+        { type: 'bet', name: 'chance', prize: 0 }
+    ];
+    form.number_prizes = product.prize_type === 'number' ? product.prizes : [];
     showModal.value = true;
-    await nextTick();
-    modalVisible.value = true;
 }
 
-async function closeModal() {
-    modalVisible.value = false;
-    await new Promise(resolve => setTimeout(resolve, 300));
+function openModal() {
+    showModal.value = true;
+}
+
+function closeModal() {
     showModal.value = false;
     imagePreview.value = null;
+    form.reset();
 }
 
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        form.value.image = file;
+        form.image = file;
         const reader = new FileReader();
         reader.onload = (e) => {
             imagePreview.value = e.target.result;
@@ -90,7 +82,7 @@ function handleImageUpload(event) {
 }
 
 function removeImage() {
-    form.value.image = null;
+    form.image = null;
     imagePreview.value = null;
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
@@ -99,46 +91,59 @@ function removeImage() {
 }
 
 function addPrize() {
-    const key = document.getElementById('prize-key').value;
-    const value = document.getElementById('prize-value').value;
+    const name = document.getElementById('prize-key').value;
+    const prize = document.getElementById('prize-value').value;
 
-    if (key && value) {
-        form.value.prizes[key] = value;
+    const exists = form.number_prizes.some(p => p.name === name);
+
+    if (exists) {
+        toast.error("This prize is already added!");
+        return;
+    }
+
+    if (!form.number_prizes) {
+        form.number_prizes = [];
+    }
+
+    if (name && prize) {
+        form.number_prizes.push({
+            type: 'number',
+            name: name,
+            prize: prize
+        });
+
+        // optional: clear inputs
         document.getElementById('prize-key').value = '';
         document.getElementById('prize-value').value = '';
     }
 }
 
-function removePrize(key) {
-    delete form.value.prizes[key];
+
+function removePrize(name) {
+    if (!form.number_prizes) return;
+
+    form.number_prizes = form.number_prizes.filter(prize => prize.name !== name);
 }
 
+
 function submitForm() {
-    const formData = new FormData();
-
-    Object.keys(form.value).forEach(key => {
-        if (key === 'prizes') {
-            formData.append(key, JSON.stringify(form.value[key]));
-        } else if (key === 'image' && form.value[key]) {
-            formData.append(key, form.value[key]);
-        } else if (key !== 'image' && key !== 'id') {
-            formData.append(key, form.value[key]);
-        }
-    });
-
-    if (isEditing.value) {
-        formData.append('_method', 'PUT');
-        router.post(`/products/${form.value.id}`, formData, {
+    if(editingProduct.value){
+        form.post(route('products.update', editingProduct.value.id), {
+            forceFormData: true,
             onSuccess: () => {
+                toast.success('Product updated successfully.')
                 closeModal();
-            },
-        });
-    } else {
-        router.post('/products', formData, {
+            }
+        })
+    }
+    else{
+        form.post(route('products.store'), {
+            forceFormData: true,
             onSuccess: () => {
+                toast.success('Product created successfully.')
                 closeModal();
-            },
-        });
+            }
+        })
     }
 }
 
@@ -148,14 +153,6 @@ function deleteProduct(id) {
     }
 }
 
-
-function getEffectiveDrawDate(product) {
-    if (!product.is_daily) {
-        return product.draw_date; // Already in YYYY-MM-DD format
-    }
-    const today = new Date();
-    return today.toISOString().split('T')[0]; // Returns YYYY-MM-DD
-}
 
 function formatDrawTime(time) {
     if (!time) return '';
@@ -170,6 +167,21 @@ function formatDrawTime(time) {
         hour12: true
     }); // Returns e.g., "11:59 PM"
 }
+
+function updateBetPrize(name, value) {
+    const prizeIndex = form.bet_prizes.findIndex(p => p.name === name);
+    if (prizeIndex !== -1) {
+        form.bet_prizes[prizeIndex].prize = parseFloat(value) || 0;
+    }
+}
+
+const statusChange = (product) => {
+    router.put(route('products.status-change', product.id), {}, {
+        onSuccess: () => {
+            toast.success('Product status changed')
+        }
+    })
+}
 </script>
 
 <template>
@@ -181,7 +193,7 @@ function formatDrawTime(time) {
                     <h1 class="text-4xl font-bold text-gray-900 mb-2">Product Management</h1>
                     <p class="text-gray-600">Manage daily games and lottery products</p>
                 </div>
-                <button @click="openModal(null)"
+                <button @click="openModal()"
                     class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -212,11 +224,7 @@ function formatDrawTime(time) {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Draw Date
-                                </th>
-                                <th
-                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Daily
+                                    Draw
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -231,7 +239,7 @@ function formatDrawTime(time) {
 
                         <!-- Table Body -->
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="product in products" :key="product.id"
+                            <tr v-for="product in products.data" :key="product.id"
                                 class="hover:bg-gray-50 transition-colors duration-200">
                                 <!-- Product Image -->
                                 <td class="px-6 py-4">
@@ -267,59 +275,39 @@ function formatDrawTime(time) {
 
                                 <!-- Draw Date and Time -->
                                 <td class="px-6 py-4 text-sm text-gray-500">
-                                    <div class="flex items-center" v-if="product.is_daily == 1">
-                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                        {{ getEffectiveDrawDate(product) }}
+                                    <div class="flex items-center" v-if="product.draw_type">
+                                        Draw Type :  <span class="text-teal-500 font-bold"> {{ product.draw_type
+                                            }}</span>
                                     </div>
-                                    <div class="flex items-center" v-else>
-                                        <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                            </path>
-                                        </svg>
-                                        {{ product.draw_date }}
+                                    <div class="flex items-center" v-if="product.draw_date">
+                                        Date :
+                                        <span class="text-teal-500">{{ new
+                                            Date(product.draw_date).toLocaleDateString('en-US', {
+                                                day: '2-digit', month:
+                                            'short', year: '2-digit' }) }}</span>
                                     </div>
-                                    <div class="text-sm text-gray-500">Time: {{ formatDrawTime(product.draw_time) }}
+                                    <div class="text-sm text-gray-500" v-if="product.draw_time">Time: <span class="text-teal-500">{{
+                                            formatDrawTime(product.draw_time) }}</span>
                                     </div>
-                                </td>
-
-                                <td class="px-6 py-4">
-                                    <span v-if="product.is_daily == 1"
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd"></path>
-                                        </svg>
-                                        Active
-                                    </span>
-                                    <span v-else
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Inactive
-                                    </span>
                                 </td>
 
                                 <!-- Status -->
                                 <td class="px-6 py-4">
-                                    <span v-if="product.is_active"
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd"
-                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                clip-rule="evenodd"></path>
-                                        </svg>
-                                        Active
-                                    </span>
-                                    <span v-else
-                                        class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        Inactive
-                                    </span>
+                                    <div @click="statusChange(product)" class="cursor-pointer">
+                                        <span v-if="product.is_active"
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                    clip-rule="evenodd"></path>
+                                            </svg>
+                                            Active
+                                        </span>
+                                        <span v-else
+                                            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Inactive
+                                        </span>
+                                    </div>
                                 </td>
 
                                 <!-- Actions -->
@@ -338,7 +326,7 @@ function formatDrawTime(time) {
                                             View
                                         </button>
                                         <!-- Edit Button -->
-                                        <button @click="openModal(product)"
+                                        <button @click="editProduct(product)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-all duration-200">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -375,7 +363,7 @@ function formatDrawTime(time) {
                         </svg>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No products found</h3>
                         <p class="text-gray-500 mb-4">Get started by creating your first product.</p>
-                        <button @click="openModal(null)"
+                        <button @click="openModal()"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -391,13 +379,12 @@ function formatDrawTime(time) {
             <Teleport to="body">
                 <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
                     <!-- Backdrop -->
-                    <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
-                        :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
+                    <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out opacity-50"></div>
 
                     <!-- Modal Container -->
                     <div class="flex items-center justify-center min-h-screen p-4">
-                        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto"
-                            :class="modalVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'">
+                        <div
+                            class="opacity-100 scale-100 translate-y-0 relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all duration-300 ease-out max-h-[90vh] overflow-y-auto">
 
                             <!-- Modal Header -->
                             <div
@@ -428,7 +415,29 @@ function formatDrawTime(time) {
                                             <input v-model="form.title" type="text"
                                                 class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                 placeholder="Enter product title" required />
+                                            <p v-if="form.errors.title" class="text-red-600 text-sm">
+                                                {{ form.errors.title }}
+                                            </p>
                                         </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                Category
+                                            </label>
+
+                                            <select v-model="form.category_id" placeholder="Select a category" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl
+               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+               transition-all duration-200 hover:border-gray-300" required>
+                                                <option value="">Select a category</option>
+                                                <option v-for="category in categories" :key="category.id"
+                                                    :value="category.id">
+                                                    {{ category.name }}
+                                                </option>
+                                            </select>
+                                            <p v-if="form.errors.category_id" class="text-red-600 text-sm">
+                                                {{ form.errors.category_id }}
+                                            </p>
+                                        </div>
+
 
                                         <!-- Price Input -->
                                         <div>
@@ -437,6 +446,9 @@ function formatDrawTime(time) {
                                             <input v-model="form.price" type="number" step="0.01" min="0"
                                                 class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                 placeholder="0.00" required />
+                                            <p v-if="form.errors.price" class="text-red-600 text-sm">
+                                                {{ form.errors.price }}
+                                            </p>
                                         </div>
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
@@ -447,6 +459,9 @@ function formatDrawTime(time) {
                                                 <option value="once">Once</option>
                                                 <option value="regular">Regular</option>
                                             </select>
+                                            <p v-if="form.errors.draw_type" class="text-red-600 text-sm">
+                                                {{ form.errors.draw_type }}
+                                            </p>
                                         </div>
                                         <template v-if="form.draw_type === 'regular'">
                                             <div class="grid grid-cols-2 gap-4 mt-5 mb-5">
@@ -472,8 +487,11 @@ function formatDrawTime(time) {
                                                     </label>
                                                 </div>
                                             </div>
+                                            <p v-if="form.errors.regular_type" class="text-red-600 text-sm">
+                                                {{ form.errors.regular_type }}
+                                            </p>
                                         </template>
-                                        <template v-if="form.draw_type === 'once'">
+                                        <template v-if="form.draw_type === 'once' || form.regular_type === 'daily'">
                                             <!-- Draw Date and Time -->
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div>
@@ -482,6 +500,9 @@ function formatDrawTime(time) {
                                                     <input v-model="form.draw_date" type="date"
                                                         class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                         required />
+                                                    <p v-if="form.errors.draw_date" class="text-red-600 text-sm">
+                                                        {{ form.errors.draw_date }}
+                                                    </p>
                                                 </div>
                                                 <div>
                                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
@@ -489,6 +510,9 @@ function formatDrawTime(time) {
                                                     <input v-model="form.draw_time" type="time"
                                                         class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                         required />
+                                                    <p v-if="form.errors.draw_time" class="text-red-600 text-sm">
+                                                        {{ form.errors.draw_time }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </template>
@@ -502,13 +526,19 @@ function formatDrawTime(time) {
                                                 <input v-model="form.pick_number" type="number" min="1"
                                                     class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                     placeholder="3" required />
+                                                <p v-if="form.errors.pick_number" class="text-red-600 text-sm">
+                                                    {{ form.errors.pick_number }}
+                                                </p>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Type
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Max Type
                                                     Number</label>
                                                 <input v-model="form.type_number" type="number" min="1"
                                                     class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                     placeholder="9" required />
+                                                <p v-if="form.errors.type_number" class="text-red-600 text-sm">
+                                                    {{ form.errors.type_number }}
+                                                </p>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Prize
@@ -519,6 +549,9 @@ function formatDrawTime(time) {
                                                     <option value="bet">Bet Based</option>
                                                     <option value="number">Number Based</option>
                                                 </select>
+                                                <p v-if="form.errors.prize_type" class="text-red-600 text-sm">
+                                                    {{ form.errors.prize_type }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -542,6 +575,9 @@ function formatDrawTime(time) {
                                                     </svg>
                                                 </button>
                                             </div>
+                                            <p v-if="form.errors.image" class="text-red-600 text-sm">
+                                                {{ form.errors.image }}
+                                            </p>
                                             <div class="relative">
                                                 <input type="file" accept="image/*" @change="handleImageUpload"
                                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
@@ -565,10 +601,15 @@ function formatDrawTime(time) {
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Prizes
                                                 Configuration</label>
                                             <div v-if="form.prize_type === 'bet'">
+                                                <p v-if="form.errors.bet_prizes" class="text-red-600 text-sm">
+                                                    {{ form.errors.bet_prizes }}
+                                                </p>
                                                 <div class="mb-2">
                                                     <div class="flex justify-between">
                                                         <label for="">STRAIGHT</label>
                                                         <input type="number"
+                                                            :value="form.bet_prizes.find(p => p.name === 'straight')?.prize || 0"
+                                                            @input="updateBetPrize('straight', $event.target.value)"
                                                             class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -576,6 +617,8 @@ function formatDrawTime(time) {
                                                     <div class="flex justify-between">
                                                         <label for="">RUMBLE</label>
                                                         <input type="number"
+                                                            :value="form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0"
+                                                            @input="updateBetPrize('rumble', $event.target.value)"
                                                             class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -583,6 +626,8 @@ function formatDrawTime(time) {
                                                     <div class="flex justify-between">
                                                         <label for="">CHANCE</label>
                                                         <input type="number"
+                                                            :value="form.bet_prizes.find(p => p.name === 'chance')?.prize || 0"
+                                                            @input="updateBetPrize('chance', $event.target.value)"
                                                             class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -609,13 +654,18 @@ function formatDrawTime(time) {
                                             </div>
                                             <div v-if="form.prize_type === 'number'"
                                                 class="space-y-2 max-h-48 overflow-y-auto">
-                                                <div v-for="(value, key) in form.prizes" :key="key"
+                                                <p v-if="form.errors.number_prizes" class="text-red-600 text-sm">
+                                                    {{ form.errors.number_prizes }}
+                                                </p>
+                                                <div v-for="(value, key) in form.number_prizes" :key="key"
                                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
                                                     <div>
-                                                        <span class="font-medium text-gray-700">{{ key }} Numbers : </span>
-                                                        <span class="text-gray-600 ml-2">{{ value }}</span>
+                                                        <span class="font-medium text-gray-700">{{ value.name }} Numbers
+                                                            :
+                                                        </span>
+                                                        <span class="text-gray-600 ml-2">{{ value.prize }}</span>
                                                     </div>
-                                                    <button type="button" @click="removePrize(key)"
+                                                    <button type="button" @click="removePrize(value.name)"
                                                         class="text-red-500 hover:text-red-700 transition-colors duration-200">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
@@ -626,7 +676,7 @@ function formatDrawTime(time) {
                                                         </svg>
                                                     </button>
                                                 </div>
-                                                <div v-if="Object.keys(form.prizes).length === 0"
+                                                <div v-if="Object.keys(form.number_prizes).length === 0"
                                                     class="text-center text-gray-500 py-4">
                                                     No prizes added yet
                                                 </div>
