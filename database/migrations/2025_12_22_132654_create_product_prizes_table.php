@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('type', ['bet', 'number']);
             $table->string('name');
             $table->double('prize');
+            $table->integer('chance_number')->nullable();
             $table->timestamps();
         });
     }

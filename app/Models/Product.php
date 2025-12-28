@@ -38,7 +38,7 @@ class Product extends Model
     public function getImageUrlAttribute()
     {
         if ($this->image) {
-           return static_asset($this->image);
+            return static_asset($this->image);
         }
         return null;
     }
@@ -46,13 +46,17 @@ class Product extends Model
     // Scope for active products
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)
+            ->whereHas('category', function ($q) {
+                $q->where('status', 1);
+            });
     }
+
 
     // Scope for products by type
     public function scopeByType($query, $type)
     {
-        return $query->where('type', $type);
+        return $query->where('draw_type', $type);
     }
 
     public function getDrawTimeAttribute($value)
@@ -60,11 +64,13 @@ class Product extends Model
         return $value instanceof Carbon ? $value->format('H:i') : $value;
     }
 
-    public function category(){
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
 
-    public function prizes(){
+    public function prizes()
+    {
         return $this->hasMany(ProductPrize::class);
     }
 }

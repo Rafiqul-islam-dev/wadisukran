@@ -50,6 +50,12 @@ const mainNavItems: NavItem[] = [
                 icon: Option,
                 permission: 'show categories'
             },
+            {
+                title: 'Trashed Products',
+                href: '/products/trash',
+                icon: Trash,
+                permission: 'show trashed products'
+            },
         ],
         permission: 'show product list'
     },

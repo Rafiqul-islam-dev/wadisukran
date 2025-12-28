@@ -15,10 +15,14 @@ class ProductResource extends JsonResource
      */
     public function toArray($request)
     {
-        if ($this->is_daily == 1) {
-            $productdraw = Carbon::today();
+        $draw_date = $this->draw_date;
+        $draw_time = $this->draw_time;
+        if ($this->draw_type == 'daily') {
+            $draw_date = Carbon::today();
+        } else if ($this->draw_type == 'hourly') {
+            $draw_date = Carbon::today();
+            $draw_time = Carbon::parse($this->draw_time)->addHour();
         } else {
-            // Convert to Carbon instance explicitly
             $productdraw = Carbon::parse($this->draw_date);
         }
 
@@ -26,16 +30,14 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'price' => (float) $this->price,
-            'drawDate' => $productdraw->format('Y-m-d'),
-            'drawTime' => Carbon::parse($this->draw_time)->format('H:i:s'), // Parse draw_time to Carbon
+            'drawDate' => $draw_date ? $draw_date->format('Y-m-d') :'',
+            'drawTime' => $draw_time ? Carbon::parse($draw_time)->format('H:i:s') : '', // Parse draw_time to Carbon
             'prizes' => $this->prizes,
             'image' => $this->image_url ? url($this->image_url) : 'https://picsum.photos/60/60?random=' . $this->id,
-            'type' => $this->type,
+            'type' => $this->draw_type,
             'pick_number' => $this->pick_number,
             'showing_type' => $this->showing_type,
             'type_number' => $this->type_number,
         ];
     }
-
-
 }

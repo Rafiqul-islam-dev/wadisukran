@@ -42,6 +42,7 @@ class ProductService
                     'product_id' => $product->id,
                     'type' => $prize['type'],
                     'name' => $prize['name'],
+                    'chance_number' => $prize['chance_number'] ?? null,
                     'prize' => $prize['prize']
                 ]);
             }

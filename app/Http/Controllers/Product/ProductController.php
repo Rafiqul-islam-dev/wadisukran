@@ -190,8 +190,19 @@ class ProductController extends Controller
         return $today;
     }
 
-    public function status_change(Product $product){
+    public function status_change(Product $product)
+    {
         $this->productService->statusChange($product);
         return back();
+    }
+
+    public function trashed_products()
+    {
+        return 'ok';
+        $products = Product::onlyTrashed()->with(['category', 'prizes:id,product_id,type,name,prize'])->paginate(10);
+        return $products;
+        return Inertia::render('Product/Trashed', [
+            'products' => $products
+        ]);
     }
 }

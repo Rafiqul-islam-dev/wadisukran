@@ -14,9 +14,9 @@ class ProductController extends Controller
     public function apiIndex()
     {
         $products = Product::active()
-            ->byType('product')
             ->orderBy('id', 'desc')
             ->get();
+        // return $products;
 
         return ProductResource::collection($products);
     }

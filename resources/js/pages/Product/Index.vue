@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, watch, computed } from 'vue';
 import { router, useForm } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 
@@ -26,9 +26,9 @@ const form = useForm({
     prize_type: 'bet',
     type_number: '',
     bet_prizes: [
-        { type: 'bet', name: 'straight', prize: 0 },
-        { type: 'bet', name: 'rumble', prize: 0 },
-        { type: 'bet', name: 'chance', prize: 0 }
+        { type: 'bet', name: 'straight', prize: 0, chance_number: null },
+        { type: 'bet', name: 'rumble', prize: 0, chance_number: null },
+        { type: 'bet', name: 'chance', prize: 0, chance_number: 1 }
     ],
     number_prizes: []
 });
@@ -41,8 +41,8 @@ const editProduct = (product) => {
     form.price = product.price;
     form.draw_type = product.draw_type === 'once' ? 'once' : 'regular';
     form.draw_date = product.draw_date
-    ? product.draw_date.substring(0, 10)
-    : '';
+        ? product.draw_date.substring(0, 10)
+        : '';
     form.draw_time = product.draw_time;
     form.regular_type = product.draw_type === 'hourly' || product.draw_type === 'daily' ? product.draw_type : '';
     form.image = null;
@@ -51,9 +51,9 @@ const editProduct = (product) => {
     form.prize_type = product.prize_type;
     form.type_number = product.type_number;
     form.bet_prizes = product.prize_type === 'bet' ? product.prizes : [
-        { type: 'bet', name: 'straight', prize: 0 },
-        { type: 'bet', name: 'rumble', prize: 0 },
-        { type: 'bet', name: 'chance', prize: 0 }
+        { type: 'bet', name: 'straight', prize: 0, chance_number: null },
+        { type: 'bet', name: 'rumble', prize: 0, chance_number: null },
+        { type: 'bet', name: 'chance', prize: 0, chance_number: 1 }
     ];
     form.number_prizes = product.prize_type === 'number' ? product.prizes : [];
     showModal.value = true;
@@ -127,7 +127,7 @@ function removePrize(name) {
 
 
 function submitForm() {
-    if(editingProduct.value){
+    if (editingProduct.value) {
         form.post(route('products.update', editingProduct.value.id), {
             forceFormData: true,
             onSuccess: () => {
@@ -136,7 +136,7 @@ function submitForm() {
             }
         })
     }
-    else{
+    else {
         form.post(route('products.store'), {
             forceFormData: true,
             onSuccess: () => {
@@ -168,10 +168,67 @@ function formatDrawTime(time) {
     }); // Returns e.g., "11:59 PM"
 }
 
-function updateBetPrize(name, value) {
-    const prizeIndex = form.bet_prizes.findIndex(p => p.name === name);
+// Watch pick_number changes to update bet_prizes array
+watch(() => form.pick_number, (newPickNumber) => {
+    if (form.prize_type === 'bet' && newPickNumber) {
+        const pickNum = parseInt(newPickNumber);
+
+        // Always keep straight and rumble
+        const basePrizes = [
+            {
+                type: 'bet',
+                name: 'straight',
+                prize: form.bet_prizes.find(p => p.name === 'straight')?.prize || 0,
+                chance_number: null
+            },
+            {
+                type: 'bet',
+                name: 'rumble',
+                prize: form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0,
+                chance_number: null
+            }
+        ];
+
+        // Add chance prizes based on pick_number
+        for (let i = 1; i <= pickNum; i++) {
+            const existingPrize = form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i);
+            basePrizes.push({
+                type: 'bet',
+                name: 'chance',
+                prize: existingPrize?.prize || 0,
+                chance_number: i
+            });
+        }
+
+        form.bet_prizes = basePrizes;
+    }
+});
+
+// Computed property to get chance prizes dynamically
+const chancePrizes = computed(() => {
+    if (!form.pick_number) return [];
+    const pickNum = parseInt(form.pick_number);
+    return Array.from({ length: pickNum }, (_, i) => i + 1);
+});
+
+function updateBetPrize(name, chanceNumber, value) {
+    const prizeIndex = form.bet_prizes.findIndex(p => {
+        if (name === 'chance') {
+            return p.name === name && p.chance_number === chanceNumber;
+        }
+        return p.name === name;
+    });
+
     if (prizeIndex !== -1) {
         form.bet_prizes[prizeIndex].prize = parseFloat(value) || 0;
+    } else {
+        // Add new prize if it doesn't exist
+        form.bet_prizes.push({
+            type: 'bet',
+            name: name,
+            prize: parseFloat(value) || 0,
+            chance_number: name === 'chance' ? chanceNumber : null
+        });
     }
 }
 
@@ -190,11 +247,10 @@ const statusChange = (product) => {
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Product Management</h1>
-                    <p class="text-gray-600">Manage daily games and lottery products</p>
+                    <h1 class="text-xl lg:text-4xl font-bold text-gray-900 mb-2">Products</h1>
                 </div>
                 <button @click="openModal()"
-                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold">
+                    class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 font-semibold text-sm lg:text-lg">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -276,18 +332,20 @@ const statusChange = (product) => {
                                 <!-- Draw Date and Time -->
                                 <td class="px-6 py-4 text-sm text-gray-500">
                                     <div class="flex items-center" v-if="product.draw_type">
-                                        Draw Type :  <span class="text-teal-500 font-bold"> {{ product.draw_type
-                                            }}</span>
+                                        Draw Type : <span class="text-teal-500 font-bold"> {{ product.draw_type
+                                        }}</span>
                                     </div>
                                     <div class="flex items-center" v-if="product.draw_date">
                                         Date :
                                         <span class="text-teal-500">{{ new
                                             Date(product.draw_date).toLocaleDateString('en-US', {
                                                 day: '2-digit', month:
-                                            'short', year: '2-digit' }) }}</span>
+                                                    'short', year: '2-digit'
+                                            }) }}</span>
                                     </div>
-                                    <div class="text-sm text-gray-500" v-if="product.draw_time">Time: <span class="text-teal-500">{{
-                                            formatDrawTime(product.draw_time) }}</span>
+                                    <div class="text-sm text-gray-500" v-if="product.draw_time">Time: <span
+                                            class="text-teal-500">{{
+                                                formatDrawTime(product.draw_time) }}</span>
                                     </div>
                                 </td>
 
@@ -352,7 +410,19 @@ const statusChange = (product) => {
                             </tr>
                         </tbody>
                     </table>
-
+                    <div class="mt-4 flex justify-end py-5">
+                        <nav class="flex items-center space-x-1">
+                            <button v-for="(link, i) in products.links" :key="i"
+                                @click="link.url && router.visit(link.url)" v-html="link.label" :disabled="!link.url"
+                                :class="[
+                                    'px-3 py-1 rounded border',
+                                    link.active
+                                        ? 'bg-gray-800 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-100',
+                                    !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                                ]" />
+                        </nav>
+                    </div>
                     <!-- Empty State -->
                     <div v-if="!products || products.length === 0" class="text-center py-12">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
@@ -606,29 +676,30 @@ const statusChange = (product) => {
                                                 </p>
                                                 <div class="mb-2">
                                                     <div class="flex justify-between">
-                                                        <label for="">STRAIGHT</label>
+                                                        <label>STRAIGHT</label>
                                                         <input type="number"
                                                             :value="form.bet_prizes.find(p => p.name === 'straight')?.prize || 0"
-                                                            @input="updateBetPrize('straight', $event.target.value)"
-                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                            @input="updateBetPrize('straight', null, $event.target.value)"
+                                                            class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
                                                 <div class="mb-2">
                                                     <div class="flex justify-between">
-                                                        <label for="">RUMBLE</label>
+                                                        <label>RUMBLE</label>
                                                         <input type="number"
                                                             :value="form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0"
-                                                            @input="updateBetPrize('rumble', $event.target.value)"
-                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                            @input="updateBetPrize('rumble', null, $event.target.value)"
+                                                            class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
-                                                <div>
+                                                <!-- Dynamic Chance Prizes -->
+                                                <div v-for="i in chancePrizes" :key="i" class="mb-2">
                                                     <div class="flex justify-between">
-                                                        <label for="">CHANCE</label>
+                                                        <label>CHANCE {{ i }}</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'chance')?.prize || 0"
-                                                            @input="updateBetPrize('chance', $event.target.value)"
-                                                            class=" border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
+                                                            :value="form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i)?.prize || 0"
+                                                            @input="updateBetPrize('chance', i, $event.target.value)"
+                                                            class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
                                             </div>

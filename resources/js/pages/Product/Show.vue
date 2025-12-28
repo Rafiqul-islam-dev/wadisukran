@@ -122,11 +122,13 @@ function formatPrizes(prizes) {
 
                         <!-- Prizes -->
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Prizes</h3>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Winning Prizes</h3>
                             <div class="space-y-3">
                                 <div v-for="prize in product.prizes" :key="prize.key"
                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
-                                    <span class="font-medium text-gray-700">{{ prize.name }} <span v-if="prize.type === 'number'">Number Matches</span> :</span>
+                                    <span class="font-medium text-gray-700">{{ prize.name }} <span
+                                            v-if="prize.name === 'chance'">{{ prize.chance_number }} numbers</span>
+                                        <span v-if="prize.type === 'number'">Number Matches</span> :</span>
                                     <span class="font-semibold text-green-600">{{ prize.prize }} AED</span>
                                 </div>
                             </div>

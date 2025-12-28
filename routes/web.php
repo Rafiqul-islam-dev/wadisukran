@@ -66,11 +66,17 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::get('categories/status-change/{category}', [CategoryController::class, 'status_change'])->name('categories.status-change');
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
+
+    // Product Routes
     Route::resource('products', ProductController::class)
         ->except(['update']);
-
     Route::post('products/update/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::put('products/status-change/{product}', [ProductController::class, 'status_change'])->name('products.status-change');
+
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('trash', [ProductController::class, 'trashed_products'])->name('trashed');
+    });
+
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 
     // Additional banner routes
