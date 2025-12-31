@@ -6,6 +6,10 @@ use App\Models\Category;
 
 class CategoryService
 {
+    function activeCategories()
+    {
+        return Category::where('status', 1)->get();
+    }
     function createCategory(array $data): string {
         Category::create([
             'name' => $data['name'],

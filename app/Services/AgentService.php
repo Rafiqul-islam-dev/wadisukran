@@ -33,7 +33,8 @@ class AgentService
         $this->userService->updateUser($user, $data);
         Agent::updateOrCreate(['user_id' => $user->id], [
             'username' => $data['username'],
-            'trn' => $data['trn']
+            'trn' => $data['trn'],
+            'commission' => $data['commission'],
         ]);
         return 'Agent updated successfully.';
     }

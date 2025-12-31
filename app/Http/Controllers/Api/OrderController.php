@@ -18,14 +18,13 @@ class OrderController extends Controller
 {
     public function orderStore(Request $request)
     {
-        // dd($request->all());
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
             'game_cards' => 'required|array',
             'game_cards.*.selected_numbers' => 'required|array',
             'game_cards.*.selected_numbers.*' => 'required|string',
-            'game_cards.*.selected_play_types' => 'nullable|array', // Changed to array
-            'game_cards.*.selected_play_types.*' => 'nullable|string|in:Straight,Ramble,Chance', // Validate each play type
+            // 'game_cards.*.selected_play_types' => 'nullable|array',
+            // 'game_cards.*.selected_play_types.*' => 'nullable|string|in:Straight,Ramble,Chance',
             'quantity' => 'required|integer|min:1',
             'total_price' => 'required|numeric|min:0',
         ]);
@@ -50,11 +49,11 @@ class OrderController extends Controller
         $drawDateTimeString = $date . ' ' . $time; // "2025-08-02 17:00:00"
         $drawDateTime = Carbon::parse($drawDateTimeString);
 
-        if (now()->gt($drawDateTime)) {
-            return response()->json([
-                'message' => 'Ticket not available.',
-            ], 403);
-        }
+        // if (now()->gt($drawDateTime)) {
+        //     return response()->json([
+        //         'message' => 'Ticket not available.',
+        //     ], 403);
+        // }
 
         // Verify selected_numbers count matches pick_number
         foreach ($request->game_cards as $card) {
@@ -237,7 +236,7 @@ class OrderController extends Controller
             // If no remarks, set status to Printed
             $order->status = 'Printed';
         }
-        
+
         $order->save();
 
         return response()->json([

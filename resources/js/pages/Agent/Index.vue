@@ -23,8 +23,7 @@ const form = useForm({
     email: '',
     phone: '',
     address: '',
-    username: '',
-    password: '',
+    commission: '',
     trn: '',
     password_confirmation: '',
     photo: null,
@@ -42,7 +41,7 @@ const editModal = (user) => {
     form.email = user.email;
     form.phone = user.phone;
     form.trn = user.agent?.trn;
-    form.username = user.agent?.username;
+    form.commission = user.agent?.commission;
     form.address = user.address;
     form.join_date = user.join_date;
     showModal.value = true;
@@ -55,10 +54,9 @@ function closeModal() {
     form.email = '';
     form.phone = '';
     form.join_date = '';
-    form.username = '';
+    form.commission = '';
     form.address = '';
     form.trn = '';
-    form.password = '';
     form.password_confirmation = '';
     showModal.value = false;
 }
@@ -214,6 +212,9 @@ function toggleUserStatus(user) {
                                     TRN</th>
                                 <th
                                     class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    Commission</th>
+                                <th
+                                    class="px-6 py-4 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                                     Actions</th>
                             </tr>
                         </thead>
@@ -228,7 +229,7 @@ function toggleUserStatus(user) {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -264,6 +265,7 @@ function toggleUserStatus(user) {
                                         : 'N/A'
                                 }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ user.agent?.trn || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ user.agent?.commission+' %' || 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
                                         <button v-if="can('agent update')" @click="editModal(user)"
@@ -370,16 +372,7 @@ function toggleUserStatus(user) {
                                             {{ form.errors.join_date }}
                                         </p>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Username
-                                            (Unique)</label>
-                                        <input v-model="form.username" type="text"
-                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
-                                            placeholder="Enter unique username" />
-                                        <p v-if="form.errors.username" class="text-red-600 text-sm">
-                                            {{ form.errors.username }}
-                                        </p>
-                                    </div>
+
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">TRN</label>
                                         <input v-model="form.trn" type="text"
@@ -389,7 +382,20 @@ function toggleUserStatus(user) {
                                             {{ form.errors.trn }}
                                         </p>
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Commission
+                                            (%)</label>
+                                        <select v-model="form.commission" name="commission" id="commission" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
+                                            <option value="" disabled>Select commission percentage</option>
 
+                                            <option v-for="i in 100" :key="i" :value="i">
+                                                {{ i }}%
+                                            </option>
+                                        </select>
+                                        <p v-if="form.errors.commission" class="text-red-600 text-sm">
+                                            {{ form.errors.commission }}
+                                        </p>
+                                    </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Address</label>
                                         <textarea v-model="form.address" rows="2"
@@ -401,7 +407,7 @@ function toggleUserStatus(user) {
                                     </div>
 
                                     <!-- Password Section -->
-                                    <div class="md:col-span-2 border-t border-gray-200 pt-3">
+                                    <!-- <div class="md:col-span-2 border-t border-gray-200 pt-3">
                                         <h3 class="text-lg font-semibold text-gray-900 flex items-center">
                                             <svg class="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -411,9 +417,9 @@ function toggleUserStatus(user) {
                                             </svg>
                                             {{ isEditing ? 'Change Password (optional)' : 'Set Password' }}
                                         </h3>
-                                    </div>
+                                    </div> -->
 
-                                    <div>
+                                    <!-- <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                                             Password {{ !isEditing ? '*' : '' }}
                                         </label>
@@ -435,7 +441,7 @@ function toggleUserStatus(user) {
                                         <p v-if="form.errors.password_confirmation" class="text-red-600 text-sm">
                                             {{ form.errors.password_confirmation }}
                                         </p>
-                                    </div>
+                                    </div> -->
 
                                     <!-- Profile Photo -->
                                     <div class="md:col-span-2 border-t border-gray-200 pt-6">

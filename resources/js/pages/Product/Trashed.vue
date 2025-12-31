@@ -1,15 +1,30 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { router, useForm } from '@inertiajs/vue3';
+import { RotateCcw } from 'lucide-vue-next';
+import { toast } from 'vue-sonner';
 
 const { products } = defineProps<{
     products: Array<any>;
 }>();
 
 
+function restoreProduct(id) {
+    if (confirm('Are you sure you want to restore this product?')) {
+        router.get(route('products.restore', id), {}, {
+            onSuccess: () => {
+                toast.success('Product restored successfully.');
+            }
+        });
+    }
+}
 function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        router.delete(`/products/${id}`);
+    if (confirm('Are you sure you want to permanent delete this product?')) {
+        router.get(route('products.permanent-delete', id),{}, {
+            onSuccess: () => {
+                toast.success('Product permanently deleted successfully.');
+            }
+        });
     }
 }
 
@@ -131,16 +146,10 @@ function formatDrawTime(time) {
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end space-x-2">
                                         <!-- View Button -->
-                                        <button @click="router.visit(`/products/${product.id}`)"
+                                        <button @click="restoreProduct(product.id)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 hover:text-green-700 transition-all duration-200">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            View
+                                            <RotateCcw class="w-4 h-4 mr-1" />
+                                            Restore
                                         </button>
                                         <!-- Delete Button -->
                                         <button @click="deleteProduct(product.id)"

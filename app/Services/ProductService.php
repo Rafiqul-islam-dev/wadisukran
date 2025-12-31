@@ -97,4 +97,17 @@ class ProductService
 
         return 'Product updated successfully.';
     }
+    public function productPermanentDelete($id) : string {
+        $product = Product::withTrashed()->find($id);
+        if ($product) {
+            if ($product->image && file_exists(public_path($product->image))) {
+                unlink(public_path($product->image));
+            }
+            $product->prizes()->delete();
+            $product->forceDelete();
+            
+            return 'Product permanently deleted successfully.';
+        }
+        return 'Product not found.';
+    }
 }

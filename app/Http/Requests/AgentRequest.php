@@ -27,11 +27,10 @@ class AgentRequest extends FormRequest
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:20|unique:users,phone',
             'address' => 'nullable|string',
-            'password' => 'required|string|min:8|confirmed',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
             'role' => 'required|string|exists:roles,name',
             'join_date' => 'required|date',
-            'username' => 'required|unique:agents,username|regex:/^\S+$/',
+            'commission' => 'required|numeric|min:0|max:100',
             'trn' => 'required|unique:agents,trn'
         ];
     }
@@ -48,10 +47,6 @@ class AgentRequest extends FormRequest
 
             'phone.unique' => 'This phone number is already in use.',
 
-            'password.required' => 'Password is required.',
-            'password.min' => 'Password must be at least 8 characters.',
-            'password.confirmed' => 'Password confirmation does not match.',
-
             'photo.image' => 'The photo must be an image.',
             'photo.mimes' => 'Photo must be a jpeg, png, jpg, or gif.',
             'photo.max' => 'Photo size must not exceed 10MB.',
@@ -61,10 +56,6 @@ class AgentRequest extends FormRequest
 
             'join_date.required' => 'Join date is required.',
             'join_date.date' => 'Join date must be a valid date.',
-
-            'username.required' => 'Username is required.',
-            'username.unique' => 'This username is already taken.',
-            'username.regex' => 'Username must not contain spaces.',
 
             'trn.required' => 'TRN is required.',
             'trn.unique' => 'This TRN already exists.',

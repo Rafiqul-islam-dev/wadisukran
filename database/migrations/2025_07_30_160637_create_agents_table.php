@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('username')->nullable();
             $table->string('trn')->nullable();
+            $table->decimal('commission', 5, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

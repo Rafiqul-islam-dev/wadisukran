@@ -20,7 +20,6 @@ interface Props {
     currentPath: string
 }
 const { auth_permissions } = usePage().props;
-console.log(auth_permissions)
 const props = defineProps<Props>()
 const isActive = (href?: string) => {
     if (!href) return false

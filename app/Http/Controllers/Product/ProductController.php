@@ -112,11 +112,6 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // Delete image if exists
-        if ($product->image) {
-            Storage::disk('public')->delete($product->image);
-        }
-
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
@@ -198,11 +193,25 @@ class ProductController extends Controller
 
     public function trashed_products()
     {
-        return 'ok';
-        $products = Product::onlyTrashed()->with(['category', 'prizes:id,product_id,type,name,prize'])->paginate(10);
-        return $products;
+        $products = Product::onlyTrashed()->with(['category', 'prizes:id,product_id,type,name,prize'])->orderByDesc('deleted_at')->paginate(10);
         return Inertia::render('Product/Trashed', [
             'products' => $products
         ]);
+    }
+
+    public function permanent_delete($product)
+    {
+        $this->productService->productPermanentDelete($product);
+        return back();
+    }
+
+    public function restore_product($id)
+    {
+        $product = Product::onlyTrashed()->find($id);
+        if ($product) {
+            $product->restore();
+            return back()->with('success', 'Product restored successfully.');
+        }
+        return back()->with('error', 'Product not found.');
     }
 }

@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'name' => 'required|string',
+            'name' => 'required|string|exists:agents,username',
             'password' => 'required|string',
         ]);
 
-        // Tell Laravel to check 'name' instead of 'email'
-        if (Auth::attempt(['name' => $credentials['name'], 'password' => $credentials['password']])) {
+        $agent = Agent::where('username', $credentials['name'])->first();
+
+        if (Auth::attempt(['id' => $agent->user_id, 'password' => $credentials['password']])) {
             $user = Auth::user();
             $token = $user->createToken('auth_token')->plainTextToken;
 

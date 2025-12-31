@@ -10,6 +10,7 @@ use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Role\PermissionController;
 
 Route::get('/', function () {
@@ -73,11 +74,18 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::post('products/update/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::put('products/status-change/{product}', [ProductController::class, 'status_change'])->name('products.status-change');
 
-    Route::prefix('products')->name('products.')->group(function () {
-        Route::get('trash', [ProductController::class, 'trashed_products'])->name('trashed');
+    Route::get('trashed-products', [ProductController::class, 'trashed_products'])->name('products.trashed');
+    Route::get('products-permanent-delete/{product}', [ProductController::class, 'permanent_delete'])->name('products.permanent-delete');
+    Route::get('products-restore/{product}', [ProductController::class, 'restore_product'])->name('products.restore');
+
+    Route::prefix('draws')->name('draws.')->middleware('can:show draws')->group(function () {
+        Route::get('/', [DrawController::class, 'index'])->name('index');
+        Route::get('/{draw}', [OrderController::class, 'drawDetails'])->name('details');
     });
 
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+    });
 
     // Additional banner routes
     Route::prefix('banners')->name('banners.')->group(function () {
