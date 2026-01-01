@@ -19,6 +19,7 @@ const filter = ref({
     date_to: filters?.date_to ?? '',
     time_to: filters?.time_to ?? '',
     match_type: filters?.match_type ?? '',
+    category_id: filters?.category_id ?? '',
 });
 
 const modalVisible = ref(false);
@@ -36,13 +37,26 @@ function resetFilters() {
         time_from: '',
         date_to: '',
         time_to: '',
-        match_type: ''
+        match_type: '',
+        category_id: ''
     };
+    handleSearch();
 }
 
 function formatDate(dateString: string | null) {
-    return dateString ? new Date(dateString).toLocaleDateString() : '-';
+    if (!dateString) return '-';
+
+    return new Date(dateString).toLocaleString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+    });
 }
+
 
 function openModal(order: any) {
     selectedOrder.value = order;
@@ -78,7 +92,7 @@ const handleSearch = () => {
                 <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                        <select v-model="filter.user_id" v-on:change="handleSearch"
+                        <select v-model="filter.category_id" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All Category</option>
                             <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -91,14 +105,11 @@ const handleSearch = () => {
                         <select v-model="filter.match_type" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All</option>
-                            <option value="once">
-                                once
+                            <option value="bet">
+                                Bet
                             </option>
-                            <option value="daily">
-                                daily
-                            </option>
-                            <option value="hourly">
-                                hourly
+                            <option value="number">
+                                Numbers
                             </option>
                         </select>
                     </div>
@@ -114,22 +125,22 @@ const handleSearch = () => {
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
-                        <input v-model="filter.date_from" type="date"
+                        <input v-model="filter.date_from" type="date" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Time</label>
-                        <input v-model="filter.time_from" type="time"
+                        <input v-model="filter.time_from" type="time" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
-                        <input v-model="filter.date_to" type="date"
+                        <input v-model="filter.date_to" type="date" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Time</label>
-                        <input v-model="filter.time_to" type="time"
+                        <input v-model="filter.time_to" type="time" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                 </div>
@@ -522,7 +533,7 @@ const handleSearch = () => {
                                                     {{ formatDate(selectedOrder.sales_date) }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">
-                                                    {{ getBigPrize(selectedOrder) }}
+                                                    <!-- {{ getBigPrize(selectedOrder) }} -->
                                                 </p>
                                             </div>
                                         </div>
