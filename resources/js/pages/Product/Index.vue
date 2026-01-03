@@ -276,6 +276,10 @@ const statusChange = (product) => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Category
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Price
                                 </th>
                                 <th
@@ -322,6 +326,9 @@ const statusChange = (product) => {
                                     <div class="text-sm font-medium text-gray-900">{{ product.title }}</div>
                                     <div class="text-sm text-gray-500">{{ product.showing_type }} | Pick {{
                                         product.pick_number }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ product.category?.name }}</div>
                                 </td>
 
                                 <!-- Price -->

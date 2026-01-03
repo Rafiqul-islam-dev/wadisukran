@@ -41,6 +41,7 @@ const handleLogoUpload = (event: Event) => {
 const saveChanges = () => {
     form.post(route('company-settings.store'), {
         preserveScroll: true,
+        preserveState: true,
         onSuccess: () => {
             toast.success('Company information updated successfully!');
         },
@@ -116,6 +117,7 @@ const saveChanges = () => {
 
                             <!-- Shop Logo -->
                             <div class="space-y-2">
+                                <img :src="company_setting?.logo_url" v-if="company_setting?.logo_url" alt="Logo" class="w-24 h-24 object-contain">
                                 <Label for="shopLogo">Logo</Label>
                                 <div class="flex items-center gap-4">
                                     <Input id="shopLogo" type="file" @change="handleLogoUpload" accept="image/*"

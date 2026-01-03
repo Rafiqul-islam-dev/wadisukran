@@ -29,6 +29,6 @@ class CompannySetting extends Model
 
     public function getLogoUrlAttribute()
     {
-        return $this->logo ? Storage::url($this->logo) : null;
+        return $this->logo ? static_asset($this->logo) : null;
     }
 }

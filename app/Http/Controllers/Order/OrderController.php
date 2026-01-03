@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\CompannySetting;
+use App\Models\OrderTicket;
+use App\Models\Product;
+use App\Models\ProductPrize;
 use App\Services\CategoryService;
 use Inertia\Inertia;
 
@@ -19,37 +22,63 @@ class OrderController extends Controller
     }
     public function index(Request $request)
     {
+        $match_type = ProductPrize::find($request->match_type);
+        // return $match_type;
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
-        ->when($request->date_from, function ($query, $dateFrom) use ($request) {
-            $timeFrom = $request->time_from ?? '00:00:00';
-            $query->where('created_at', '>=', "$dateFrom $timeFrom");
-        })
-        ->when($request->date_to, function ($query, $dateTo) use ($request) {
-            $timeTo = $request->time_to ?? '23:59:59';
-            $query->where('created_at', '<=', "$dateTo $timeTo");
-        })
-        ->when($request->category_id, function ($query, $categoryId) {
-            $query->whereHas('product', function ($q) use ($categoryId) {
-                $q->where('category_id', $categoryId);
-            });
-        })
-        ->when($request->match_type, function ($query, $matchType) {
-            $query->whereHas('product', function ($q) use ($matchType) {
-                $q->where('prize_type', $matchType);
-            });
-        })
-        ->with(['user', 'product', 'user.agent'])->limit(10)->get();
+            ->when($request->date_from, function ($query, $dateFrom) use ($request) {
+                $timeFrom = $request->time_from ?? '00:00:00';
+                $query->where('created_at', '>=', "$dateFrom $timeFrom");
+            })
+            ->when($request->date_to, function ($query, $dateTo) use ($request) {
+                $timeTo = $request->time_to ?? '23:59:59';
+                $query->where('created_at', '<=', "$dateTo $timeTo");
+            })
+            ->when($request->category_id && $request->product_id, function ($query) use ($request) {
+                $query->whereHas('product', function ($q) use ($request) {
+                    $q->where('category_id', $request->category_id)
+                        ->where('id', $request->product_id);
+                });
+            })
+            ->when($match_type, function ($query, $matchType) {
+                $query->whereHas('tickets', function ($q) use ($matchType) {
+                    $q->whereJsonContains(
+                        'selected_play_types',
+                        ucfirst(strtolower($matchType->name))
+                    );
+                });
+            })
+            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->get();
         $users = User::select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();
+        $products = Product::where('category_id', $request->category_id)->active()->orderBy('title')->get();
+
+        $product_prizes = [];
+        if ($request->product_id) {
+            $product = Product::find($request->product_id);
+            if ($product->prize_type == 'bet') {
+                foreach ($product->prizes as $prize) {
+                    $product_prizes[] = [
+                        'id' => $prize->id,
+                        'name' => $prize->name,
+                        'chance_number' => $prize->chance_number
+                    ];
+                }
+            }
+        }
+
+        // return $product_prizes;
+
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
             'users' => $users,
             'company' => $company,
             'categories' => $categories,
+            'products' => $products,
+            'product_prizes' => $product_prizes,
             'filters' => request()->only([
                 'user_id',
                 'date_from',
@@ -58,7 +87,40 @@ class OrderController extends Controller
                 'time_to',
                 'match_type',
                 'category_id',
+                'product_id',
             ]),
+        ]);
+    }
+
+    public function probableWins(Request $request)
+    {
+        $products = Product::active()->orderBy('title')->get();
+
+        $product_prizes = [];
+        if ($request->product_id) {
+            $product = Product::find($request->product_id);
+            if ($product->prize_type == 'bet') {
+                foreach ($product->prizes as $prize) {
+                    $product_prizes[] = [
+                        'id' => $prize->id,
+                        'name' => $prize->name,
+                        'chance_number' => $prize->chance_number
+                    ];
+                }
+            }
+        }
+
+        $product = Product::find($request->product_id);
+
+        // return $product;
+
+        return Inertia::render('Orders/ProbableWins', [
+            'products' => $products,
+            'filters' => request()->only([
+                'product_id'
+            ]),
+            'product_prizes' => $product_prizes,
+            'product' => $product,
         ]);
     }
 }
