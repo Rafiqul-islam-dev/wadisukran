@@ -3,34 +3,31 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
-use App\Models\Role;
+use App\Services\UserService;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    protected $userService;
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     public function index()
     {
-        $users = User::with('role')->get()->map(function ($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'status' => $user->status,
-                'photo' => $user->photo_url,
-                'role' => $user->role ? [
-                    'id' => $user->role->id,
-                    'name' => $user->role->name,
-                ] : null,
-                'created_at' => $user->created_at,
-            ];
-        });
+        $users = User::where('user_type', 'admin')->with('roles:id,name')->latest()->get();
 
-        $roles = Role::all(['id', 'name', 'description', 'permissions']);
+        $roles = Role::orderBy('name')
+            ->whereNotIn('name', ['agent', 'Super Admin'])
+            ->with(['permissions'])
+            ->get();
+
 
         return Inertia::render('User/Index', [
             'users' => $users,
@@ -38,25 +35,10 @@ class UserController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'role_id' => 'required|exists:roles,id',
-            'password' => 'required|string|min:8|confirmed',
-            'status' => 'required|in:active,inactive',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')->store('users', 'public');
-        }
-
-        User::create($validated);
-
+        $validated = $request->validated();
+        $this->userService->createUser($validated);
         return redirect()->back()->with('success', 'User created successfully!');
     }
 
@@ -65,52 +47,64 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
             'address' => 'nullable|string',
-            'role_id' => 'required|exists:roles,id',
+            'role' => 'required|string|exists:roles,name',
             'password' => 'nullable|string|min:8|confirmed',
-            'status' => 'required|in:active,inactive',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048'
         ]);
 
-        // Only update password if provided
-        if (empty($validated['password'])) {
-            unset($validated['password']);
-        }
-
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            if ($user->photo) {
-                Storage::disk('public')->delete($user->photo);
-            }
-            $validated['photo'] = $request->file('photo')->store('users', 'public');
-        }
-
-        $user->update($validated);
+        $this->userService->updateUser($user, $validated);
 
         return redirect()->back()->with('success', 'User updated successfully!');
     }
 
-    public function updateStatus(Request $request, User $user)
+    public function updateStatus(User $user)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:active,inactive'
-        ]);
-
-        $user->update($validated);
+        $this->userService->statusChange($user);
 
         return redirect()->back()->with('success', 'User status updated successfully!');
     }
 
-    public function destroy(User $user)
+    public function delete(User $user)
     {
-        // Delete photo if exists
-        if ($user->photo) {
-            Storage::disk('public')->delete($user->photo);
+        $this->userService->delete($user);
+
+        return back()->with('User deleted successfully');
+    }
+
+    public function trashed_users()
+    {
+        $users = User::onlyTrashed()->where('user_type', 'admin')->with('roles:id,name')->latest('deleted_at')->get();
+        return Inertia::render('User/Trashed', [
+            'users' => $users
+        ]);
+    }
+    public function restore_user($user)
+    {
+        try {
+            $user = User::onlyTrashed()->findOrFail($user);
+            $user->restore();
+
+            return back()->with('success', 'User restored successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
         }
+    }
 
-        $user->delete();
+    public function permanent_delete_user($user){
+        try {
+            $user = User::onlyTrashed()->findOrFail($user);
+            if($user->photo){
+                if(file_exists(public_path($user->photo))){
+                    unlink(public_path($user->photo));
+                }
+            }
+            $user->forceDelete();
 
-        return redirect()->back()->with('success', 'User deleted successfully!');
+            return back()->with('success', 'User deleted successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 }

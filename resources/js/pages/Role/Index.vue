@@ -1,115 +1,115 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-vue-next';
+import { Permission } from '@/types/permission';
+import { toast } from 'vue-sonner';
+import { can } from '@/helpers/permissions';
 
-const { roles } = defineProps<{
-    roles: Array<any>;
+const props = defineProps<{
+    permissions: Permission[]
+    roles: []
 }>();
 
 const showModal = ref(false);
+const showDeleteModal = ref(false);
 const isEditing = ref(false);
-const modalVisible = ref(false);
-const form = ref({
-    id: null,
+const editingRole = ref(null);
+const deletingRole = ref(null);
+const form = useForm({
     name: '',
-    description: '',
-    permissions: [],
+    permissions: []
 });
 
-const availablePermissions = [
-    'create_users',
-    'edit_users',
-    'delete_users',
-    'view_users',
-    'create_agents',
-    'edit_agents',
-    'delete_agents',
-    'view_agents',
-    'manage_roles',
-    'view_reports',
-    'system_settings',
-    'daily_reports',
-    'daily_summary',
-    'cancle_orders',
-    'check_winners',
-];
-
-async function openModal(role) {
-    if (role) {
-        isEditing.value = true;
-        form.value = {
-            ...role,
-            permissions: role.permissions || []
-        };
-    } else {
-        isEditing.value = false;
-        form.value = {
-            id: null,
-            name: '',
-            description: '',
-            permissions: [],
-        };
-    }
+function openModal() {
     showModal.value = true;
-    await nextTick();
-    modalVisible.value = true;
 }
 
-async function closeModal() {
-    modalVisible.value = false;
-    await new Promise(resolve => setTimeout(resolve, 300));
+const editModal = (role) => {
+    editingRole.value = role;
+    form.name = role.name;
+    form.permissions = role.permissions.map(p => p.name);
+    isEditing.value = true;
+    showModal.value = true;
+}
+
+function closeModal() {
+    editingRole.value = null;
+    form.name = '';
+    form.permissions = [];
+    isEditing.value = false;
     showModal.value = false;
 }
 
-function togglePermission(permission) {
-    const index = form.value.permissions.indexOf(permission);
-    if (index > -1) {
-        form.value.permissions.splice(index, 1);
+const togglePermission = (permission) => {
+    if (form.permissions.includes(permission.name)) {
+        form.permissions = form.permissions.filter(p => p !== permission.name);
     } else {
-        form.value.permissions.push(permission);
+        form.permissions.push(permission.name);
     }
+};
+
+function openDeleteModal(role) {
+    deletingRole.value = role;
+    showDeleteModal.value = true;
 }
 
-function submitForm() {
-    const formData = {
-        name: form.value.name,
-        description: form.value.description,
-        permissions: form.value.permissions,
-    };
-
-    if (isEditing.value) {
-        router.put(`/roles/${form.value.id}`, formData, {
+const confirmDelete = () => {
+    if (deletingRole.value) {
+        router.delete(route('roles.delete', deletingRole.value.id), {
             onSuccess: () => {
-                closeModal();
-            },
-        });
-    } else {
-        router.post('/roles', formData, {
-            onSuccess: () => {
-                closeModal();
+                showDeleteModal.value = false;
+                deletingRole.value = null;
+                toast.success('Role deleted successfully.')
+                // router.reload({ only: ['permissions'] });
             },
         });
     }
 }
 
-function deleteRole(id) {
-    if (confirm('Are you sure you want to delete this role?')) {
-        router.delete(`/roles/${id}`);
+function handleSubmit() {
+    if (isEditing && editingRole.value) {
+        form.post(route('roles.update', editingRole.value.id), {
+            forceFormData: true,
+            onSuccess: () => {
+                form.reset()
+                editingRole.value = null;
+                closeModal();
+                toast.success('Role updated successfully.')
+                router.reload({ only: ['roles'] });
+            },
+        })
+    }
+    else {
+        form.post(route('roles.store'), {
+            forceFormData: true,
+            onSuccess: () => {
+                form.reset()
+                toast.success('Role created successfully.')
+                router.reload({ only: ['roles'] });
+                closeModal();
+            },
+        })
     }
 }
 </script>
 
 <template>
+    <Head title="Roles" />
     <AppLayout>
-        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">Roles & Permissions</h1>
-                    <p class="text-gray-600">Manage user roles and their permissions</p>
+                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Roles</h1>
                 </div>
-                <button @click="openModal(null)"
+                <button v-if="can('role create')" @click="openModal()"
                     class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl shadow-lg hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -121,13 +121,12 @@ function deleteRole(id) {
 
             <!-- Roles Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div v-for="role in roles" :key="role.id"
+                <div v-for="role in props.roles" :key="role.id"
                     class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center">
-                                <div
-                                    class="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mr-4">
+                                <div class="w-12 h-12 bg-gray-400 rounded-xl flex items-center justify-center mr-4">
                                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -142,14 +141,12 @@ function deleteRole(id) {
                             </div>
                         </div>
 
-                        <p class="text-gray-600 text-sm mb-4">{{ role.description }}</p>
-
                         <div class="mb-4">
                             <h4 class="font-medium text-gray-700 mb-2">Permissions:</h4>
                             <div class="flex flex-wrap gap-1">
                                 <span v-for="permission in (role.permissions || []).slice(0, 3)" :key="permission"
-                                    class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                    {{ permission.replace('_', ' ') }}
+                                    class="px-2 py-1 bg-gray-100 text-black rounded-full text-xs font-medium">
+                                    {{ permission.name }}
                                 </span>
                                 <span v-if="(role.permissions || []).length > 3"
                                     class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
@@ -159,7 +156,7 @@ function deleteRole(id) {
                         </div>
 
                         <div class="flex justify-end space-x-3">
-                            <button @click="openModal(role)"
+                            <button v-if="can('role update')" @click="editModal(role)"
                                 class="text-blue-600 hover:text-blue-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-blue-50">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -169,7 +166,7 @@ function deleteRole(id) {
                                 </svg>
                                 Edit
                             </button>
-                            <button @click="deleteRole(role.id)"
+                            <button v-if="can('role delete')" @click="openDeleteModal(role)"
                                 class="text-red-600 hover:text-red-800 font-medium transition duration-200 px-3 py-1 rounded-lg hover:bg-red-50">
                                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -184,98 +181,81 @@ function deleteRole(id) {
                 </div>
             </div>
 
-            <!-- Enhanced Modal -->
-            <Teleport to="body">
-                <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
-                    <!-- Backdrop -->
-                    <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
-                        :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
 
-                    <!-- Modal Container -->
-                    <div class="flex items-center justify-center min-h-screen p-4">
-                        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-out"
-                            :class="modalVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'">
+            <!-- Modal -->
+            <Dialog v-model:open="showModal" @update:open="(open) => !open && closeModal()" class="">
+                <DialogContent class="max-w-[93%] max-h-[90vh] overflow-y-auto">
+                    <DialogHeader
+                        class="bg-gradient-to-r from-green-50 to-emerald-50 -m-6 mb-2 p-4 rounded-t-lg w-full">
+                        <DialogTitle class="text-2xl">
+                            {{ isEditing ? 'Edit Role' : 'Add New Role' }}
+                        </DialogTitle>
+                    </DialogHeader>
 
-                            <!-- Modal Header -->
-                            <div
-                                class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50 rounded-t-2xl">
-                                <div>
-                                    <h2 class="text-2xl font-bold text-gray-900">
-                                        {{ isEditing ? 'Edit Role' : 'Add New Role' }}
-                                    </h2>
-                                    <!-- <p class="text-gray-600 mt-1">{{ isEditing ? 'Update role information and
-                                        permissions' : 'Create a new role with permissions' }}</p> -->
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <Label for="name" class="text-sm font-semibold">Role Name</Label>
+                            <Input v-model="form.name" id="name"
+                                placeholder="Enter role name (e.g., Admin, Manager, User)" class="border-2" />
+                            <p v-if="form.errors.name" class="text-red-600 text-sm">
+                                {{ form.errors.name }}
+                            </p>
+                        </div>
+                        <div class="space-y-3">
+                            <Label class="text-sm font-semibold">Permissions</Label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div @click="togglePermission(permission)" v-for="permission in props.permissions"
+                                    :key="permission.id" :class="[
+                                        'flex items-center space-x-3 p-3 border-2 rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-50',
+                                        form.permissions.includes(permission.name)
+                                            ? 'border-green-500 bg-green-50'
+                                            : 'border-gray-200'
+                                    ]">
+                                    <input type="checkbox"
+                                        class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                        :value="permission.name" v-model="form.permissions" />
+                                    <span class="text-sm font-medium text-gray-900">
+                                        {{ permission.name }}
+                                    </span>
                                 </div>
-                                <button @click="closeModal"
-                                    class="text-gray-400 hover:text-gray-600 transition duration-200 p-2 hover:bg-white hover:rounded-full">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
                             </div>
-
-                            <!-- Modal Body -->
-                            <form @submit.prevent="submitForm" class="p-6">
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Role Name</label>
-                                        <input v-model="form.name" type="text"
-                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 hover:border-gray-300"
-                                            placeholder="Enter role name (e.g., Admin, Manager, User)" required />
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                                        <textarea v-model="form.description" rows="3"
-                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 hover:border-gray-300 resize-none"
-                                            placeholder="Describe what this role can do" required></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label
-                                            class="block text-sm font-semibold text-gray-700 mb-3">Permissions</label>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div v-for="permission in availablePermissions" :key="permission"
-                                                class="flex items-center p-3 border-2 rounded-xl transition-all duration-200 cursor-pointer hover:bg-gray-50"
-                                                :class="form.permissions.includes(permission) ? 'border-green-500 bg-green-50' : 'border-gray-200'"
-                                                @click="togglePermission(permission)">
-                                                <input type="checkbox" :checked="form.permissions.includes(permission)"
-                                                    class="w-4 h-4 text-green-600 rounded focus:ring-green-500 mr-3"
-                                                    @change="togglePermission(permission)" />
-                                                <div>
-                                                    <span class="text-sm font-medium text-gray-900">
-                                                        {{permission.replace(/_/g, ' ').replace(/\b\w/g, l =>
-                                                        l.toUpperCase()) }}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Modal Footer -->
-                                <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-                                    <button type="button" @click="closeModal"
-                                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
-                                        Cancel
-                                    </button>
-                                    <button type="submit"
-                                        class="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 font-semibold shadow-lg">
-                                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        {{ isEditing ? 'Update Role' : 'Create Role' }}
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     </div>
-                </div>
-            </Teleport>
+
+                    <DialogFooter class="border-t pt-6 mt-8">
+                        <Button type="button" variant="outline" @click="closeModal" class="px-6">
+                            Cancel
+                        </Button>
+                        <Button type="button" @click="handleSubmit"
+                            class="px-8 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                            <Check class="w-5 h-5 mr-2" />
+                            {{ isEditing ? 'Update Role' : 'Create Role' }}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <!-- Delete Confirmation Dialog -->
+            <Dialog v-model:open="showDeleteModal">
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Are you sure?</DialogTitle>
+                        <DialogDescription>
+                            This role
+                            <span v-if="deletingRole" class="font-semibold">"{{ deletingRole?.name }}"</span>
+                            will delete permanently.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" @click="showDeleteModal = false">
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" @click="confirmDelete">
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     </AppLayout>
 </template>

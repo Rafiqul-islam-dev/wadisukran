@@ -14,17 +14,18 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->foreignId('category_id')->constrained()->restrictOnDelete();
             $table->decimal('price', 10, 2);
-            $table->date('draw_date');
-            $table->time('draw_time');
+            $table->enum('draw_type', ['once', 'daily', 'hourly']);
+            $table->date('draw_date')->nullable();
+            $table->time('draw_time')->nullable();
             $table->string('image')->nullable();
-            $table->string('type')->default('product');
             $table->integer('pick_number');
-            $table->string('showing_type'); // 'prizes' or 'number'
+            $table->enum('prize_type',['bet', 'number']);
             $table->integer('type_number');
-            $table->json('prizes'); // Store prizes as JSON
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

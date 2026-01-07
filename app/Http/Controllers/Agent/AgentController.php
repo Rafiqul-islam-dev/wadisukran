@@ -3,105 +3,139 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AgentRequest;
 use App\Models\Agent;
+use App\Models\User;
+use App\Services\AgentService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AgentController extends Controller
 {
+    protected $agentService;
+    function __construct(AgentService $agentService)
+    {
+        $this->agentService = $agentService;
+    }
     public function index()
     {
-        $agents = Agent::all()->map(function ($agent) {
-            return [
-                'id' => $agent->id,
-                'name' => $agent->name,
-                'join_date' => $agent->join_date instanceof Carbon
-                    ? $agent->join_date->format('Y-m-d')
-                    : Carbon::parse($agent->join_date)->format('Y-m-d'),
-                'address' => $agent->address,
-                'trn' => $agent->trn,
-                'username' => $agent->username,
-                'email' => $agent->email,
-                'photo' => $agent->photo ? Storage::url($agent->photo) : null,
-            ];
-        });
+        $users = User::where('user_type', 'agent')->whereHas('agent')->with('agent:user_id,username,trn,commission')->latest()->get();
 
         return Inertia::render('Agent/Index', [
-            'agents' => $agents,
+            'users' => $users,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(AgentRequest $request)
+    {
+        $validated = $request->validated();
+
+        $name = $validated['name'];
+        $firstWord = strtolower(strtok($name, ' '));
+        do {
+            $randomNumber = rand(100, 999);
+            $username = $firstWord . '-' . $randomNumber;
+        } while (Agent::where('username', $username)->exists());
+
+        $validated['username'] = $username;
+        $validated['password'] = $username;
+
+        $this->agentService->createAgent($validated);
+
+        return back()->with('success', 'Agent created successfully.');
+    }
+
+    public function update(Request $request, User $user)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'address' => 'required|string|max:255',
-            'trn' => 'required|string|max:100|unique:agents,trn',
-            'username' => 'required|string|max:100|unique:agents,username',
-            'email' => 'required|email|max:255|unique:agents,email',
-            'photo' => 'nullable|image|max:2048',
+            'commission' => 'required|numeric|min:0|max:100',
+            'trn' => 'required|string|unique:agents,trn,' . $user->agent?->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
+            'address' => 'nullable|string',
+            'role' => 'required|string|exists:roles,name',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048'
         ]);
 
-        $agent = new Agent();
-        $agent->fill($validated);
+        $name = $validated['name'];
+        $firstWord = strtolower(strtok($name, ' '));
+        do {
+            $randomNumber = rand(100, 999);
+            $username = $firstWord . '-' . $randomNumber;
+        } while (Agent::where('username', $username)->exists());
 
-        if ($request->hasFile('photo')) {
-            $agent->photo = $request->file('photo')->store('photos', 'public');
+        $validated['username'] = $username;
+        $validated['password'] = $username;
+
+        $this->agentService->updateUser($user, $validated);
+
+        return back()->with('success', 'Agent updated successfully.');
+    }
+
+    public function delete(User $user)
+    {
+        $this->agentService->deleteAgent($user);
+
+        return back()->with('Agent deleted successfully');
+    }
+
+    public function trashed_agents()
+    {
+        $users = User::onlyTrashed()
+            ->where('user_type', 'agent')
+            ->whereHas('agent', function ($q) {
+                $q->withTrashed();
+            })
+            ->with([
+                'agent' => function ($q) {
+                    $q->withTrashed()->select('user_id', 'username', 'trn', 'deleted_at');
+                }
+            ])
+            ->latest('deleted_at')
+            ->get();
+
+        return Inertia::render('Agent/Trashed', [
+            'users' => $users,
+        ]);
+    }
+
+    public function restore_agent($user)
+    {
+        try {
+            DB::transaction(function () use ($user) {
+                $user = User::onlyTrashed()->findOrFail($user);
+                $user->restore();
+
+                Agent::withTrashed()
+                    ->where('user_id', $user->id)
+                    ->restore();
+            });
+
+            return back()->with('success', 'Agent restored successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-        $agent->save();
-
-        return redirect()->route('agents.index')->with('success', 'Agent created successfully.');
     }
 
-    public function show(Agent $agent)
+    public function permanent_delete_agent($user)
     {
-        return response()->json([
-            'id' => $agent->id,
-            'name' => $agent->name,
-            'join_date' => $agent->join_date->format('Y-m-d'),
-            'address' => $agent->address,
-            'trn' => $agent->trn,
-            'username' => $agent->username,
-            'email' => $agent->email,
-            'photo' => $agent->photo ? Storage::url($agent->photo) : null,
-        ]);
-    }
-
-    public function update(Request $request, Agent $agent)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'join_date' => 'required|date',
-            'address' => 'required|string|max:255',
-            'trn' => 'required|string|max:100|unique:agents,trn,' . $agent->id,
-            'username' => 'required|string|max:100|unique:agents,username,' . $agent->id,
-            'email' => 'required|email|max:255|unique:agents,email,' . $agent->id,
-            'photo' => 'nullable|image|max:2048',
-        ]);
-
-        if ($request->hasFile('photo')) {
-            if ($agent->photo) {
-                Storage::disk('public')->delete($agent->photo);
+        try {
+            $user = User::onlyTrashed()->findOrFail($user);
+            if ($user->photo) {
+                if (file_exists(public_path($user->photo))) {
+                    unlink(public_path($user->photo));
+                }
             }
-            $validated['photo'] = $request->file('photo')->store('photos', 'public');
+            Agent::withTrashed()->where('user_id', $user->id)->forceDelete();
+            $user->forceDelete();
+
+            return back()->with('success', 'User deleted successfully.');
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-        $agent->update($validated);
-
-        return redirect()->route('agents.index')->with('success', 'Agent updated successfully.');
-    }
-
-    public function destroy(Agent $agent)
-    {
-        if ($agent->photo) {
-            Storage::disk('public')->delete($agent->photo);
-        }
-        $agent->delete();
-
-        return redirect()->route('agents.index')->with('success', 'Agent deleted successfully.');
     }
 }

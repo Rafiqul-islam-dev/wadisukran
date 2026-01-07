@@ -13,15 +13,12 @@ return new class extends Migration
     {
         Schema::create('agents', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->date('join_date');
-            $table->string('address');
-            $table->string('trn')->nullable();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('username')->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('photo')->nullable();
+            $table->string('trn')->nullable();
+            $table->decimal('commission', 5, 2)->default(0);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

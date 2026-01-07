@@ -149,7 +149,7 @@ function deleteCompany(id) {
 
 <template>
     <AppLayout>
-        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
@@ -354,7 +354,7 @@ function deleteCompany(id) {
                                     <h2 class="text-2xl font-bold text-gray-900">
                                         {{ isEditing ? 'Edit Company Settings' : 'Add Company Settings' }}
                                     </h2>
-                                   
+
                                 </div>
                                 <button @click="closeModal"
                                     class="text-gray-400 hover:text-gray-600 transition duration-200 p-2 hover:bg-white hover:rounded-full">

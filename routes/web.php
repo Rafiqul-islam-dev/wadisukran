@@ -6,50 +6,86 @@ use App\Http\Controllers\Agent\AgentController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
+use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Product\DrawController;
+use App\Http\Controllers\Role\PermissionController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-
-
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
-
-Route::get('/agents', [AgentController::class, 'index'])->name('agents.index');
-Route::post('/agents', [AgentController::class, 'store'])->name('agents.store');
-Route::get('/agents/{agent}', [AgentController::class, 'show'])->name('agents.show');
-Route::put('/agents/{agent}', [AgentController::class, 'update'])->name('agents.update');
-Route::delete('/agents/{agent}', [AgentController::class, 'destroy'])->name('agents.destroy');
-
-
-Route::middleware(['auth', 'verified'])->group(function () {
-
+Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
+    Route::get('dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->middleware('can:show dashboard')->name('dashboard');
     // Role Management Routes
-    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    Route::prefix('roles')->name('roles.')->middleware('can:show roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index'])->name('index');
+        Route::post('/store', [RoleController::class, 'store'])->middleware('can:role create')->name('store');
+        Route::post('/update/{role}', [RoleController::class, 'update'])->middleware('can:role update')->name('update');
+        Route::delete('/delete/{role}', [RoleController::class, 'delete'])->middleware('can:role update')->name('delete');
+    });
+
+    // Permissions
+    Route::prefix('permissions')->name('permissions.')->middleware('can:show permissions')->group(function () {
+        Route::get('/', [PermissionController::class, 'index'])->name('index');
+        Route::post('/store', [PermissionController::class, 'store'])->middleware('can:permission create')->name('store');
+        Route::post('/update/{permission}', [PermissionController::class, 'update'])->middleware('can:permission update')->name('update');
+        Route::delete('/delete/{permission}', [PermissionController::class, 'delete'])->middleware('can:permission delete')->name('delete');
+    });
 
     // User Management Routes
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::post('/users', [UserController::class, 'store'])->name('users.store');
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::patch('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.update-status');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->middleware('can:show users')->name('index');
+        Route::post('/store', [UserController::class, 'store'])->middleware('can:user create')->name('store');
+        Route::post('/update/{user}', [UserController::class, 'update'])->middleware('can:user update')->name('update');
+        Route::get('/status-change/{user}', [UserController::class, 'updateStatus'])->middleware('can:user status change')->name('status-change');
+        Route::delete('/delete/{user}', [UserController::class, 'delete'])->middleware('can:user delete')->name('delete');
+        Route::get('/trashed', [UserController::class, 'trashed_users'])->middleware('can:show trashed users')->name('trashed');
+        Route::get('/restore/{user}', [UserController::class, 'restore_user'])->middleware('can:user restore')->name('restore');
+        Route::delete('/permanent-delete/{user}', [UserController::class, 'permanent_delete_user'])->middleware('can:user permanent delete')->name('permanent-delete');
+    });
+    // Agent Management Routes
+    Route::prefix('agents')->name('agents.')->middleware('can:show agent list')->group(function () {
+        Route::get('/', [AgentController::class, 'index'])->name('index');
+        Route::post('/store', [AgentController::class, 'store'])->middleware('can:agent create')->name('store');
+        Route::post('/update/{user}', [AgentController::class, 'update'])->middleware('can:agent update')->name('update');
+        Route::delete('/delete/{user}', [AgentController::class, 'delete'])->middleware('can:agent delete')->name('delete');
+        Route::get('/trashed', [AgentController::class, 'trashed_agents'])->middleware('can:show trashed agents')->name('trashed');
+        Route::get('/restore/{user}', [AgentController::class, 'restore_agent'])->middleware('can:agent restore')->name('restore');
+        Route::delete('/permanent-delete/{user}', [AgentController::class, 'permanent_delete_agent'])->middleware('can:agent permanent delete')->name('permanent-delete');
+    });
 
+
+    Route::middleware('can:show categories')->resource('categories', CategoryController::class);
+    Route::get('categories/status-change/{category}', [CategoryController::class, 'status_change'])->name('categories.status-change');
     Route::resource('banners', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
-    Route::resource('products', ProductController::class);
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+    // Product Routes
+    Route::resource('products', ProductController::class)
+        ->except(['update']);
+    Route::post('products/update/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::put('products/status-change/{product}', [ProductController::class, 'status_change'])->name('products.status-change');
+
+    Route::get('trashed-products', [ProductController::class, 'trashed_products'])->name('products.trashed');
+    Route::get('products-permanent-delete/{product}', [ProductController::class, 'permanent_delete'])->name('products.permanent-delete');
+    Route::get('products-restore/{product}', [ProductController::class, 'restore_product'])->name('products.restore');
+
+    Route::prefix('draws')->name('draws.')->middleware('can:show draws')->group(function () {
+        Route::get('/', [DrawController::class, 'index'])->name('index');
+        Route::get('/{draw}', [OrderController::class, 'drawDetails'])->name('details');
+    });
+
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+    });
 
     // Additional banner routes
     Route::prefix('banners')->name('banners.')->group(function () {
@@ -69,8 +105,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('search', [AppBannerController::class, 'search'])
             ->name('search');
     });
-
-
-
-
 });

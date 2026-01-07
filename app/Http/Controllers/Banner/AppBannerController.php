@@ -18,6 +18,8 @@ class AppBannerController extends Controller
      */
     public function index()
     {
+        // dd('ok');
+
         $banners = Banner::orderBy('created_at', 'desc')->get()->map(function ($banner) {
             return [
                 'id' => $banner->id,
@@ -29,7 +31,6 @@ class AppBannerController extends Controller
             ];
         });
 
-        // dd($banners);
 
         return Inertia::render('Banner/Index', [
             'banners' => $banners,
@@ -77,7 +78,7 @@ class AppBannerController extends Controller
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
-                $imagePath = $image->storeAs('banners', $imageName, 'public');
+                $imagePath = $image->storeAs('uploads/banners', $imageName);
                 $banner->image_url = $imagePath;
             }
 

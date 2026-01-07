@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->enum('user_type', ['admin', 'agent'])->default('admin');
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
@@ -21,9 +22,11 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('photo')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->foreignId('role_id')->nullable()->constrained('roles')->onDelete('set null');
+            $table->integer('role_id')->nullable();
             $table->rememberToken();
+            $table->timestamp('join_date');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+
 use Illuminate\Foundation\Http\FormRequest;
 
 class ProductRequest extends FormRequest
@@ -13,36 +14,39 @@ class ProductRequest extends FormRequest
 
     public function rules()
     {
-        $rules = [
-            'title' => 'required|string|max:255',
+        return [
+            'title' => 'required|string|max:255|unique:products,title',
+            'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
-            'draw_date' => 'required|date|after_or_equal:today',
-            'draw_time' => 'required|date_format:H:i',
+            'draw_type' => 'required|in:once,regular',
+            'regular_type' => 'nullable|in:hourly,daily|required_if:draw_type,regular',
+            'draw_date' => 'nullable|date',
+            'draw_time' => 'nullable|date_format:H:i',
             'pick_number' => 'required|integer|min:1|max:10',
-            'showing_type' => 'required|in:prizes,number',
-            'type_number' => 'required|integer|min:1',
-            'prizes' => 'required|array|min:1',
-            'prizes.*' => 'required|string',
-            'is_active' => 'boolean'
+            'type_number' => 'required|integer|min:1|max:100',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+            'prize_type' => 'required|in:bet,number',
+            'bet_prizes' => 'nullable|array',
+            'number_prizes' => 'nullable|array'
         ];
-
-        // Image validation - required for create, optional for update
-        if ($this->isMethod('post')) {
-            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif|max:10240';
-        } else {
-            $rules['image'] = 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240';
-        }
-
-        return $rules;
     }
 
     public function messages()
     {
         return [
             'title.required' => 'Product title is required.',
+            'title.unique' => 'Product title is already exists',
+            'title.string' => 'Product title must be text.',
+            'title.max' => 'Product title cannot be greater than 255 character.',
+            'category_id.required' => 'Category is required.',
+            'category_id.exists' => 'Invalid category.',
             'price.required' => 'Product price is required.',
             'price.numeric' => 'Price must be a valid number.',
             'price.min' => 'Price cannot be negative.',
+            'draw_type.required' => 'Draw Type is required.',
+            'draw_type.in' => 'Draw Type must be in once or regular.',
+            'regular_type.in' => 'Regular type must be in hourly or daily',
+            'required_if.required_if' => 'Regular type is required.',
             'draw_date.required' => 'Draw date is required.',
             'draw_date.after_or_equal' => 'Draw date cannot be in the past.',
             'draw_time.required' => 'Draw time is required.',
@@ -57,29 +61,29 @@ class ProductRequest extends FormRequest
             'pick_number.max' => 'Pick number cannot exceed 10.',
             'showing_type.required' => 'Showing type is required.',
             'showing_type.in' => 'Showing type must be either prizes or number.',
-            'type_number.required' => 'Type number is required.',
-            'type_number.integer' => 'Type number must be an integer.',
-            'type_number.min' => 'Type number must be at least 1.',
-            'prizes.required' => 'At least one prize must be configured.',
-            'prizes.array' => 'Prizes must be an array.',
-            'prizes.min' => 'At least one prize must be configured.',
+            'type_number.required' => 'Max Type number is required.',
+            'type_number.integer' => 'Max Type number must be an integer.',
+            'type_number.min' => 'Max Type number must be at least 1.',
+            'type_number.max' => 'Max Type number must be greater than 100.',
+            'bet_prizes.required' => 'prize must be configured.',
+            'bet_prizes.array' => 'Prizes must be an array.',
+            'number_prizes.required' => 'prize must be configured.',
+            'number_prizes.array' => 'Prizes must be an array.',
         ];
     }
-
-    protected function prepareForValidation()
+    public function withValidator($validator)
     {
-        // Parse JSON prizes if it's a string
-        if ($this->has('prizes') && is_string($this->prizes)) {
-            $this->merge([
-                'prizes' => json_decode($this->prizes, true) ?: []
-            ]);
-        }
+        $validator->sometimes(['draw_date', 'draw_time'], 'required', function ($input) {
+            return $input->draw_type === 'once' || $input->regular_type === 'daily';
+        });
 
-        // Convert is_active to boolean
-        if ($this->has('is_active')) {
-            $this->merge([
-                'is_active' => filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN)
-            ]);
-        }
+        $validator->sometimes('bet_prizes', 'required|array', function ($input) {
+            return $input->prize_type === 'bet';
+        });
+
+        $validator->sometimes('number_prizes', 'required|array', function ($input) {
+            return $input->prize_type === 'number';
+        });
     }
+
 }

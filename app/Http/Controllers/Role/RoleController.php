@@ -3,19 +3,36 @@
 namespace App\Http\Controllers\Role;
 
 use App\Http\Controllers\Controller;
+use App\Services\PermissionService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Role;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    protected $permissionService;
+
+    public function __construct(PermissionService $permissionService)
+    {
+        $this->permissionService = $permissionService;
+    }
     public function index()
     {
-        $roles = Role::withCount('users')->get();
+        $roles = Role::withCount(['users', 'permissions'])
+            ->with('permissions')
+            ->orderBy('name')
+            ->get();
+
+
+        $permissions = Permission::withCount('roles')
+            ->orderByDesc('updated_at')
+            ->get();
 
         return Inertia::render('Role/Index', [
-            'roles' => $roles
+            'roles' => $roles,
+            'permissions' => $permissions
         ]);
     }
 
@@ -23,11 +40,11 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles',
-            'description' => 'required|string',
-            'permissions' => 'array'
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name'
         ]);
 
-        Role::create($validated);
+        $this->permissionService->createRole($validated);
 
         return redirect()->back()->with('success', 'Role created successfully!');
     }
@@ -36,22 +53,18 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
-            'description' => 'required|string',
-            'permissions' => 'array'
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name'
         ]);
 
-        $role->update($validated);
+        $this->permissionService->updateRole($role->id, $validated);
 
         return redirect()->back()->with('success', 'Role updated successfully!');
     }
 
-    public function destroy(Role $role)
+    public function delete(Role $role)
     {
-        if ($role->users()->count() > 0) {
-            return redirect()->back()->with('error', 'Cannot delete role that has assigned users!');
-        }
-
-        $role->delete();
+        $this->permissionService->deleteRole($role->id);
 
         return redirect()->back()->with('success', 'Role deleted successfully!');
     }
