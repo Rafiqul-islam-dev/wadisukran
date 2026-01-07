@@ -111,16 +111,50 @@ class OrderController extends Controller
         }
 
         $product = Product::find($request->product_id);
+        $match_type = ProductPrize::find($request->match_type);
+        // return $request->pick_number;
+        $numbers = $request->pick_number ? collect($request->pick_number)->sort()->values() : '';
 
-        // return $product;
+        // return $pickJson;
+
+        $orders = Order::where('product_id', $request->product_id)
+            ->when($match_type, function ($query, $matchType) use ($numbers) {
+
+                $query->whereHas('tickets', function ($q) use ($matchType, $numbers) {
+                    $q->whereJsonContains(
+                        'selected_play_types',
+                        $matchType->name
+                    );
+                    $q->whereRaw(
+                        'JSON_LENGTH(selected_numbers) = ?',
+                        [count($numbers)]
+                    )->whereJsonContains('selected_numbers', $numbers);
+                    if ($matchType->name === 'Rumble') {
+                        $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [count($numbers)])
+                            ->whereJsonContains('selected_numbers', $numbers);
+                    }
+                    if ($matchType->name === 'Chance') {
+                        $q->where(function ($sub) use ($numbers) {
+                            foreach ($numbers as $n) {
+                                $sub->orWhereJsonContains('selected_numbers', $n);
+                            }
+                        });
+                    }
+                });
+            })
+            ->get();
+
 
         return Inertia::render('Orders/ProbableWins', [
             'products' => $products,
             'filters' => request()->only([
-                'product_id'
+                'product_id',
+                'match_type',
+                'pick_number'
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,
+            'orders' => $orders
         ]);
     }
 }

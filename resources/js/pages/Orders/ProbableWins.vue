@@ -15,7 +15,8 @@ const { orders, users, company, filters, categories, products, product_prizes, p
     product: Array<any>;
 }>();
 
-console.log(product);
+console.log(orders);
+console.log(filters);
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -31,7 +32,7 @@ const filter = ref({
 
 const modalVisible = ref(false);
 
-console.log(filter.value.pick_number);
+// console.log(filter.value.pick_number);
 
 
 const selectedOrder = ref<any | null>(null);
@@ -147,7 +148,7 @@ const handleSearch = () => {
                         class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
                         Reset Filters
                     </button>
-                    <button
+                    <button @click="handleSearch"
                         class="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold ml-2">
                         Search
                     </button>

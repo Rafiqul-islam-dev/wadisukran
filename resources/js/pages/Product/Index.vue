@@ -51,9 +51,9 @@ const editProduct = (product) => {
     form.prize_type = product.prize_type;
     form.type_number = product.type_number;
     form.bet_prizes = product.prize_type === 'bet' ? product.prizes : [
-        { type: 'bet', name: 'straight', prize: 0, chance_number: null },
-        { type: 'bet', name: 'rumble', prize: 0, chance_number: null },
-        { type: 'bet', name: 'chance', prize: 0, chance_number: 1 }
+        { type: 'bet', name: 'Straight', prize: 0, chance_number: null },
+        { type: 'bet', name: 'Rumble', prize: 0, chance_number: null },
+        { type: 'bet', name: 'Chance', prize: 0, chance_number: 1 }
     ];
     form.number_prizes = product.prize_type === 'number' ? product.prizes : [];
     showModal.value = true;

@@ -63,7 +63,7 @@ function formatDate(dateString: string | null) {
 
 
 function openModal(order: any) {
-    console.log(order)
+    // console.log(order)
     selectedOrder.value = order;
     showModal.value = true;
     document.body.style.overflow = 'hidden';
