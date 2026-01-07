@@ -27,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
                     return Auth::user()->getAllPermissions()->pluck('name');
                 }
             },
+            'company_setting' => function () {
+                return company_setting();
+            },
         ]);
     }
 }

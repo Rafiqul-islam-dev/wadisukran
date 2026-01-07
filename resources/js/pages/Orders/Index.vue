@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 
 
-const { orders, users, company, filters } = defineProps<{
+const { orders, users, company, filters, categories, products, product_prizes } = defineProps<{
     orders: Array<any>;
     users: Array<any>;
     company: Record<string, any>;
     categories: Array<any>;
+    products: Array<any>;
     filters: Record<string, any>;
+    product_prizes: Array<any>;
 }>();
 
 const filter = ref({
@@ -19,6 +21,8 @@ const filter = ref({
     date_to: filters?.date_to ?? '',
     time_to: filters?.time_to ?? '',
     match_type: filters?.match_type ?? '',
+    category_id: filters?.category_id ?? '',
+    product_id: filters?.product_id ?? '',
 });
 
 const modalVisible = ref(false);
@@ -36,15 +40,30 @@ function resetFilters() {
         time_from: '',
         date_to: '',
         time_to: '',
-        match_type: ''
+        match_type: '',
+        category_id: '',
+        product_id: '',
     };
+    handleSearch();
 }
 
 function formatDate(dateString: string | null) {
-    return dateString ? new Date(dateString).toLocaleDateString() : '-';
+    if (!dateString) return '-';
+
+    return new Date(dateString).toLocaleString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+    });
 }
 
+
 function openModal(order: any) {
+    console.log(order)
     selectedOrder.value = order;
     showModal.value = true;
     document.body.style.overflow = 'hidden';
@@ -64,6 +83,7 @@ const handleSearch = () => {
         {
             preserveScroll: true,
             replace: true,
+            showProgress: false
         }
     );
 };
@@ -75,10 +95,10 @@ const handleSearch = () => {
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Filters -->
             <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-9 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                        <select v-model="filter.user_id" v-on:change="handleSearch"
+                        <select v-model="filter.category_id" v-on:change="handleSearch"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All Category</option>
                             <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -87,24 +107,28 @@ const handleSearch = () => {
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Product</label>
+                        <select v-model="filter.product_id" v-on:change="handleSearch"
+                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                            <option value="">All Products</option>
+                            <option v-for="product in products" :key="product.id" :value="product.id">
+                                {{ product.title }}
+                            </option>
+                        </select>
+                    </div>
+                    <div v-if="product_prizes.length">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Match Type</label>
-                        <select v-model="filter.match_type" v-on:change="handleSearch"
+                        <select v-model="filter.match_type"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All</option>
-                            <option value="once">
-                                once
-                            </option>
-                            <option value="daily">
-                                daily
-                            </option>
-                            <option value="hourly">
-                                hourly
+                            <option v-for="prize in product_prizes" :key="prize.id" :value="prize.id">
+                                {{ prize.name }} {{ prize.chance_number }}
                             </option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Select User</label>
-                        <select v-model="filter.user_id" v-on:change="handleSearch"
+                        <select v-model="filter.user_id"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All Users</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">
@@ -131,6 +155,9 @@ const handleSearch = () => {
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Time</label>
                         <input v-model="filter.time_to" type="time"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <button v-on:click="handleSearch" class="px-4 py-1 text-white rounded-lg bg-teal-500 text-xl">Search</button>
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end">
@@ -234,7 +261,7 @@ const handleSearch = () => {
                     <div class="flex items-center justify-center min-h-screen p-4">
                         <div
                             class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all">
-                            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+                            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 text-white">
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <h2 class="text-3xl font-bold">Order Invoice</h2>
@@ -257,7 +284,7 @@ const handleSearch = () => {
                                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 mb-8">
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 class="text-2xl font-bold text-gray-900">
-                                                {{ selectedOrder.product.title }}
+                                                {{ selectedOrder.product?.title }}
                                             </h3>
                                             <div class="flex items-center space-x-2">
                                                 <span
@@ -413,7 +440,7 @@ const handleSearch = () => {
                                                     alt="Placeholder Image" class="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div v-for="(card, index) in selectedOrder.game_cards" :key="index"
+                                        <div v-for="(card, index) in selectedOrder.tickets" :key="index"
                                             class="mb-6">
                                             <div class="bg-white rounded-xl p-6 shadow-md">
                                                 <h4 class="font-bold text-lg mb-4 text-center text-gray-800">
@@ -522,7 +549,7 @@ const handleSearch = () => {
                                                     {{ formatDate(selectedOrder.sales_date) }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">
-                                                    {{ getBigPrize(selectedOrder) }}
+                                                    <!-- {{ getBigPrize(selectedOrder) }} -->
                                                 </p>
                                             </div>
                                         </div>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import type { HTMLAttributes } from 'vue';
 
 defineOptions({
@@ -8,6 +9,8 @@ defineOptions({
 interface Props {
     className?: HTMLAttributes['class'];
 }
+const { company_setting } = usePage().props;
+
 
 defineProps<Props>();
 </script>

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Resources\ProductOrderResource;
+use App\Models\OrderTicket;
 
 class OrderController extends Controller
 {
@@ -56,19 +57,19 @@ class OrderController extends Controller
         // }
 
         // Verify selected_numbers count matches pick_number
-        foreach ($request->game_cards as $card) {
-            if (count($card['selected_numbers']) != $product->pick_number) {
-                return response()->json([
-                    'message' => 'Invalid number of selected numbers',
-                ], 422);
-            }
-            // Verify selected_play_types for prizes type
-            if ($product->showing_type == 'prizes' && empty($card['selected_play_types'])) {
-                return response()->json([
-                    'message' => 'At least one play type is required for prizes type',
-                ], 422);
-            }
-        }
+        // foreach ($request->game_cards as $card) {
+        //     if (count($card['selected_numbers']) != $product->pick_number) {
+        //         return response()->json([
+        //             'message' => 'Invalid number of selected numbers',
+        //         ], 422);
+        //     }
+        //     // Verify selected_play_types for prizes type
+        //     if ($product->showing_type == 'prizes' && empty($card['selected_play_types'])) {
+        //         return response()->json([
+        //             'message' => 'At least one play type is required for prizes type',
+        //         ], 422);
+        //     }
+        // }
 
         $invoiceNumber = now()->format('YmdH') . random_int(1000, 9999);
 
@@ -104,13 +105,20 @@ class OrderController extends Controller
         $order = Order::create([
             'user_id' => Auth::id(),
             'product_id' => $request->product_id,
-            'game_cards' => $request->game_cards,
             'quantity' => $request->quantity,
             'total_price' => $request->total_price,
             'invoice_no' => $invoiceNumber,
             'sales_date' => today()->toDateString(),
             'draw_number' => $drawNumber,
         ]);
+
+        foreach ($request->game_cards as $card) {
+            OrderTicket::create([
+                'order_id' => $order->id,
+                'selected_numbers' => $card['selected_numbers'],
+                'selected_play_types' => $card['selected_play_types']
+            ]);
+        }
 
         return response()->json([
             'message' => 'Order created successfully',
@@ -245,6 +253,4 @@ class OrderController extends Controller
             'data' => $order,
         ], 200);
     }
-
-
 }

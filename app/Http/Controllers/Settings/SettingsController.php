@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Models\CompannySetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -32,62 +33,38 @@ class SettingsController extends Controller
             'website' => 'nullable|url|max:255',
             'licence_no' => 'nullable|string|max:100',
             'bank_account' => 'nullable|string|max:100',
-            'details' => 'nullable|string',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->except('logo');
+        $company = CompannySetting::first();
+        if (!$company) {
+            $company = new CompannySetting();
+        }
+        $company->name = $request->name;
+        $company->address = $request->address;
+        $company->phone = $request->phone;
+        $company->whatsapp = $request->whatsapp;
+        $company->trn_no = $request->trn_no;
+        $company->currency = $request->currency;
+        $company->email = $request->email;
+        $company->website = $request->website;
+        $company->licence_no = $request->licence_no;
+        $company->bank_account = $request->bank_account;
 
         if ($request->hasFile('logo')) {
-            $data['logo'] = $request->file('logo')->store('logos', 'public');
+            if($company->logo && file_exists(public_path($company->logo))){
+                unlink(public_path($company->logo));
+            }
+            $file = $request->file('logo');
+            $file_name = 'company-logo'.time() . '.' . $file->extension();
+            $path = $file->storeAs('uploads/company', $file_name);
+            $company->logo = $path;
         }
 
-        CompannySetting::create($data);
+        $company->save();
+
+        Cache::forget('company_setting');
 
         return redirect()->back()->with('success', 'Company setting created successfully.');
-    }
-
-    public function update(Request $request, CompannySetting $companySetting)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|string|max:50',
-            'whatsapp' => 'nullable|string|max:50',
-            'trn_no' => 'nullable|string|max:100',
-            'currency' => 'nullable|string|max:10',
-            'email' => 'nullable|email|max:255',
-            'website' => 'nullable|url|max:255',
-            'licence_no' => 'nullable|string|max:100',
-            'bank_account' => 'nullable|string|max:100',
-            'details' => 'nullable|string',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $data = $request->except('logo');
-
-        if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($companySetting->logo) {
-                Storage::disk('public')->delete($companySetting->logo);
-            }
-            $data['logo'] = $request->file('logo')->store('logos', 'public');
-        }
-
-        $companySetting->update($data);
-
-        return redirect()->back()->with('success', 'Company setting updated successfully.');
-    }
-
-    public function destroy(CompannySetting $companySetting)
-    {
-        // Delete logo file if exists
-        if ($companySetting->logo) {
-            Storage::disk('public')->delete($companySetting->logo);
-        }
-
-        $companySetting->delete();
-
-        return redirect()->back()->with('success', 'Company setting deleted successfully.');
     }
 }
