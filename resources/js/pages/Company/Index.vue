@@ -30,6 +30,7 @@ const form = useForm({
     website: company_setting?.website ?? '',
     licence_no: company_setting?.licence_no ?? '',
     bank_account: company_setting?.bank_account ?? '',
+    vat: company_setting?.vat ?? '',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -114,10 +115,23 @@ const saveChanges = () => {
                                 <Input id="bank" v-model="form.bank_account" type="text" placeholder="Bank Name"
                                     class="max-w-4xl" />
                             </div>
+                            <div class="space-y-2">
+                                <Label for="vat">Vat (%)</Label>
+
+                                <select name="vat" id="vat" v-model="form.vat" class="w-full border rounded py-2 px-2">
+                                    <option value="">Select VAT</option>
+
+                                    <option v-for="i in 99" :key="i" :value="i">
+                                        {{ i }}%
+                                    </option>
+                                </select>
+                            </div>
+
 
                             <!-- Shop Logo -->
                             <div class="space-y-2">
-                                <img :src="company_setting?.logo_url" v-if="company_setting?.logo_url" alt="Logo" class="w-24 h-24 object-contain">
+                                <img :src="company_setting?.logo_url" v-if="company_setting?.logo_url" alt="Logo"
+                                    class="w-24 h-24 object-contain">
                                 <Label for="shopLogo">Logo</Label>
                                 <div class="flex items-center gap-4">
                                     <Input id="shopLogo" type="file" @change="handleLogoUpload" accept="image/*"

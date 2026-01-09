@@ -14,6 +14,8 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     product_prizes: Array<any>;
 }>();
 
+console.log(orders)
+
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',
@@ -88,13 +90,32 @@ const handleSearch = () => {
     );
 };
 
+function goTo(url) {
+    if (!url) return
+
+    // page from pagination link
+    const page = new URL(url).searchParams.get('page')
+
+    // current params (filters/search/sort etc)
+    const params = new URLSearchParams(window.location.search)
+
+    if (page) params.set('page', page)
+
+    router.visit(`${window.location.pathname}?${params.toString()}`, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        showProgress: false
+    })
+}
+
 </script>
 
 <template>
     <AppLayout>
-        <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div class="p-2 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Filters -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg px-4 py-2 mb-4">
                 <div class="grid grid-cols-2 md:grid-cols-9 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
@@ -156,16 +177,21 @@ const handleSearch = () => {
                         <input v-model="filter.time_to" type="time"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
-                    <div class="flex items-center justify-center">
-                        <button v-on:click="handleSearch" class="px-4 py-1 text-white rounded-lg bg-teal-500 text-xl">Search</button>
+                    <div class="flex items-center justify-center gap-3">
+                        <button v-on:click="handleSearch"
+                            class="px-4 py-1 text-white rounded-lg bg-teal-500 text-xl">Search</button>
+                        <button @click="resetFilters"
+                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
+                            Reset
+                        </button>
                     </div>
                 </div>
-                <div class="mt-4 flex justify-end">
+                <!-- <div class="mt-4 flex justify-end">
                     <button @click="resetFilters"
                         class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
                         Reset Filters
                     </button>
-                </div>
+                </div> -->
             </div>
 
             <!-- Table View -->
@@ -180,11 +206,27 @@ const handleSearch = () => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Agent
+                                    User Type
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Vendor
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Sales Date
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Product
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Type
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Raffile Ticket
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -196,7 +238,11 @@ const handleSearch = () => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Sales Date
+                                    Vat (%)
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Commission (%)
                                 </th>
                                 <th
                                     class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -205,14 +251,41 @@ const handleSearch = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="order in orders" :key="order.id"
+                            <tr v-for="order in orders.data" :key="order.id"
                                 class="hover:bg-gray-50 transition-colors duration-200">
                                 <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ order.invoice_no }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
+                                    <p>{{ order.user.user_type }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
                                     <p>{{ order.user.name }}</p>
-                                    <p class="text-teal-500">{{ order.user.agent?.username }}</p>
+                                    <p class="text-teal-500">{{ order.user?.agent?.username }}</p>
+                                    <p class="text-red-400">{{ order.user?.address }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ formatDate(order.sales_date) }}
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ order.product.title }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-3">
+                                        <div class="flex flex-nowrap gap-2">
+                                            <span v-for="type in ticket.selected_play_types" :key="type"
+                                                class="bg-gray-100 rounded-lg px-2 py-1 text-sm whitespace-nowrap">
+                                                {{ type }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-3">
+                                        <div class="flex flex-nowrap gap-2 overflow-x-auto whitespace-nowrap">
+                                            <span v-for="number in ticket.selected_numbers" :key="number"
+                                                class="bg-gray-100 rounded-lg px-2 py-1 text-sm whitespace-nowrap shrink-0">
+                                                {{ number }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -222,8 +295,11 @@ const handleSearch = () => {
                                 <td class="px-6 py-4 text-sm font-semibold text-green-600">
                                     {{ order.total_price }} AED
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">
-                                    {{ formatDate(order.sales_date) }}
+                                <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                                    {{ order.vat }} ({{ order.vat_percentage }}%)
+                                </td>
+                                <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                                    {{ order.commission }} ({{ order.commission_percentage }}%)
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <button @click="openModal(order)"
@@ -240,8 +316,20 @@ const handleSearch = () => {
                         </tbody>
                     </table>
 
+                    <div class="mt-4 flex justify-end py-5">
+                        <nav class="flex items-center space-x-1">
+                            <button v-for="(link, i) in orders.links" :key="i" @click="goTo(link.url)"
+                                v-html="link.label" :disabled="!link.url" :class="[
+                                    'px-3 py-1 rounded border',
+                                    link.active ? 'bg-gray-800 text-white' : 'bg-white text-gray-700 hover:bg-gray-100',
+                                    !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                                ]" />
+
+                        </nav>
+                    </div>
+
                     <!-- Empty State -->
-                    <div v-if="orders.length === 0" class="text-center py-12">
+                    <div v-if="orders.data?.length === 0" class="text-center py-12">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -440,8 +528,7 @@ const handleSearch = () => {
                                                     alt="Placeholder Image" class="w-full h-full object-cover" />
                                             </div>
                                         </div>
-                                        <div v-for="(card, index) in selectedOrder.tickets" :key="index"
-                                            class="mb-6">
+                                        <div v-for="(card, index) in selectedOrder.tickets" :key="index" class="mb-6">
                                             <div class="bg-white rounded-xl p-6 shadow-md">
                                                 <h4 class="font-bold text-lg mb-4 text-center text-gray-800">
                                                     Card {{ index + 1 }}
