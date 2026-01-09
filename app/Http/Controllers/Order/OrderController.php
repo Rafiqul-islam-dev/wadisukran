@@ -92,67 +92,39 @@ class OrderController extends Controller
         ]);
     }
 
-    public function probableWins(Request $request)
+    protected function product_prizes($product_id)
     {
-        $products = Product::active()->orderBy('title')->get();
-
         $product_prizes = [];
-        if ($request->product_id) {
-            $product = Product::find($request->product_id);
-            if ($product->prize_type == 'bet') {
-                foreach ($product->prizes as $prize) {
-                    $product_prizes[] = [
-                        'id' => $prize->id,
-                        'name' => $prize->name,
-                        'chance_number' => $prize->chance_number
-                    ];
-                }
+        $product = Product::find($product_id);
+
+        if ($product->prize_type == 'bet') {
+            foreach ($product->prizes as $prize) {
+                $product_prizes[] = [
+                    'id' => $prize->id,
+                    'name' => $prize->name,
+                    'chance_number' => $prize->chance_number
+                ];
             }
         }
 
+        return $product_prizes;
+    }
+
+    public function probableWins(Request $request)
+    {
+        $products = Product::active()->orderBy('title')->get();
+        $product_prizes = $request->product_id ? $this->product_prizes($request->product_id) : [];
+
         $product = Product::find($request->product_id);
+
         $match_type = ProductPrize::find($request->match_type);
-        // return $request->pick_number;
+
         $numbers = $request->pick_number
             ? collect($request->pick_number)->sort()->values()
             : collect();
 
-        // return $pickJson;
+        $types = $match_type ? [$match_type->name] : ['Straight', 'Rumble', 'Chance'];
 
-        // $orders = Order::where('product_id', $request->product_id)
-        //     ->when($match_type, function ($query, $matchType) use ($numbers) {
-
-        //         $query->whereHas('tickets', function ($q) use ($matchType, $numbers) {
-        //             $q->whereJsonContains(
-        //                 'selected_play_types',
-        //                 $matchType->name
-        //             );
-        //             $q->whereRaw(
-        //                 'JSON_LENGTH(selected_numbers) = ?',
-        //                 [count($numbers)]
-        //             )->whereJsonContains('selected_numbers', $numbers);
-        //             if ($matchType->name === 'Rumble') {
-        //                 $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [count($numbers)])
-        //                     ->whereJsonContains('selected_numbers', $numbers);
-        //             }
-        //             if ($matchType->name === 'Chance') {
-        //                 $q->where(function ($sub) use ($numbers) {
-        //                     foreach ($numbers as $n) {
-        //                         $sub->orWhereJsonContains('selected_numbers', $n);
-        //                     }
-        //                 });
-        //             }
-        //         });
-        //     })
-        //     ->get();
-
-
-        // Decide which match types to summarize
-        $types = $match_type
-            ? [$match_type->name]                           // only selected one
-            : ['Straight', 'Rumble', 'Chance'];               // all
-
-        // ---- Helper: apply winner rule on Ticket query ----
         $applyWinnerRule = function ($q, string $type) use ($numbers) {
             $q->whereJsonContains('selected_play_types', $type);
 
@@ -193,7 +165,7 @@ class OrderController extends Controller
                 'total_amount'     => (float) ($winners * $prize),
             ];
         })->values();
-        // return $summary;
+
         // ---- Winner Orders list (your existing logic) ----
         $ordersQuery = Order::query()->where('product_id', $request->product_id);
 
