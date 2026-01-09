@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 
 
-const { orders, users, company, filters, categories, products, product_prizes, product } = defineProps<{
+const { company_setting } = usePage().props;
+
+const { orders, users, company, filters, categories, products, product_prizes, product, summary } = defineProps<{
     orders: Array<any>;
+    summary: Array<any>;
     users: Array<any>;
     company: Record<string, any>;
     categories: Array<any>;
@@ -15,8 +18,9 @@ const { orders, users, company, filters, categories, products, product_prizes, p
     product: Array<any>;
 }>();
 
-console.log(orders);
-console.log(filters);
+console.log(summary);
+// console.log(orders);
+// console.log(filters);
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -180,11 +184,24 @@ const handleSearch = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
+                            <tr v-for="(win, index) in summary" :key="index"
+                                class="hover:bg-gray-50 transition-colors duration-200">
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ win.match_type }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <p>{{ win.winners }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <p>{{ win.prize_per_winner }} {{ company_setting?.currency }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    {{ win.total_amount }} {{ company_setting?.currency }}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
 
                     <!-- Empty State -->
-                    <div class="text-center py-12">
+                    <div class="text-center py-12" v-if="summary.length === 0">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

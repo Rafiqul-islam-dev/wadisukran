@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 
-
+const { company_setting } = usePage().props;
 const { orders, users, company, filters, categories, products, product_prizes } = defineProps<{
     orders: Array<any>;
     users: Array<any>;
@@ -293,7 +293,7 @@ function goTo(url) {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-semibold text-green-600">
-                                    {{ order.total_price }} AED
+                                    {{ order.total_price }} {{ company_setting?.currency }}
                                 </td>
                                 <td class="px-6 py-4 text-sm font-semibold text-green-600">
                                     {{ order.vat }} ({{ order.vat_percentage }}%)
@@ -324,7 +324,6 @@ function goTo(url) {
                                     link.active ? 'bg-gray-800 text-white' : 'bg-white text-gray-700 hover:bg-gray-100',
                                     !link.url ? 'opacity-50 cursor-not-allowed' : ''
                                 ]" />
-
                         </nav>
                     </div>
 

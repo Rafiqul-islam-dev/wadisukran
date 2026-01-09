@@ -113,36 +113,101 @@ class OrderController extends Controller
         $product = Product::find($request->product_id);
         $match_type = ProductPrize::find($request->match_type);
         // return $request->pick_number;
-        $numbers = $request->pick_number ? collect($request->pick_number)->sort()->values() : '';
+        $numbers = $request->pick_number
+            ? collect($request->pick_number)->sort()->values()
+            : collect();
 
         // return $pickJson;
 
-        $orders = Order::where('product_id', $request->product_id)
-            ->when($match_type, function ($query, $matchType) use ($numbers) {
+        // $orders = Order::where('product_id', $request->product_id)
+        //     ->when($match_type, function ($query, $matchType) use ($numbers) {
 
-                $query->whereHas('tickets', function ($q) use ($matchType, $numbers) {
-                    $q->whereJsonContains(
-                        'selected_play_types',
-                        $matchType->name
-                    );
-                    $q->whereRaw(
-                        'JSON_LENGTH(selected_numbers) = ?',
-                        [count($numbers)]
-                    )->whereJsonContains('selected_numbers', $numbers);
-                    if ($matchType->name === 'Rumble') {
-                        $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [count($numbers)])
-                            ->whereJsonContains('selected_numbers', $numbers);
-                    }
-                    if ($matchType->name === 'Chance') {
-                        $q->where(function ($sub) use ($numbers) {
-                            foreach ($numbers as $n) {
-                                $sub->orWhereJsonContains('selected_numbers', $n);
-                            }
-                        });
+        //         $query->whereHas('tickets', function ($q) use ($matchType, $numbers) {
+        //             $q->whereJsonContains(
+        //                 'selected_play_types',
+        //                 $matchType->name
+        //             );
+        //             $q->whereRaw(
+        //                 'JSON_LENGTH(selected_numbers) = ?',
+        //                 [count($numbers)]
+        //             )->whereJsonContains('selected_numbers', $numbers);
+        //             if ($matchType->name === 'Rumble') {
+        //                 $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [count($numbers)])
+        //                     ->whereJsonContains('selected_numbers', $numbers);
+        //             }
+        //             if ($matchType->name === 'Chance') {
+        //                 $q->where(function ($sub) use ($numbers) {
+        //                     foreach ($numbers as $n) {
+        //                         $sub->orWhereJsonContains('selected_numbers', $n);
+        //                     }
+        //                 });
+        //             }
+        //         });
+        //     })
+        //     ->get();
+
+
+        // Decide which match types to summarize
+        $types = $match_type
+            ? [$match_type->name]                           // only selected one
+            : ['Straight', 'Rumble', 'Chance'];               // all
+
+        // ---- Helper: apply winner rule on Ticket query ----
+        $applyWinnerRule = function ($q, string $type) use ($numbers) {
+            $q->whereJsonContains('selected_play_types', $type);
+
+            // Straight + Rumble = exact same numbers & length (based on your code)
+            if ($type === 'Straight' || $type === 'Rumble') {
+                $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [count($numbers)])
+                    ->whereJsonContains('selected_numbers', $numbers);
+            }
+
+            // Chance = any number matches
+            if ($type === 'Chance') {
+                $q->where(function ($sub) use ($numbers) {
+                    foreach ($numbers as $n) {
+                        $sub->orWhereJsonContains('selected_numbers', $n);
                     }
                 });
-            })
-            ->get();
+            }
+
+            return $q;
+        };
+
+        $summary = collect($types)->map(function ($type) use ($request, $applyWinnerRule) {
+            $winners = OrderTicket::query()
+                ->whereHas('order', fn($o) => $o->where('product_id', $request->product_id))
+                ->tap(fn($q) => $applyWinnerRule($q, $type))
+                ->count();
+
+            // Prize per winner (adjust column name to your DB)
+            $prize = ProductPrize::query()
+                ->where('product_id', $request->product_id)
+                ->where('name', $type)
+                ->value('prize') ?? 0;
+
+            return [
+                'match_type'       => $type,
+                'winners'          => (int) $winners,
+                'prize_per_winner' => (float) $prize,
+                'total_amount'     => (float) ($winners * $prize),
+            ];
+        })->values();
+        // return $summary;
+        // ---- Winner Orders list (your existing logic) ----
+        $ordersQuery = Order::query()->where('product_id', $request->product_id);
+
+        if ($match_type) {
+            $ordersQuery->whereHas('tickets', function ($q) use ($applyWinnerRule, $match_type) {
+                $applyWinnerRule($q, $match_type->name);
+            });
+        }
+
+        // You used get(); you can paginate if needed
+        $orders = $ordersQuery
+            ->with(['user', 'product', 'user.agent', 'tickets'])
+            ->latest()
+            ->paginate(10);
 
 
         return Inertia::render('Orders/ProbableWins', [
@@ -154,7 +219,8 @@ class OrderController extends Controller
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,
-            'orders' => $orders
+            'orders' => $orders,
+            'summary' => $summary
         ]);
     }
 }

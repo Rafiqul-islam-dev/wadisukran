@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 
 const { products } = defineProps<{
     products: Array<any>;
     categories: Array<any>;
 }>();
+
+const { company_setting } = usePage().props;
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -333,7 +335,7 @@ const statusChange = (product) => {
 
                                 <!-- Price -->
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-green-600">{{ product.price }} AED</div>
+                                    <div class="text-sm font-medium text-green-600">{{ product.price }} {{ company_setting?.currency }}</div>
                                 </td>
 
                                 <!-- Draw Date and Time -->
