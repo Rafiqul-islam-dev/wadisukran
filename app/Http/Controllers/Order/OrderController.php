@@ -134,8 +134,7 @@ class OrderController extends Controller
 
             $numbersStraight = collect($request->pick_number)->values();
             $numbersChance = collect($request->pick_number)->reverse()->values();
-            // keep order
-            $numbersSorted   = collect($request->pick_number)->sort()->values();   // for rumble
+            $numbersSorted   = collect($request->pick_number)->sort()->values();
             $len             = $numbersStraight->count();
 
             $orders = OrderTicket::query()
@@ -145,7 +144,7 @@ class OrderController extends Controller
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
-                    $data = ['id' => $order->id];
+                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers];
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
@@ -154,7 +153,7 @@ class OrderController extends Controller
                         : (array) $order->selected_play_types;
 
                     $ticketNumbers = collect($order->selected_numbers)->values();
-                    if($product->prize_type === 'bet'){
+                    if ($product->prize_type === 'bet') {
                         foreach ($product->prizes->whereIn('name', ['Straight', 'Rumble']) as $type) {
                             if ($type->name === 'Straight' & in_array('Straight', $ticketTypes, true)) {
                                 $isStraightWinner =
@@ -170,11 +169,11 @@ class OrderController extends Controller
                                 $data[$type->name] = $isRumbleWinner;
                             }
                         }
-                        if(in_array('Chance', $ticketTypes, true)){
-                            $matchCount = $ticketNumbers
+                        if (in_array('Chance', $ticketTypes, true)) {
+                            $matchCount = $ticketNumbers->reverse()
                                 ->values()
                                 ->zip($numbersChance)
-                                ->filter(fn($pair) => $pair[0] === $pair[1])
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
                                 ->count();
 
                             $chancePrizes = $product->prizes
@@ -184,7 +183,6 @@ class OrderController extends Controller
 
 
                             foreach ($chancePrizes as $chanceType) {
-
                                 $key = $chanceType->name . ' ' . $chanceType->chance_number;
                                 $data[$key] = false;
 
@@ -192,21 +190,47 @@ class OrderController extends Controller
                                     continue;
                                 }
 
-                                // EXACT positional match
                                 if ($matchCount == (int) $chanceType->chance_number) {
                                     $data[$key] = true;
-                                    $isChanceWinner = true; // block lower tiers
+                                    $isChanceWinner = true;
                                 }
                             }
                         }
+                    } else {
+                        $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
 
+                        // Numeric prizes: name = 2,3,4... (bigger first)
+                        $numberPrizes = $product->prizes
+                            ->sortByDesc('name');
+
+                        $isNumberWinner = false;
+
+                        foreach ($numberPrizes as $prize) {
+                            $key = 'Number ' . (int) $prize->name;
+                            $data[$key] = false;
+
+                            if ($isNumberWinner) continue; // exclusive
+
+                            if ($matchCount === (int) $prize->name) {
+                                $data[$key] = true;
+                                $isNumberWinner = true; // block lower tiers
+                            }
+                        }
                     }
                     return $data;
                 });
 
-
             foreach ($types as $type) {
-                if ($type->name === 'Chance') {
+                if (is_numeric($type->name)) {
+                    $name = 'Number ' . $type->name;
+                    $summery[$name] = [
+                        'match_type' => $name,
+                        'winners' =>  $orders->where($name, true)->count(),
+                        'prize_per_winner' => $type->prize,
+                        'tickets' => $orders->where($name, true)->values(),
+                        'total_amount' => ($orders->where($name, true)->count() * $type->prize)
+                    ];
+                } else if ($type->name === 'Chance') {
                     $name = $type->name . ' ' . $type->chance_number;
                     $summery[$name] = [
                         'match_type' => $name,
@@ -226,94 +250,6 @@ class OrderController extends Controller
                 }
             }
         }
-
-
-        // $numbers = $request->pick_number
-        //     ? collect($request->pick_number)->sort()->values()
-        //     : collect();
-        // $numbersStraight = $request->pick_number
-        //     ? collect($request->pick_number)->values()
-        //     : collect();
-
-        // $numbersRumble = $numbersStraight->reverse()->values();
-
-        // $winJsonStraight = json_encode($numbersStraight->all(), JSON_UNESCAPED_UNICODE);
-        // $winJsonRumble   = json_encode($numbersRumble->all(), JSON_UNESCAPED_UNICODE);
-        // // return $winJsonRumble;
-
-        // $len = $numbersStraight->count();
-
-
-        // $types = $match_type ? [$match_type->name] : ($product_prizes->isNotEmpty()
-        //     ? $product_prizes->pluck('name')->values()->toArray()
-        //     : ['Straight', 'Rumble', 'Chance']
-        // );
-
-        // $applyWinnerRule = function ($q, string $type) use ($winJsonStraight, $winJsonRumble, $len, $numbers) {
-        //     $q->whereJsonContains('selected_play_types', $type);
-
-        //     // Straight -- win == 123 , ticket == 123
-        //     // Rumble-- win == 123,  ticket == 321 --- jekono vabe millei hoice
-        //     // Chances-- right to left how many number matches
-
-        //     // Straight + Rumble = exact same numbers & length (based on your code)
-        //     if ($type === 'Straight') {
-        //         $q->whereRaw('selected_numbers = CAST(? AS JSON)', [$winJsonStraight]);
-        //     }
-
-        //     if ($type === 'Rumble') {
-        //         $q->whereRaw('JSON_LENGTH(selected_numbers) = ?', [$len])
-        //             // ticket contains all winning numbers (order independent)
-        //             ->whereJsonContains('selected_numbers', $numbers->all());
-        //     }
-
-        //     // Chance = any number matches
-        //     if ($type === 'Chance') {
-        //         $q->where(function ($sub) use ($numbers) {
-        //             foreach ($numbers as $n) {
-        //                 $sub->orWhereJsonContains('selected_numbers', $n);
-        //             }
-        //         });
-        //     }
-
-        //     return $q;
-        // };
-
-        // $summary = collect($types)->map(function ($type) use ($request, $applyWinnerRule) {
-        //     $winners = OrderTicket::query()
-        //         ->whereHas('order', fn($o) => $o->where('product_id', $request->product_id))
-        //         ->tap(fn($q) => $applyWinnerRule($q, $type))
-        //         ->count();
-
-        //     // Prize per winner (adjust column name to your DB)
-        //     $prize = ProductPrize::query()
-        //         ->where('product_id', $request->product_id)
-        //         ->where('name', $type)
-        //         ->value('prize') ?? 0;
-
-        //     return [
-        //         'match_type'       => $type,
-        //         'winners'          => (int) $winners,
-        //         'prize_per_winner' => (float) $prize,
-        //         'total_amount'     => (float) ($winners * $prize),
-        //     ];
-        // })->values();
-
-        // // ---- Winner Orders list (your existing logic) ----
-        // $ordersQuery = Order::query()->where('product_id', $request->product_id);
-
-        // if ($match_type) {
-        //     $ordersQuery->whereHas('tickets', function ($q) use ($applyWinnerRule, $match_type) {
-        //         $applyWinnerRule($q, $match_type->name);
-        //     });
-        // }
-
-        // // You used get(); you can paginate if needed
-        // $orders = $ordersQuery
-        //     ->with(['user', 'product', 'user.agent', 'tickets'])
-        //     ->latest()
-        //     ->paginate(10);
-
 
         return Inertia::render('Orders/ProbableWins', [
             'products' => $products,
