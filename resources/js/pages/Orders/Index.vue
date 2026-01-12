@@ -14,7 +14,7 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     product_prizes: Array<any>;
 }>();
 
-console.log(orders)
+console.log(product_prizes)
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -292,13 +292,13 @@ function goTo(url) {
                                         {{ order.quantity }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                                <td class="px-6 py-4 text-sm font-semibold text-green-600 whitespace-nowrap">
                                     {{ order.total_price }} {{ company_setting?.currency }}
                                 </td>
-                                <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                                <td class="px-6 py-4 text-sm font-semibold text-green-600 whitespace-nowrap">
                                     {{ order.vat }} ({{ order.vat_percentage }}%)
                                 </td>
-                                <td class="px-6 py-4 text-sm font-semibold text-green-600">
+                                <td class="px-6 py-4 text-sm font-semibold text-green-600 whitespace-nowrap">
                                     {{ order.commission }} ({{ order.commission_percentage }}%)
                                 </td>
                                 <td class="px-6 py-4 text-right">

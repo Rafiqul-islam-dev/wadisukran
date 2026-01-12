@@ -19,6 +19,8 @@ const { orders, users, company, filters, categories, products, product_prizes, p
 }>();
 
 console.log(summary);
+// console.log(product_prizes)
+
 // console.log(orders);
 // console.log(filters);
 
@@ -32,6 +34,7 @@ const filter = ref({
     category_id: filters?.category_id ?? '',
     product_id: filters?.product_id ?? '',
     pick_number: filters?.pick_number ?? [],
+    btn: filters?.btn ?? ''
 });
 
 const modalVisible = ref(false);
@@ -53,7 +56,11 @@ function resetFilters() {
         category_id: '',
         product_id: '',
         pick_number: [],
+        btn: ''
     };
+    router.get(
+        route('probable-wins.index')
+    );
 }
 
 const generateRandomNumbers = () => {
@@ -70,6 +77,7 @@ const generateRandomNumbers = () => {
 
 
 const handleSearch = () => {
+    filter.value.btn = 'search';
     router.get(
         route('probable-wins.index'),
         { ...filter.value },
