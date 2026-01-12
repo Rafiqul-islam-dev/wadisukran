@@ -113,7 +113,6 @@ class OrderController extends Controller
     public function probableWins(Request $request)
     {
         $products = Product::active()->orderBy('title')->get();
-
         $product_prizes = $request->product_id
             ? collect($this->product_prizes($request->product_id))
             : collect();
@@ -122,10 +121,6 @@ class OrderController extends Controller
 
         $summery = [];
         if ($request->btn === 'search' && $request->pick_number && $request->product_id) {
-            $numbers = $request->pick_number
-                ? collect($request->pick_number)->sort()->values()
-                : collect();
-
             $match_type = ProductPrize::find($request->match_type);
 
             $types = $match_type
@@ -198,8 +193,6 @@ class OrderController extends Controller
                         }
                     } else {
                         $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
-
-                        // Numeric prizes: name = 2,3,4... (bigger first)
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
@@ -209,11 +202,11 @@ class OrderController extends Controller
                             $key = 'Number ' . (int) $prize->name;
                             $data[$key] = false;
 
-                            if ($isNumberWinner) continue; // exclusive
+                            if ($isNumberWinner) continue;
 
                             if ($matchCount === (int) $prize->name) {
                                 $data[$key] = true;
-                                $isNumberWinner = true; // block lower tiers
+                                $isNumberWinner = true;
                             }
                         }
                     }
