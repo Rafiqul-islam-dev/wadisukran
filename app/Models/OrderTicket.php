@@ -12,4 +12,8 @@ class OrderTicket extends Model
         'selected_numbers' => 'array',
         'selected_play_types' => 'array',
     ];
+
+    public function order(){
+        return $this->belongsTo(Order::class);
+    }
 }

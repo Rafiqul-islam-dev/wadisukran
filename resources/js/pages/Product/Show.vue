@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 
+const { company_setting } = usePage().props;
 const { product } = defineProps<{
     product: Array<any>;
 }>();
@@ -50,7 +51,8 @@ function formatPrizes(prizes) {
                             <div class="space-y-3">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Price:</span>
-                                    <span class="font-semibold text-green-600">{{ product.price }} AED</span>
+                                    <span class="font-semibold text-green-600">{{ product.price }} {{
+                                        company_setting?.currency }}</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">Status:</span>
@@ -129,7 +131,8 @@ function formatPrizes(prizes) {
                                     <span class="font-medium text-gray-700">{{ prize.name }} <span
                                             v-if="prize.name === 'chance'">{{ prize.chance_number }} numbers</span>
                                         <span v-if="prize.type === 'number'">Number Matches</span> :</span>
-                                    <span class="font-semibold text-green-600">{{ prize.prize }} AED</span>
+                                    <span class="font-semibold text-green-600">{{ prize.prize }} {{
+                                        company_setting?.currency }}</span>
                                 </div>
                             </div>
                         </div>

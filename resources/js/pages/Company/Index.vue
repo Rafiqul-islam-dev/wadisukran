@@ -30,6 +30,7 @@ const form = useForm({
     website: company_setting?.website ?? '',
     licence_no: company_setting?.licence_no ?? '',
     bank_account: company_setting?.bank_account ?? '',
+    vat: company_setting?.vat ?? '',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -67,18 +68,27 @@ const saveChanges = () => {
                                 <Label for="shopName">Name</Label>
                                 <Input id="shopName" v-model="form.name" placeholder="Enter company name"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.name" class="text-red-600 text-sm">
+                                    {{ form.errors.name }}
+                                </p>
                             </div>
                             <!-- Email Address -->
                             <div class="space-y-2">
                                 <Label for="email">Email Address</Label>
                                 <Input id="email" v-model="form.email" type="email" placeholder="your@email.com"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.email" class="text-red-600 text-sm">
+                                    {{ form.errors.email }}
+                                </p>
                             </div>
                             <!-- Trn Address -->
                             <div class="space-y-2">
                                 <Label for="trn">TRN</Label>
                                 <Input id="trn" v-model="form.trn_no" type="text" placeholder="Enter TRN"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.trn_no" class="text-red-600 text-sm">
+                                    {{ form.errors.trn_no }}
+                                </p>
                             </div>
 
                             <!-- License -->
@@ -86,6 +96,9 @@ const saveChanges = () => {
                                 <Label for="license">License</Label>
                                 <Input id="license" v-model="form.licence_no" type="text" placeholder="License Number"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.licence_no" class="text-red-600 text-sm">
+                                    {{ form.errors.licence_no }}
+                                </p>
                             </div>
 
                             <!-- Phone Number -->
@@ -93,19 +106,41 @@ const saveChanges = () => {
                                 <Label for="phone">Phone Number</Label>
                                 <Input id="phone" v-model="form.phone" type="tel" placeholder="+1234567890"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.phone" class="text-red-600 text-sm">
+                                    {{ form.errors.phone }}
+                                </p>
                             </div>
                             <!-- Whatsapp Number -->
                             <div class="space-y-2">
                                 <Label for="whatsapp">WhatsApp Number</Label>
                                 <Input id="whatsapp" v-model="form.whatsapp" type="tel" placeholder="+1234567890"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.whatsapp" class="text-red-600 text-sm">
+                                    {{ form.errors.whatsapp }}
+                                </p>
                             </div>
 
                             <!-- Currency -->
                             <div class="space-y-2">
                                 <Label for="currency">Currency</Label>
-                                <Input id="currency" v-model="form.currency" type="text" placeholder="Currency"
-                                    class="max-w-4xl" />
+                                <select name="vat" id="vat" v-model="form.currency"
+                                    class="w-full border rounded py-2 px-2">
+                                    <option value="">Select Currency</option>
+
+                                    <option value="AED">AED – United Arab Emirates Dirham</option>
+                                    <option value="USD">USD – US Dollar</option>
+                                    <option value="EUR">EUR – Euro</option>
+                                    <option value="GBP">GBP – British Pound</option>
+                                    <option value="SAR">SAR – Saudi Riyal</option>
+                                    <option value="QAR">QAR – Qatari Riyal</option>
+                                    <option value="KWD">KWD – Kuwaiti Dinar</option>
+                                    <option value="INR">INR – Indian Rupee</option>
+                                    <option value="BDT">BDT – Bangladeshi Taka</option>
+                                    <option value="CNY">CNY – Chinese Yuan</option>
+                                </select>
+                                <p v-if="form.errors.currency" class="text-red-600 text-sm">
+                                    {{ form.errors.currency }}
+                                </p>
                             </div>
 
                             <!-- Bank  -->
@@ -113,22 +148,47 @@ const saveChanges = () => {
                                 <Label for="bank">Bank Account</Label>
                                 <Input id="bank" v-model="form.bank_account" type="text" placeholder="Bank Name"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.bank_account" class="text-red-600 text-sm">
+                                    {{ form.errors.bank_account }}
+                                </p>
                             </div>
+                            <div class="space-y-2">
+                                <Label for="vat">Vat (%)</Label>
+
+                                <select name="vat" id="vat" v-model="form.vat" class="w-full border rounded py-2 px-2">
+                                    <option value="">Select VAT</option>
+
+                                    <option v-for="i in 99" :key="i" :value="i">
+                                        {{ i }}%
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.vat" class="text-red-600 text-sm">
+                                    {{ form.errors.vat }}
+                                </p>
+                            </div>
+
 
                             <!-- Shop Logo -->
                             <div class="space-y-2">
-                                <img :src="company_setting?.logo_url" v-if="company_setting?.logo_url" alt="Logo" class="w-24 h-24 object-contain">
+                                <img :src="company_setting?.logo_url" v-if="company_setting?.logo_url" alt="Logo"
+                                    class="w-24 h-24 object-contain">
                                 <Label for="shopLogo">Logo</Label>
                                 <div class="flex items-center gap-4">
                                     <Input id="shopLogo" type="file" @change="handleLogoUpload" accept="image/*"
                                         class="max-w-4xl" />
                                 </div>
+                                <p v-if="form.errors.logo" class="text-red-600 text-sm">
+                                    {{ form.errors.logo }}
+                                </p>
                             </div>
                             <!-- Website -->
                             <div class="space-y-2">
                                 <Label for="website">Website</Label>
                                 <Input id="website" v-model="form.website" type="text" placeholder="https://example.com"
                                     class="max-w-4xl" />
+                                <p v-if="form.errors.website" class="text-red-600 text-sm">
+                                    {{ form.errors.website }}
+                                </p>
                             </div>
                         </div>
 
@@ -137,6 +197,9 @@ const saveChanges = () => {
                             <Label for="address">Address</Label>
                             <Textarea id="address" v-model="form.address" placeholder="123 Main Street, City, Country"
                                 rows="3" class="max-w-4xl" />
+                            <p v-if="form.errors.address" class="text-red-600 text-sm">
+                                {{ form.errors.address }}
+                            </p>
                         </div>
 
                         <!-- Save Button -->

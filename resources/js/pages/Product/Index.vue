@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 
 const { products } = defineProps<{
     products: Array<any>;
     categories: Array<any>;
 }>();
+
+const { company_setting } = usePage().props;
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -51,9 +53,9 @@ const editProduct = (product) => {
     form.prize_type = product.prize_type;
     form.type_number = product.type_number;
     form.bet_prizes = product.prize_type === 'bet' ? product.prizes : [
-        { type: 'bet', name: 'straight', prize: 0, chance_number: null },
-        { type: 'bet', name: 'rumble', prize: 0, chance_number: null },
-        { type: 'bet', name: 'chance', prize: 0, chance_number: 1 }
+        { type: 'bet', name: 'Straight', prize: 0, chance_number: null },
+        { type: 'bet', name: 'Rumble', prize: 0, chance_number: null },
+        { type: 'bet', name: 'Chance', prize: 0, chance_number: 1 }
     ];
     form.number_prizes = product.prize_type === 'number' ? product.prizes : [];
     showModal.value = true;
@@ -333,7 +335,7 @@ const statusChange = (product) => {
 
                                 <!-- Price -->
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-green-600">{{ product.price }} AED</div>
+                                    <div class="text-sm font-medium text-green-600">{{ product.price }} {{ company_setting?.currency }}</div>
                                 </td>
 
                                 <!-- Draw Date and Time -->
