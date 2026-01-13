@@ -24,7 +24,6 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $match_type = ProductPrize::find($request->match_type);
-        // return $match_type;
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
@@ -69,9 +68,6 @@ class OrderController extends Controller
                 }
             }
         }
-
-        // return $product_prizes;
-
 
         return Inertia::render('Orders/Index', [
             'orders' => $orders,

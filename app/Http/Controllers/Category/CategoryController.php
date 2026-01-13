@@ -40,7 +40,8 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|unique:categories,name',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'draw_type' => 'required|in:once,daily,hourly'
         ]);
         $this->categoryService->createCategory($validated);
         return back();
@@ -69,12 +70,14 @@ class CategoryController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:categories,name,' . $id,
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'draw_type' => 'required|in:once,daily,hourly'
         ]);
 
         Category::find($id)->update([
             'name' => $request->name,
-            'description' => $request->description
+            'description' => $request->description,
+            'draw_type' => $request->draw_type
         ]);
 
         return back();
