@@ -3,7 +3,8 @@ import { reactive, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { router } from '@inertiajs/vue3';
+import { router, useForm } from '@inertiajs/vue3';
+import { toast } from 'vue-sonner';
 
 
 const { categories, products, filters } = defineProps<{
@@ -11,13 +12,14 @@ const { categories, products, filters } = defineProps<{
     filters: Array<any>;
     products: Array<any>;
 }>();
-
+const form = useForm({
+    date: '',
+    time: '11:59',
+    products: []
+});
 const filter = ref({
     category_id: filters?.category_id ?? ''
 });
-
-const date = ref('');
-const time = ref('11:59');
 
 const drawNumbers = reactive<Record<number, string[]>>({});
 products.forEach((product: any) => {
@@ -53,8 +55,8 @@ const clearAll = () => {
     });
 
     // Optional resets
-    date.value = '';
-    time.value = '11:59';
+    form.date = '';
+    form.time = '11:59';
 };
 
 
@@ -69,13 +71,38 @@ const handleSearch = () => {
         }
     );
 };
+
+const saveDraw = () => {
+    form.products = products.map((p: any) => ({
+        id: p.id,
+        numbers: (drawNumbers[p.id] ?? [])
+            .filter((n) => n !== '')          // remove empty inputs
+            .map((n) => Number(n)),           // convert to number
+    }));
+
+    form.post(route('draws.store'), {
+        onSuccess: () => {
+            toast.success('Draw stored successfully.');
+        },
+        onError: () => {
+            toast.error('Something went wrong storing draw.');
+        }
+    });
+    console.log(form)
+}
 </script>
 
 <template>
     <AppLayout>
         <div class="p-2 bg-gradient-to-br from-gray-50 to-gray-100">
-            <div class=" mx-auto">
+
+            <div class="mx-auto">
                 <div class="bg-white rounded-lg shadow-md p-6">
+                    <ol v-if="Object.keys(form.errors).length" class="text-red-500 list-disc pl-5 mb-3">
+                        <li v-for="(error, key) in form.errors" :key="key">
+                            {{ error }}
+                        </li>
+                    </ol>
                     <!-- Date & Time Selection -->
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row gap-4">
@@ -95,13 +122,13 @@ const handleSearch = () => {
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
                                     Select Date
                                 </label>
-                                <Input type="date" v-model="date" class="w-full" placeholder="mm/dd/yyyy" />
+                                <Input type="date" v-model="form.date" class="w-full" placeholder="mm/dd/yyyy" />
                             </div>
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">
                                     Select Time
                                 </label>
-                                <Input type="time" v-model="time" class="w-full" />
+                                <Input type="time" v-model="form.time" class="w-full" />
                             </div>
                         </div>
                     </div>
@@ -157,7 +184,7 @@ const handleSearch = () => {
 
                     <!-- Action Buttons -->
                     <div class="flex gap-3 mt-6">
-                        <Button class="bg-blue-500 hover:bg-blue-600 text-white">
+                        <Button @click="saveDraw" class="bg-blue-500 hover:bg-blue-600 text-white">
                             Save Draw
                         </Button>
                         <Button variant="destructive" @click="clearAll">

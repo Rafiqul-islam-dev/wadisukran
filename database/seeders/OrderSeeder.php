@@ -2,14 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Order;
-use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 
 class OrderSeeder extends Seeder
 {
@@ -20,12 +16,14 @@ class OrderSeeder extends Seeder
     }
     public function run(): void
     {
-        $product = Product::find(24);
+        $product = Product::inRandomOrder()->first();
         if (!$product) {
             $this->command->warn('No products found. Create products first.');
             return;
         }
+
         $usersCount = User::where('user_type', 'agent')->count();
+
         if ($usersCount === 0) {
             $this->command->warn('No users found. Create users first.');
             return;
@@ -50,7 +48,7 @@ class OrderSeeder extends Seeder
 
             for ($c = 0; $c < $quantity; $c++) {
                 $card = [
-                    'selected_numbers' => $this->makeNumbers($product->pick_number),
+                    'selected_numbers' => $this->makeNumbers($product->pick_number, $product->type_number),
                 ];
 
                 if ($product->prize_type === 'bet') {
@@ -69,18 +67,27 @@ class OrderSeeder extends Seeder
         $this->command->info('✅ Seeded 1000 orders for last 30 days with tickets.');
     }
 
-    private function makeNumbers(int $pickNumber): array
+    private function makeNumbers(int $pickNumber, int $maxNumber): array
     {
-        // Example: generate unique 2-digit strings like "01".."99"
-        $pool = range(1, 99);
+        $pickNumber = max(1, $pickNumber);
+        $maxNumber  = max($pickNumber, $maxNumber); // ensure enough pool
+
+        // Pool: 1 → maxNumber
+        $pool = range(1, $maxNumber);
         shuffle($pool);
 
-        $nums = array_slice($pool, 0, max(1, $pickNumber));
-        $nums = array_map(fn($n) => str_pad((string)$n, 2, '0', STR_PAD_LEFT), $nums);
+        // Pick exactly $pickNumber numbers
+        $nums = array_slice($pool, 0, $pickNumber);
 
-        sort($nums); // keep consistent ordering (helps matching logic)
-        return $nums;
+        // Keep stable ordering for matching logic
+        sort($nums);
+
+        return array_map(
+            fn($n) => str_pad((string) $n, 2, '0', STR_PAD_LEFT),
+            $nums
+        );
     }
+
 
     private function randomPlayTypes(): array
     {
