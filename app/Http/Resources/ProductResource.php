@@ -40,33 +40,47 @@ class ProductResource extends JsonResource
         ];
     }
 
-    public function formatPrizes($prizes)
-    {
-        $prize_array = [];
+public function formatPrizes($prizes)
+{
+    $prize_array = [];
+    $chancePrizes = [];
 
-        $chancePrizes = [];
+    foreach ($prizes as $prize) {
 
-        foreach ($prizes as $prize) {
-
-            if ($prize->name === 'chance') {
-                $chancePrizes[] = (float) $prize->prize;
-                continue;
-            }
-            $prize_array[$prize->name] =
-                number_format((float) $prize->prize, 2, '.', '') . ' AED';
+        // chance গুলো একসাথে দেখানোর জন্য
+        if ($prize->name === 'chance') {
+            $chancePrizes[] = (float) $prize->prize;
+            continue;
         }
 
-        rsort($chancePrizes);
+        $formattedPrize = number_format((float) $prize->prize, 2, '.', '') . ' AED';
 
-        if (!empty($chancePrizes)) {
-            $formatted = array_map(
-                fn($p) => number_format($p, 2, '.', '') . ' AED',
-                $chancePrizes
-            );
-
-            $prize_array['chance'] = implode(' , ', $formatted);
+        if ($prize->type == 'bet') {
+            $prize_array[$prize->name] = $formattedPrize;
+            continue;
         }
 
-        return $prize_array;
+        if ($prize->type == 'number') {
+            $label = trim($prize->name) . ' Number';
+            $prize_array[$label] = $formattedPrize;
+        } else {
+            $label = trim($prize->name) . ' ' . ucfirst($prize->type);
+            $prize_array[$label] = $formattedPrize;
+        }
     }
+
+    rsort($chancePrizes);
+
+    if (!empty($chancePrizes)) {
+        $formatted = array_map(
+            fn($p) => number_format($p, 2, '.', '') . ' AED',
+            $chancePrizes
+        );
+
+        $prize_array['chance'] = implode(' , ', $formatted);
+    }
+
+    return $prize_array;
+}
+
 }
