@@ -36,6 +36,7 @@ class CreateSuperAdmin extends Seeder
             "show draws",
             "show order history",
             "show permissions",
+            "show probable wins",
             "show product list",
             "show report",
             "show roles",

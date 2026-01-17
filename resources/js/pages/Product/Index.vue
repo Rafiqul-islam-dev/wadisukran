@@ -4,7 +4,7 @@ import { ref, nextTick, watch, computed } from 'vue';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 
-const { products } = defineProps<{
+const { products, categories } = defineProps<{
     products: Array<any>;
     categories: Array<any>;
 }>();
@@ -241,6 +241,23 @@ const statusChange = (product) => {
         }
     })
 }
+
+const handleCategoryChange = (e: Event) => {
+  const id = (e.target as HTMLSelectElement).value;
+
+  const category = categories?.find((c: any) => String(c.id) === String(id));
+  if (!category) return;
+
+  // category.draw_type: 'once' | 'daily' | 'hourly'
+  if (category.draw_type && category.draw_type !== 'once') {
+    form.draw_type = 'regular';
+    form.regular_type = category.draw_type;
+  } else {
+    form.draw_type = 'once';
+    form.regular_type = '';
+  }
+};
+
 </script>
 
 <template>
@@ -503,7 +520,7 @@ const statusChange = (product) => {
                                                 Category
                                             </label>
 
-                                            <select v-model="form.category_id" placeholder="Select a category" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl
+                                            <select v-model="form.category_id" v-on:change="handleCategoryChange" placeholder="Select a category" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl
                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                transition-all duration-200 hover:border-gray-300" required>
                                                 <option value="">Select a category</option>
@@ -516,7 +533,6 @@ const statusChange = (product) => {
                                                 {{ form.errors.category_id }}
                                             </p>
                                         </div>
-
 
                                         <!-- Price Input -->
                                         <div>
@@ -532,8 +548,8 @@ const statusChange = (product) => {
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
                                                 Type</label>
-                                            <select v-model="form.draw_type" name="draw_type"
-                                                class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                            <select v-model="form.draw_type" name="draw_type" disabled="true"
+                                                class="disabled:bg-gray-200 disabled:cursor-not-allowed w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                 id="">
                                                 <option value="once">Once</option>
                                                 <option value="regular">Regular</option>

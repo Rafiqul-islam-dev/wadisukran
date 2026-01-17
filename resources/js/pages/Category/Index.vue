@@ -14,7 +14,8 @@ const { categories } = defineProps<{
 }>();
 const form = useForm({
     name: '',
-    description: ''
+    description: '',
+    draw_type: 'once'
 });
 
 const addCategoryModal = ref(false);
@@ -34,6 +35,7 @@ const closeModal = () => {
 const editCategory = (category) => {
     form.name = category.name;
     form.description = category.description;
+    form.draw_type = category.draw_type;
     isEditing.value = true;
     editingCategory.value = category;
     addCategoryModal.value = true;
@@ -44,7 +46,7 @@ const addCategory = () => {
 }
 const handleSubmit = () => {
     if (editingCategory.value) {
-        router.put(route('categories.update', editingCategory.value.id), { name: form.name, description: form.description }, {
+        router.put(route('categories.update', editingCategory.value.id), { name: form.name, description: form.description, draw_type: form.draw_type }, {
             onSuccess: () => {
                 toast.success('Category updated successfully.');
                 form.reset();
@@ -132,6 +134,10 @@ const statusChange = (id) => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Draw Type
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Description
                                 </th>
                                 <th
@@ -155,6 +161,9 @@ const statusChange = (id) => {
                                 </td>
                                 <td class="px-6 py-4">
                                     {{ category.name }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ category.draw_type }}
                                 </td>
                                 <td class="px-6 py-4">
                                     {{ category.description }}
@@ -251,6 +260,21 @@ const statusChange = (id) => {
                         <Input id="name" v-model="form.name" placeholder="Enter category name" class="w-full" />
                         <p v-if="form.errors.name" class="text-red-600 text-sm">
                             {{ form.errors.name }}
+                        </p>
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="name" class="text-sm font-semibold">
+                            Draw Type <span class="text-red-500">*</span>
+                        </Label>
+                        <select v-model="form.draw_type" name="draw_type"
+                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                            id="">
+                            <option value="once">Once</option>
+                            <option value="daily">Daily</option>
+                            <option value="hourly">Hourly</option>
+                        </select>
+                        <p v-if="form.errors.draw_type" class="text-red-600 text-sm">
+                            {{ form.errors.draw_type }}
                         </p>
                     </div>
 

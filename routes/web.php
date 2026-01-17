@@ -82,6 +82,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('draws')->name('draws.')->middleware('can:show draws')->group(function () {
         Route::get('/', [DrawController::class, 'index'])->name('index');
+        Route::post('store', [DrawController::class, 'store'])->name('store');
         Route::get('/{draw}', [OrderController::class, 'drawDetails'])->name('details');
     });
 

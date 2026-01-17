@@ -11,6 +11,7 @@ use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\ProductPrize;
 use App\Services\CategoryService;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -23,7 +24,6 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $match_type = ProductPrize::find($request->match_type);
-        // return $match_type;
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
@@ -69,9 +69,6 @@ class OrderController extends Controller
             }
         }
 
-        // return $product_prizes;
-
-
         return Inertia::render('Orders/Index', [
             'orders' => $orders,
             'users' => $users,
@@ -112,8 +109,21 @@ class OrderController extends Controller
 
     public function probableWins(Request $request)
     {
-        $products = Product::active()->orderBy('title')->get();
+        $from = null;
+        $to   = null;
 
+        if ($request->date_from) {
+            $from = Carbon::parse(
+                $request->date_from . ' ' . ($request->time_from ?? '00:00:00')
+            );
+        }
+
+        if ($request->date_to) {
+            $to = Carbon::parse(
+                $request->date_to . ' ' . ($request->time_to ?? '23:59:59')
+            );
+        }
+        $products = Product::active()->orderBy('title')->get();
         $product_prizes = $request->product_id
             ? collect($this->product_prizes($request->product_id))
             : collect();
@@ -122,10 +132,6 @@ class OrderController extends Controller
 
         $summery = [];
         if ($request->btn === 'search' && $request->pick_number && $request->product_id) {
-            $numbers = $request->pick_number
-                ? collect($request->pick_number)->sort()->values()
-                : collect();
-
             $match_type = ProductPrize::find($request->match_type);
 
             $types = $match_type
@@ -138,7 +144,15 @@ class OrderController extends Controller
             $len             = $numbersStraight->count();
 
             $orders = OrderTicket::query()
-                ->whereHas('order', fn($o) => $o->where('product_id', $request->product_id))
+                ->whereHas('order', function ($o) use ($request, $from, $to) {
+                    $o->where('product_id', $request->product_id);
+                    if ($from) {
+                        $o->where('created_at', '>=', $from);
+                    }
+                    if ($to) {
+                        $o->where('created_at', '<=', $to);
+                    }
+                })
                 ->when($request->match_type, function ($q) use ($match_type) {
                     $q->whereJsonContains('selected_play_types', $match_type->name);
                 })
@@ -198,8 +212,6 @@ class OrderController extends Controller
                         }
                     } else {
                         $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
-
-                        // Numeric prizes: name = 2,3,4... (bigger first)
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
@@ -209,11 +221,11 @@ class OrderController extends Controller
                             $key = 'Number ' . (int) $prize->name;
                             $data[$key] = false;
 
-                            if ($isNumberWinner) continue; // exclusive
+                            if ($isNumberWinner) continue;
 
                             if ($matchCount === (int) $prize->name) {
                                 $data[$key] = true;
-                                $isNumberWinner = true; // block lower tiers
+                                $isNumberWinner = true;
                             }
                         }
                     }
@@ -223,30 +235,36 @@ class OrderController extends Controller
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
-                    $summery[$name] = [
-                        'match_type' => $name,
-                        'winners' =>  $orders->where($name, true)->count(),
-                        'prize_per_winner' => $type->prize,
-                        'tickets' => $orders->where($name, true)->values(),
-                        'total_amount' => ($orders->where($name, true)->count() * $type->prize)
-                    ];
+                    if ($orders->where($name, true)->count() > 0) {
+                        $summery[$name] = [
+                            'match_type' => $name,
+                            'winners' =>  $orders->where($name, true)->count(),
+                            'prize_per_winner' => $type->prize,
+                            'tickets' => $orders->where($name, true)->values(),
+                            'total_amount' => ($orders->where($name, true)->count() * $type->prize)
+                        ];
+                    }
                 } else if ($type->name === 'Chance') {
                     $name = $type->name . ' ' . $type->chance_number;
-                    $summery[$name] = [
-                        'match_type' => $name,
-                        'winners' =>  $orders->where($name, true)->count(),
-                        'prize_per_winner' => $type->prize,
-                        'tickets' => $orders->where($name, true)->values(),
-                        'total_amount' => ($orders->where($name, true)->count() * $type->prize)
-                    ];
+                    if ($orders->where($name, true)->count() > 0) {
+                        $summery[$name] = [
+                            'match_type' => $name,
+                            'winners' =>  $orders->where($name, true)->count(),
+                            'prize_per_winner' => $type->prize,
+                            'tickets' => $orders->where($name, true)->values(),
+                            'total_amount' => ($orders->where($name, true)->count() * $type->prize)
+                        ];
+                    }
                 } else {
-                    $summery[$type->name] = [
-                        'match_type' => $type->name,
-                        'winners' =>  $orders->where($type->name, true)->count(),
-                        'prize_per_winner' => $type->prize,
-                        'tickets' => $orders->where($type->name, true)->values(),
-                        'total_amount' => ($orders->where($type->name, true)->count() * $type->prize)
-                    ];
+                    if ($orders->where($type->name, true)->count() > 0) {
+                        $summery[$type->name] = [
+                            'match_type' => $type->name,
+                            'winners' =>  $orders->where($type->name, true)->count(),
+                            'prize_per_winner' => $type->prize,
+                            'tickets' => $orders->where($type->name, true)->values(),
+                            'total_amount' => ($orders->where($type->name, true)->count() * $type->prize)
+                        ];
+                    }
                 }
             }
         }
@@ -256,7 +274,11 @@ class OrderController extends Controller
             'filters' => request()->only([
                 'product_id',
                 'match_type',
-                'pick_number'
+                'pick_number',
+                'date_from',
+                'time_from',
+                'date_to',
+                'time_to'
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,

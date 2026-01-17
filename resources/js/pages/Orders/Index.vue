@@ -14,8 +14,6 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     product_prizes: Array<any>;
 }>();
 
-console.log(product_prizes)
-
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',

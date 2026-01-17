@@ -1,28 +1,17 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-
 
 const { company_setting } = usePage().props;
 
-const { orders, users, company, filters, categories, products, product_prizes, product, summary } = defineProps<{
-    orders: Array<any>;
+const { filters, products, product_prizes, product, summary } = defineProps<{
     summary: Array<any>;
-    users: Array<any>;
-    company: Record<string, any>;
-    categories: Array<any>;
     products: Array<any>;
     filters: Record<string, any>;
     product_prizes: Array<any>;
     product: Array<any>;
 }>();
-
-console.log(summary);
-// console.log(product_prizes)
-
-// console.log(orders);
-// console.log(filters);
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -36,14 +25,6 @@ const filter = ref({
     pick_number: filters?.pick_number ?? [],
     btn: filters?.btn ?? ''
 });
-
-const modalVisible = ref(false);
-
-// console.log(filter.value.pick_number);
-
-
-const selectedOrder = ref<any | null>(null);
-const showModal = ref(false);
 
 function resetFilters() {
     filter.value = {
@@ -119,22 +100,22 @@ const handleSearch = () => {
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
-                        <input type="date"
+                        <input type="date" v-model="filter.date_from"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Time</label>
-                        <input type="time"
+                        <input type="time" v-model="filter.time_from"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
-                        <input type="date"
+                        <input type="date" v-model="filter.date_to"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Time</label>
-                        <input type="time"
+                        <input type="time" v-model="filter.time_to"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                 </div>
