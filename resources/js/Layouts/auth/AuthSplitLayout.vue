@@ -13,20 +13,28 @@ defineProps<{
 </script>
 
 <template>
-    <div class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0">
+    <div
+        class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0"
+    >
+        <!-- LEFT SIDE -->
         <div class="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-            <div class="absolute inset-0 bg-zinc-900" />
-            <Link :href="route('home')" class="relative z-20 flex items-center text-lg font-medium">
-                <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
-                {{ name }}
-            </Link>
-            <div v-if="quote" class="relative z-20 mt-auto">
-                <blockquote class="space-y-2">
-                    <p class="text-lg">&ldquo;{{ quote.message }}&rdquo;</p>
-                    <footer class="text-sm text-neutral-300">{{ quote.author }}</footer>
-                </blockquote>
+            <!-- Background -->
+            <div class="absolute inset-0 bg-zinc-900"></div>
+
+            <!-- Centered Content -->
+            <div class="relative z-20 flex h-full flex-col items-center justify-center text-center">
+                <Link :href="route('home')" class="flex flex-col items-center justify-center">
+                    <!-- Responsive Logo size -->
+                    <AppLogoIcon class="size-16 sm:size-20 md:size-24 fill-current text-white" />
+                    <!-- Name under logo -->
+                    <div class="mt-4 text-lg sm:text-xl font-semibold">
+                        WADI SHUKRAN
+                    </div>
+                </Link>
             </div>
         </div>
+
+        <!-- RIGHT SIDE -->
         <div class="lg:p-8">
             <div class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
                 <div class="flex flex-col space-y-2 text-center">

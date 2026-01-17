@@ -45,7 +45,7 @@ const isExpanded = (items?: NavItem[]) => {
                     <SidebarMenuButton v-if="!item.items" as-child :class="{ 'bg-gray-300/50': isActive(item.href) }">
                         <Link :href="item.href">
                             <component :is="item.icon" v-if="item.icon" />
-                            <span>{{ item.title }}</span>
+                            <span class="font-bold">{{ item.title }}</span>
                         </Link>
                     </SidebarMenuButton>
 
@@ -54,7 +54,7 @@ const isExpanded = (items?: NavItem[]) => {
                         <CollapsibleTrigger as-child>
                             <SidebarMenuButton :class="{ 'bg-muted font-semibold': isExpanded(item.items) }">
                                 <component :is="item.icon" v-if="item.icon" />
-                                <span>{{ item.title }}</span>
+                                <span class="font-bold">{{ item.title }}</span>
                                 <ChevronRight
                                     class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                             </SidebarMenuButton>

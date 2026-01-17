@@ -184,12 +184,6 @@ function goTo(url) {
                         </button>
                     </div>
                 </div>
-                <!-- <div class="mt-4 flex justify-end">
-                    <button @click="resetFilters"
-                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
-                        Reset Filters
-                    </button>
-                </div> -->
             </div>
 
             <!-- Table View -->
