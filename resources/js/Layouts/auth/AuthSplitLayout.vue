@@ -2,10 +2,6 @@
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
-const page = usePage();
-const name = page.props.name;
-const quote = page.props.quote;
-
 defineProps<{
     title?: string;
     description?: string;
@@ -41,7 +37,6 @@ defineProps<{
                     <h1 class="text-xl font-medium tracking-tight" v-if="title">{{ title }}</h1>
                     <p class="text-sm text-muted-foreground" v-if="description">{{ description }}</p>
                 </div>
-                <slot />
             </div>
         </div>
     </div>

@@ -12,25 +12,8 @@ const { users } = defineProps<{
     users: Array<any>;
 }>();
 
-const showModal = ref(false);
 const showDeleteModal = ref(false);
 const deletingUser = ref(null);
-const isEditing = ref(false);
-const editingUser = ref(null);
-const form = useForm({
-    user_type: 'agent',
-    role: 'Agent',
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    username: '',
-    password: '',
-    trn: '',
-    password_confirmation: '',
-    photo: null,
-    join_date: ''
-});
 
 function deleteUser(user) {
     showDeleteModal.value = true;

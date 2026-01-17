@@ -7,9 +7,7 @@ const { product } = defineProps<{
     product: Array<any>;
 }>();
 
-function formatPrizes(prizes) {
-    return Object.entries(prizes).map(([key, value]) => ({ key, value }));
-}
+
 </script>
 
 

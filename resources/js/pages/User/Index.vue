@@ -161,8 +161,8 @@ function toggleUserStatus(user) {
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
                                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
-                                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                    v-for="role in user.roles">
+                                <span v-for="role in user.roles" :key="role.id ?? role.name"
+                                    class="inline-block px-3 py-1 rounded-full text-sm font-medium border">
                                     {{ role?.name || 'No Role' }}
                                 </span>
                             </div>
@@ -232,7 +232,7 @@ function toggleUserStatus(user) {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -248,10 +248,11 @@ function toggleUserStatus(user) {
                                     <div class="text-gray-500 text-sm">{{ user.phone || 'No phone' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        v-for="role in user.roles">
+                                    <span v-for="role in user.roles" :key="role.id ?? role.name"
+                                        class="inline-block px-3 py-1 rounded-full text-sm font-medium border">
                                         {{ role?.name || 'No Role' }}
                                     </span>
+
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">

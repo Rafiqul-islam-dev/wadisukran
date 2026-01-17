@@ -8,12 +8,11 @@ import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
 import { Rotate3D } from 'lucide-vue-next';
 
-const { users, roles } = defineProps<{
+const { users } = defineProps<{
     users: Array<any>;
     roles: Array<any>;
 }>();
 
-const showModal = ref(false);
 const showDeleteModal = ref(false);
 const deletingUser = ref(null);
 
@@ -76,7 +75,7 @@ const restoreUser = (id) => {
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
                                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
                                 <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                    v-for="role in user.roles">
+                                    v-for="role in user.roles" :key="role.id">
                                     {{ role?.name || 'No Role' }}
                                 </span>
                             </div>
@@ -158,7 +157,7 @@ const restoreUser = (id) => {
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        v-for="role in user.roles">
+                                        v-for="role in user.roles" :key="role.id">
                                         {{ role?.name || 'No Role' }}
                                     </span>
                                 </td>
