@@ -101,6 +101,12 @@ const mainNavItems: NavItem[] = [
                 icon: Users,
                 permission: 'show order history'
             },
+            {
+                title: 'Winner Report',
+                href: '/reports/winner-report',
+                icon: Users,
+                permission: 'show winner report'
+            },
         ],
         permission: 'show report'
     },
@@ -109,6 +115,19 @@ const mainNavItems: NavItem[] = [
         href: '/probable-wins',
         icon: Wind,
         permission: 'show probable wins'
+    },
+    {
+        title: 'Payment',
+        icon: Folder,
+        items: [
+            {
+                title: 'All Payment',
+                href: '/payments/all-payment',
+                icon: Users,
+                permission: 'show all payment'
+            },
+        ],
+        permission: 'all payment'
     },
     {
         title: 'Settings',

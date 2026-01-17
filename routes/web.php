@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Agent\AgentController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Product\DrawController;
+use App\Http\Controllers\Report\WinnerReportController;
 use App\Http\Controllers\Role\PermissionController;
 
 Route::get('/', function () {
@@ -109,4 +111,14 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('search', [AppBannerController::class, 'search'])
             ->name('search');
     });
+
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('winner-report', [WinnerReportController::class, 'winnerReport'])->name('winner-report');
+    });
+
+
+      Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('all-payment', [PaymentController::class, 'allPayment'])->name('all-payment');
+    });
+
 });
