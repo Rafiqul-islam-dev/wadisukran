@@ -91,7 +91,7 @@ const mainNavItems: NavItem[] = [
             },
             {
                 title: 'Cancel order',
-                href: '/cancel-report',
+                href: '/reports/cancel-report',
                 icon: Users,
                 permission: 'show cancel order'
             },

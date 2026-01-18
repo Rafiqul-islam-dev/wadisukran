@@ -14,6 +14,7 @@ use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
 use App\Http\Controllers\Role\PermissionController;
+use App\Http\Controllers\Report\CancelReportController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -115,6 +116,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('winner-report', [WinnerReportController::class, 'winnerReport'])->name('winner-report');
+        Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
     });
 
 
