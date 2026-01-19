@@ -11,6 +11,7 @@ use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Product\CheckWinController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
 use App\Http\Controllers\Role\PermissionController;
@@ -86,6 +87,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::post('store', [DrawController::class, 'store'])->name('store');
         Route::get('/{draw}', [OrderController::class, 'drawDetails'])->name('details');
     });
+    Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
 
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
