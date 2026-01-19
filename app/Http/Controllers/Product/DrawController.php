@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Product;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Win;
 use App\Services\DrawService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,5 +44,12 @@ class DrawController extends Controller
         // return $validated;
         $this->drawService->createWin($validated);
         return back();
+    }
+
+    public function histories(){
+        $wins = Win::latest()->paginate(10);
+        return Inertia::render('Product/Draws/History', [
+            'wins' => $wins
+        ]);
     }
 }
