@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
+import { BreadcrumbItem } from '@/types';
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Winner Report',
+        href: '/reports/winner-report',
+    },
+];
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Winner Report" />
+    <AppLayout :breadcrumbs="breadcrumbs">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">

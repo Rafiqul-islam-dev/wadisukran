@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { router, useForm } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { RotateCcw } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Trashed Products',
+        href: '/trashed-products',
+    },
+];
 
 const { products } = defineProps<{
     products: Array<any>;
@@ -47,14 +55,15 @@ function formatDrawTime(time) {
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Trashed Products" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
+            <!-- <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="text-xl lg:text-4xl font-bold text-gray-900 mb-2">Trashed Products</h1>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Table View -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">

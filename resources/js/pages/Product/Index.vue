@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Product List',
+        href: '/products',
+    },
+];
 
 const { products, categories } = defineProps<{
     products: Array<any>;
@@ -261,7 +269,8 @@ const handleCategoryChange = (e: Event) => {
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Product List" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">

@@ -6,6 +6,14 @@ import { toast } from 'vue-sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Agent List',
+        href: '/agents',
+    },
+];
 
 const { users } = defineProps<{
     users: Array<any>;
@@ -123,8 +131,8 @@ function toggleUserStatus(user) {
 
 <template>
 
-    <Head title="Agents" />
-    <AppLayout>
+    <Head title="Agent List" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">

@@ -3,9 +3,16 @@ import { reactive, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
+import { BreadcrumbItem } from '@/types';
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Draw',
+        href: '/draws',
+    },
+];
 
 const { categories, products, filters } = defineProps<{
     categories: Array<any>;
@@ -22,6 +29,7 @@ const filter = ref({
 });
 
 const drawNumbers = reactive<Record<number, string[]>>({});
+
 products.forEach((product: any) => {
     drawNumbers[product.id] = Array(product.pick_number).fill('');
 });
@@ -93,7 +101,9 @@ const saveDraw = () => {
 </script>
 
 <template>
-    <AppLayout>
+
+    <Head title="Draws" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-2 bg-gradient-to-br from-gray-50 to-gray-100">
 
             <div class="mx-auto">
@@ -184,7 +194,7 @@ const saveDraw = () => {
 
                     <!-- Action Buttons -->
                     <div class="flex gap-3 mt-6">
-                        <Button @click="saveDraw" class="bg-blue-500 hover:bg-blue-600 text-white">
+                        <Button @click="saveDraw" class="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer">
                             Save Draw
                         </Button>
                         <Button variant="destructive" @click="clearAll">

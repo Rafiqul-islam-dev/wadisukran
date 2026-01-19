@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Banners',
+        href: '/banners',
+    },
+];
 
 const { banners } = defineProps<{
     banners: Array<any>;
@@ -103,7 +111,9 @@ function deleteBanner(id) {
 </script>
 
 <template>
-    <AppLayout>
+
+    <Head title="Banners" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">

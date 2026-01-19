@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
-import { toast } from 'vue-sonner';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Cancelled Orders',
+        href: '/reports/cancel-report',
+    },
+];
 
 const { company_setting } = usePage().props;
 const { users, filters, orders } = defineProps<{
@@ -43,7 +50,7 @@ function resetFilters() {
 const handleSearch = () => {
     router.get(
         route('reports.cancel-report'),
-        { 
+        {
             ...filter.value,
             status: 'Cancel' // Match database status value
         },
@@ -75,13 +82,16 @@ const formatCurrency = (amount: number) => {
 </script>
 
 <template>
-    <AppLayout>
+
+    <Head title="Cancelled Order" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-6">
             <!-- Header Section -->
             <div class="mb-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                        <h1
+                            class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                             Cancelled Orders
                         </h1>
                         <p class="text-gray-600 mt-1">Search and manage your cancelled orders</p>
@@ -94,18 +104,21 @@ const formatCurrency = (amount: number) => {
             </div>
 
             <!-- Filter Section with Enhanced Design -->
-            <div class="bg-white rounded-3xl shadow-2xl p-6 mb-6 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
+            <div
+                class="bg-white rounded-3xl shadow-2xl p-6 mb-6 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
                 <div class="flex items-center mb-4">
                     <div class="w-1 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full mr-3"></div>
                     <h2 class="text-xl font-bold text-gray-800">Search Filters</h2>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
                     <!-- User Select -->
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                             Select User
                         </label>
@@ -121,8 +134,11 @@ const formatCurrency = (amount: number) => {
                     <!-- From Date -->
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
                             </svg>
                             From Date
                         </label>
@@ -133,8 +149,10 @@ const formatCurrency = (amount: number) => {
                     <!-- From Time -->
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             From Time
                         </label>
@@ -145,8 +163,11 @@ const formatCurrency = (amount: number) => {
                     <!-- To Date -->
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
                             </svg>
                             To Date
                         </label>
@@ -157,8 +178,10 @@ const formatCurrency = (amount: number) => {
                     <!-- To Time -->
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             To Time
                         </label>
@@ -172,14 +195,17 @@ const formatCurrency = (amount: number) => {
                     <button @click="resetFilters"
                         class="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
                         </svg>
                         Reset
                     </button>
                     <button @click="handleSearch"
                         class="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                         Search Orders
                     </button>
@@ -222,7 +248,7 @@ const formatCurrency = (amount: number) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="(order, index) in orders" :key="order.id" 
+                            <tr v-for="(order, index) in orders" :key="order.id"
                                 class="hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all duration-200"
                                 :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -230,7 +256,8 @@ const formatCurrency = (amount: number) => {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-white font-bold mr-2">
+                                        <div
+                                            class="w-8 h-8 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full flex items-center justify-center text-white font-bold mr-2">
                                             {{ order.user?.name?.charAt(0) || 'V' }}
                                         </div>
                                         <span class="font-medium text-gray-900">{{ order.user?.name || 'N/A' }}</span>
@@ -240,7 +267,8 @@ const formatCurrency = (amount: number) => {
                                     {{ formatDate(order.created_at) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                                    <span
+                                        class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                                         {{ order.product?.title || 'N/A' }}
                                     </span>
                                 </td>
@@ -268,10 +296,12 @@ const formatCurrency = (amount: number) => {
                                     <span class="font-bold text-gray-900">{{ order.quantity || 0 }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="font-bold text-orange-600 text-lg">{{ formatCurrency(order.total_price || 0) }}</span>
+                                    <span class="font-bold text-orange-600 text-lg">{{ formatCurrency(order.total_price
+                                        || 0) }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <button class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                    <button
+                                        class="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                                         View Details
                                     </button>
                                 </td>
@@ -283,15 +313,20 @@ const formatCurrency = (amount: number) => {
                     <div v-if="!orders || orders.length === 0" class="text-center py-16">
                         <div class="relative">
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="w-32 h-32 bg-gradient-to-br from-orange-200 to-amber-200 rounded-full opacity-20 animate-pulse"></div>
+                                <div
+                                    class="w-32 h-32 bg-gradient-to-br from-orange-200 to-amber-200 rounded-full opacity-20 animate-pulse">
+                                </div>
                             </div>
-                            <svg class="w-20 h-20 text-orange-300 mx-auto mb-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            <svg class="w-20 h-20 text-orange-300 mx-auto mb-4 relative z-10" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                             </svg>
                         </div>
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">No Cancelled Orders Found</h3>
                         <p class="text-gray-500 mb-6">Try adjusting your search filters to see more results.</p>
-                        <button @click="resetFilters" class="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-semibold shadow-lg">
+                        <button @click="resetFilters"
+                            class="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-semibold shadow-lg">
                             Clear All Filters
                         </button>
                     </div>

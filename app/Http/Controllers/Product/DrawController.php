@@ -12,6 +12,7 @@ use Inertia\Inertia;
 class DrawController extends Controller
 {
     protected $drawService;
+
     public function __construct(DrawService $drawService)
     {
         $this->drawService = $drawService;
@@ -29,19 +30,18 @@ class DrawController extends Controller
     }
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'date' => ['required', 'date'],
             'time' => ['required', 'date_format:H:i'],
 
             'products' => ['required', 'array', 'min:1'],
 
             'products.*.id' => ['required', 'integer', 'exists:products,id'],
-
-            // 'products.*.numbers' => ['required', 'array', 'min:1'],
-
-            // 'products.*.numbers.*' => ['required', 'integer'],
+            'products.*.numbers' => ['required', 'array'],
+            'products.*.numbers.*' => ['integer']
         ]);
-
-        return $request->all();
+        // return $validated;
+        $this->drawService->createWin($validated);
+        return back();
     }
 }

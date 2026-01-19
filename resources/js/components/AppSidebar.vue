@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -84,7 +83,7 @@ const mainNavItems: NavItem[] = [
         icon: Folder,
         items: [
             {
-                title: 'Daily Summary Report',
+                title: 'Daily Sales Report',
                 href: '/orders',
                 icon: Users,
                 permission: 'show daily summery report'
@@ -94,12 +93,6 @@ const mainNavItems: NavItem[] = [
                 href: '/reports/cancel-report',
                 icon: Users,
                 permission: 'show cancel order'
-            },
-            {
-                title: 'Order History',
-                href: '/oder-history',
-                icon: Users,
-                permission: 'show order history'
             },
             {
                 title: 'Winner Report',

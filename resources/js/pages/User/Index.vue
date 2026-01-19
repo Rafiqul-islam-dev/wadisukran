@@ -6,6 +6,14 @@ import { toast } from 'vue-sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'User List',
+        href: '/users',
+    },
+];
 
 const { users, roles } = defineProps<{
     users: Array<any>;
@@ -122,15 +130,14 @@ function toggleUserStatus(user) {
 </script>
 
 <template>
-
     <Head title="Users" />
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
-                    <p class="text-gray-600 hidden md:block">Manage system users and their roles</p>
+                    <h1 class="lg:text-xl font-bold text-gray-900 mb-2">Users Management</h1>
+                    <!-- <p class="text-gray-600 hidden md:block">Manage system users and their roles</p> -->
                 </div>
                 <button v-if="can('user create')" @click="openModal()"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">

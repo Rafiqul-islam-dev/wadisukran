@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { computed, ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Probable Wins',
+        href: '/probable-wins',
+    },
+];
 const { company_setting } = usePage().props;
 
 const { filters, products, product_prizes, product, summary } = defineProps<{
@@ -73,7 +80,9 @@ const handleSearch = () => {
 </script>
 
 <template>
-    <AppLayout>
+
+    <Head title="Probable Wins" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Filters -->
             <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">

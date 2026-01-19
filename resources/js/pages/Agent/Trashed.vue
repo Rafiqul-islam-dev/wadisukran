@@ -7,6 +7,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
 import { Rotate3D } from 'lucide-vue-next';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Trashed Agents',
+        href: '/agents/trashed',
+    },
+];
 
 const { users } = defineProps<{
     users: Array<any>;
@@ -47,15 +55,15 @@ const confirmDelete = () => {
 
 <template>
 
-    <Head title="Agents" />
-    <AppLayout>
+    <Head title="Trashed Agents" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
+            <!-- <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Trashed Agents</h1>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Users Cards Grid (Mobile) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 md:hidden">
@@ -137,7 +145,7 @@ const confirmDelete = () => {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>

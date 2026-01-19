@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Daily Sales Report',
+        href: '/orders',
+    },
+];
 
 const { company_setting } = usePage().props;
 const { orders, users, company, filters, categories, products, product_prizes } = defineProps<{
@@ -101,7 +109,8 @@ function goTo(url) {
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Daily Sales Report" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-6">
 
             <div class="bg-white rounded-3xl shadow-2xl p-6 mb-6 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
@@ -109,9 +118,9 @@ function goTo(url) {
                     <div class="w-1 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full mr-3"></div>
                     <h2 class="text-xl font-bold text-gray-800">Search Filters</h2>
                 </div>
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    
+
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +246,7 @@ function goTo(url) {
                         Search Orders
                     </button>
                 </div>
-            </div>  
+            </div>
 
             <!-- Table View -->
             <div class="bg-white rounded-3xl shadow-2xl border-2 border-orange-100">
