@@ -20,8 +20,8 @@ const { categories, products, filters } = defineProps<{
     products: Array<any>;
 }>();
 const form = useForm({
-    date: '',
-    time: '11:59',
+    date: new Date().toISOString().split('T')[0],
+    time: '23:59',
     products: []
 });
 const filter = ref({
@@ -63,8 +63,8 @@ const clearAll = () => {
     });
 
     // Optional resets
-    form.date = '';
-    form.time = '11:59';
+    form.date = new Date().toISOString().split('T')[0];
+    form.time = '23:59';
 };
 
 

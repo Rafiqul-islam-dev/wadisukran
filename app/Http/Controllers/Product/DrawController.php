@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Win;
 use App\Services\DrawService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -41,13 +42,17 @@ class DrawController extends Controller
             'products.*.numbers' => ['required', 'array'],
             'products.*.numbers.*' => ['integer']
         ]);
-        // return $validated;
-        $this->drawService->createWin($validated);
+        $toTime = Carbon::createFromFormat('Y-m-d H:i', $validated['date'] . ' ' . $validated['time']);
+        $toTime->second(59);
+        $data['to_time'] = $toTime->toDateTimeString(); // Format it as a string 'Y-m-d H:i:s'
+        $data['products'] = $validated['products'];
+        $this->drawService->createWin($data);
         return back();
     }
 
-    public function histories(){
-        $wins = Win::latest()->paginate(10);
+    public function histories()
+    {
+        $wins = Win::latest()->with('product')->paginate(10);
         return Inertia::render('Product/Draws/History', [
             'wins' => $wins
         ]);

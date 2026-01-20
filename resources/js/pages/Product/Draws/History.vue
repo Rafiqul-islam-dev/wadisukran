@@ -15,29 +15,32 @@ const breadcrumbs: BreadcrumbItem[] = [
 const { wins } = defineProps<{
     wins: Array<any>;
 }>();
+console.log(wins)
 
 const formatDate = (date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    const parsedDate = new Date(date);
+    const formattedDate = new Intl.DateTimeFormat('en-US', {
         month: 'long',
         day: '2-digit',
-        year: 'numeric'
-    }).format(new Date(date));
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+    }).format(parsedDate);
+
+    return formattedDate.replace(' at', '');
 };
 
 const formatTime = (time) => {
-    if (!time) return '';
-
-    const [hours, minutes] = time.split(':');
-
-    const date = new Date();
-    date.setHours(hours, minutes, 0);
-
+    const date = new Date(time);
     return new Intl.DateTimeFormat('en-US', {
-        hour: 'numeric',
+        hour: '2-digit',
         minute: '2-digit',
+        second: '2-digit',
         hour12: true,
     }).format(date);
 };
+
 
 </script>
 
@@ -119,12 +122,16 @@ const formatTime = (time) => {
                                         {{ (wins?.current_page - 1) * wins?.per_page + index + 1 }}
                                     </td>
                                     <td class="px-6 py-4 border-r text-center">
-                                        {{ formatDate(win.win_date) }} {{ formatTime(win.win_time) }}
+                                        <p class="text-lg">
+                                            {{ formatDate(win.draw_time) }}
+                                        </p>
+                                        <p class="font-bold text-md" v-if="win.from_time && win.to_time">
+                                            {{ win.product?.draw_type === 'daily' ? formatDate(win.from_time) : formatTime(win.from_time) }} - {{ win.product?.draw_type === 'daily' ? formatDate(win.to_time) : formatTime(win.to_time) }}
+                                        </p>
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
-                                            <Input v-for="(number, idx) in win.win_number" :key="idx" :value="number"
-                                            disabled class="w-10 h-10 text-center font-bold disabled:border-orange-700 disabled:text-black disabled:opacity-100 disabled:bg-orange-100 border-2" />
+                                            <div v-for="(number, idx) in win.win_number" :key="idx" class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2">{{ number }}</div>
                                         </div>
 
                                     </td>

@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('histories', [DrawController::class, 'histories'])->name('histories');
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
+    Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
 
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
