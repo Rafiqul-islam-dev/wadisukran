@@ -8,6 +8,7 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
 use App\Http\Controllers\Category\CategoryController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
@@ -25,9 +26,7 @@ require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->middleware('can:show dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->middleware('can:show dashboard')->name('dashboard');
     // Role Management Routes
     Route::prefix('roles')->name('roles.')->middleware('can:show roles')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
@@ -100,7 +99,6 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     // Additional banner routes
     Route::prefix('banners')->name('banners.')->group(function () {
-
         // Toggle banner status
         Route::patch('{banner}/toggle-status', [AppBannerController::class, 'toggleStatus'])
             ->name('toggle-status');

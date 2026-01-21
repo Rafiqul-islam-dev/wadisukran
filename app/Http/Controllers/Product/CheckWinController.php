@@ -17,9 +17,10 @@ class CheckWinController extends Controller
         $this->checkWinService = $checkWinService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $wins = OrderTicket::get();
+
         return Inertia::render('CheckWin/Index');
     }
 
@@ -29,7 +30,9 @@ class CheckWinController extends Controller
             'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
-        return Inertia::render('CheckWin/Index',[
+
+        return response()->json([
+            'success' => true,
             'summery' => $summery
         ]);
     }

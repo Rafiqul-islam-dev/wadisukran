@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage, Inertia } from '@inertiajs/vue3';
+import axios from 'axios';
 import { Ref, ref } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -12,40 +13,46 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const {summery} = usePage().props;
-console.log(summery)
 
-const form = useForm({
-    invoice_no: '', // Form data
-});
+const invoice_no = ref('');
+const errors = ref([]);
 
 const showModal = ref(false);
 const isChecking = ref(false);
+const checkData = ref([]);
 
-const handleCheck = () => {
-    if (!form.invoice_no) {
+const handleCheck = async () => {
+    if (!invoice_no.value) {
         toast.error('Please write the invoice number first.');
         return false;
     }
 
+    showModal.value = true;
     isChecking.value = true;
 
-    // Send the POST request using Inertia's `post()` method
-    form.post(route('check-win'), {
-        onBefore: () => {
-            showModal.value = true;
-            isChecking.value = true;
-        },
-        onFinish: (response) => {
-            console.log(summery);
-            isChecking.value = false;
-        },
-        onError: (error) => {
-            console.log(error);
-            isChecking.value = false;
-        }
-    });
+    try {
+        // Make the POST request using Axios
+        const response = await axios.post(route('check-win'), {
+            invoice_no: invoice_no.value,  // Send invoice_no as part of the body
+        });
+
+        // Update checkData with the response data
+        checkData.value = response.data.summery;  // Assuming the response contains a `summery` key
+        console.log('Summary received:', checkData.value);
+
+        // Handle other actions after success
+        isChecking.value = false;
+    } catch (error) {
+        // Handle error
+        console.error('Error fetching data:', error);
+        isChecking.value = false;
+        errors.value = error.response?.data?.errors || [];
+        toast.error('Failed to check invoice. Please try again.');
+    }
 };
+
+
+
 </script>
 <template>
 
@@ -56,7 +63,7 @@ const handleCheck = () => {
             <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
                     <div>
-                        <input v-model="form.invoice_no" type="text" placeholder="Invoice No.."
+                        <input v-model="invoice_no" type="text" placeholder="Invoice No.."
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                     </div>
                     <div class="flex items-center flex-col">
@@ -161,12 +168,13 @@ const handleCheck = () => {
                         </div>
                     </div>
                     <!-- Summary State -->
-                    <div class="text-center">
+                    <div class="text-center" v-if="checkData.value && checkData.value.length > 0">
                         <!-- Success Icon -->
                         <div class="relative mx-auto w-20 h-20 mb-6">
                             <div class="absolute inset-0 bg-green-100 rounded-full"></div>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
@@ -179,10 +187,10 @@ const handleCheck = () => {
 
                         <!-- Summary Content -->
                         <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                            <div v-for="(item, index) in summery" :key="index" class="mb-3 last:mb-0">
+                            <div v-for="(item, index) in checkData.value" :key="index" class="mb-3 last:mb-0">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-sm text-gray-600">{{ item.label }}</span>
-                                    <span class="text-sm font-semibold text-gray-800">{{ item.value }}</span>
+                                    <span class="text-sm text-gray-600">{{ index }}</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ item.winners }}</span>
                                 </div>
                             </div>
                         </div>
@@ -200,10 +208,10 @@ const handleCheck = () => {
                         </div>
                     </div>
 
-                    <div class="text-center" v-if="isChecking === false && form.errors && Object.keys(form.errors).length > 0">
+                    <div class="text-center" v-if="isChecking === false && errors && Object.keys(errors).length > 0">
                         <div class="bg-red-100 text-red-600 p-3 rounded-md">
                             <ul class="list-disc list-inside">
-                                <li v-for="(error, field) in form.errors" :key="field">
+                                <li v-for="(error, field) in errors" :key="field">
                                     {{ error }}
                                 </li>
                             </ul>
