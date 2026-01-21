@@ -37,7 +37,7 @@ products.forEach((product: any) => {
 const generateForProduct = (product: any) => {
     drawNumbers[product.id] = Array.from(
         { length: product.pick_number },
-        () => Math.floor(Math.random() * 10).toString()
+        () => Math.floor(Math.random() * product.type_number).toString()
     );
 };
 
@@ -81,12 +81,21 @@ const handleSearch = () => {
 };
 
 const saveDraw = () => {
-    form.products = products.map((p: any) => ({
-        id: p.id,
-        numbers: (drawNumbers[p.id] ?? [])
-            .filter((n) => n !== '')          // remove empty inputs
-            .map((n) => Number(n)),           // convert to number
-    }));
+    form.products = products
+        .map((p: any) => {
+            const numbers = (drawNumbers[p.id] ?? [])
+                .filter((n) => n !== '')     // remove empty inputs
+                .map((n) => Number(n));      // convert to number
+
+            // return null if no numbers
+            if (numbers.length === 0) return null;
+
+            return {
+                id: p.id,
+                numbers,
+            };
+        })
+        .filter(Boolean);
 
     form.post(route('draws.store'), {
         onSuccess: () => {
@@ -171,8 +180,7 @@ const saveDraw = () => {
                                             <Input v-for="(_, idx) in product.pick_number" :key="idx" type="text"
                                                 :value="drawNumbers[product.id]?.[idx]"
                                                 @input="handleNumberChange(product, idx, $event.target.value)"
-                                                class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold"
-                                                maxlength="1" />
+                                                class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold" />
                                         </div>
                                     </td>
 
