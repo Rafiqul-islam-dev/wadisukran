@@ -126,19 +126,22 @@ const formatTime = (time) => {
                                             {{ formatDate(win.draw_time) }}
                                         </p>
                                         <p class="font-bold text-md" v-if="win.from_time && win.to_time">
-                                            {{ win.product?.draw_type === 'daily' ? formatDate(win.from_time) : formatTime(win.from_time) }} - {{ win.product?.draw_type === 'daily' ? formatDate(win.to_time) : formatTime(win.to_time) }}
+                                            {{ formatTime(win.from_time) }} - {{ formatTime(win.to_time) }}
                                         </p>
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
-                                            <div v-for="(number, idx) in win.win_number" :key="idx" class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2">{{ number }}</div>
+                                            <div v-for="(number, idx) in win.win_number" :key="idx"
+                                                class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2">
+                                                {{ number }}</div>
                                         </div>
 
                                     </td>
 
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
-                                            <Button variant="outline" size="sm" class="cursor-pointer px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 hover:text-white">
+                                            <Button variant="outline" size="sm"
+                                                class="cursor-pointer px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 hover:text-white">
                                                 Edit
                                             </Button>
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Ref, ref } from 'vue';
+import { toast } from 'vue-sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -11,32 +12,40 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const {summery} = usePage().props;
+console.log(summery)
+
 const form = useForm({
-    invoice_no: ''
+    invoice_no: '', // Form data
 });
 
 const showModal = ref(false);
 const isChecking = ref(false);
-// const error = ref('');
 
 const handleCheck = () => {
+    if (!form.invoice_no) {
+        toast.error('Please write the invoice number first.');
+        return false;
+    }
+
     isChecking.value = true;
+
+    // Send the POST request using Inertia's `post()` method
     form.post(route('check-win'), {
         onBefore: () => {
             showModal.value = true;
             isChecking.value = true;
         },
         onFinish: (response) => {
-            console.log(response);
-            // isChecking.value = false;
+            console.log(summery);
+            isChecking.value = false;
         },
         onError: (error) => {
-            console.log(error)
+            console.log(error);
             isChecking.value = false;
-            // showModal.value = false;
         }
     });
-}
+};
 </script>
 <template>
 
@@ -52,7 +61,7 @@ const handleCheck = () => {
                     </div>
                     <div class="flex items-center flex-col">
                         <button @click="handleCheck"
-                            class="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                            class="cursor-pointer px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
                             Check
                         </button>
                     </div>
@@ -151,9 +160,47 @@ const handleCheck = () => {
                                 style="animation-delay: 300ms"></div>
                         </div>
                     </div>
+                    <!-- Summary State -->
+                    <div class="text-center">
+                        <!-- Success Icon -->
+                        <div class="relative mx-auto w-20 h-20 mb-6">
+                            <div class="absolute inset-0 bg-green-100 rounded-full"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
 
-                    <div class="text-center"
-                        v-if="isChecking === false && form.errors && Object.keys(form.errors).length > 0">
+                        <!-- Success Title -->
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Invoice Verified</h3>
+                        <p class="text-gray-600 mb-6">Your invoice has been successfully checked</p>
+
+                        <!-- Summary Content -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+                            <div v-for="(item, index) in summery" :key="index" class="mb-3 last:mb-0">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">{{ item.label }}</span>
+                                    <span class="text-sm font-semibold text-gray-800">{{ item.value }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3">
+                            <button
+                                class="flex-1 bg-white border-2 border-orange-500 text-orange-500 font-semibold py-3 px-6 rounded-lg hover:bg-orange-50 transition-colors">
+                                Check
+                            </button>
+                            <button
+                                class="flex-1 bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg hover:bg-orange-600 transition-colors">
+                                Claim
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center" v-if="isChecking === false && form.errors && Object.keys(form.errors).length > 0">
                         <div class="bg-red-100 text-red-600 p-3 rounded-md">
                             <ul class="list-disc list-inside">
                                 <li v-for="(error, field) in form.errors" :key="field">

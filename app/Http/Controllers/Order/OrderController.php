@@ -49,7 +49,7 @@ class OrderController extends Controller
                     );
                 });
             })
-            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->paginate(10);
+            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->latest()->paginate(10);
         $users = User::select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();
