@@ -18,6 +18,10 @@ class Order extends Model
         'invoice_no',
         'sales_date',
         'draw_number',
+        'commission',
+        'vat',
+        'commission_percentage',
+        'vat_percentage'
     ];
 
     protected $casts = [

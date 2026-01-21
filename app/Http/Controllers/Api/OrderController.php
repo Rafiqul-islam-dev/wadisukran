@@ -52,7 +52,7 @@ class OrderController extends Controller
                 'required',
                 'numeric',
                 'min:0',
-                'max:' . $product->pick_number,
+                'max:' . $product->type_number,
             ],
             'game_cards.*.selected_play_types' => [
                 Rule::requiredIf($product->prize_type === 'bet'),
@@ -61,7 +61,7 @@ class OrderController extends Controller
             'game_cards.*.selected_play_types.*' => [
                 'required',
                 'string',
-                Rule::in(['Straight', 'Ramble', 'Chance']),
+                Rule::in(['Straight', 'Rumble', 'Chance']),
             ],
             'quantity' => 'required|integer|min:1',
             'total_price' => 'required|numeric|min:0',
@@ -79,91 +79,7 @@ class OrderController extends Controller
 
         $validated['user_id'] = Auth::id();
 
-
         $order = $this->orderService->createOrder($validated);
-
-        // $product = Product::find($request->product_id);
-
-        // if (!$product) {
-        //     return response()->json([
-        //         'message' => 'Product not found',
-        //     ], 404);
-        // }
-
-        // $date = Carbon::parse($request->draw_date)->toDateString(); // "2025-08-02"
-        // $time = date('H:i:s', strtotime($request->draw_time)); // "17:00:00"
-        // $drawDateTimeString = $date . ' ' . $time; // "2025-08-02 17:00:00"
-        // $drawDateTime = Carbon::parse($drawDateTimeString);
-
-        // if (now()->gt($drawDateTime)) {
-        //     return response()->json([
-        //         'message' => 'Ticket not available.',
-        //     ], 403);
-        // }
-
-        // // Verify selected_numbers count matches pick_number
-        // foreach ($request->game_cards as $card) {
-        //     if (count($card['selected_numbers']) != $product->pick_number) {
-        //         return response()->json([
-        //             'message' => 'Invalid number of selected numbers',
-        //         ], 422);
-        //     }
-        //     // Verify selected_play_types for prizes type
-        //     if ($product->prize_type == 'bet' && empty($card['selected_play_types'])) {
-        //         return response()->json([
-        //             'message' => 'At least one play type is required for prizes type',
-        //         ], 422);
-        //     }
-        // }
-
-        // $invoiceNumber = now()->format('YmdH') . random_int(1000, 9999);
-
-        // // Before creating the order
-        // $today = today()->toDateString();
-
-        // // Step 1: Check today's draw_number using created_at
-        // $todayDraw = Order::whereDate('created_at', today())
-        //     ->whereNotNull('draw_number')
-        //     ->orderBy('draw_number', 'desc')
-        //     ->value('draw_number');
-
-        // // dd($todayDraw);
-
-        // if ($todayDraw) {
-        //     // Use same number for all today's orders
-        //     $drawNumber = $todayDraw;
-        // } else {
-        //     // Step 2: No draw today, get last draw from previous days
-        //     $lastPrevious = Order::orderBy('sales_date', 'desc')
-        //         ->orderBy('draw_number', 'desc')
-        //         ->value('draw_number');
-
-        //     if ($lastPrevious) {
-        //         $drawNumber = $lastPrevious + 1;
-        //     } else {
-        //         // Step 3: No orders at all
-        //         $drawNumber = 1;
-        //     }
-        // }
-
-
-        // $order = Order::create([
-        //     'user_id' => Auth::id(),
-        //     'product_id' => $request->product_id,
-        //     'quantity' => $request->quantity,
-        //     'total_price' => $request->total_price,
-        //     'invoice_no' => $invoiceNumber,
-        //     'sales_date' => today()->toDateString(),
-        //     'draw_number' => $drawNumber,
-        // ]);
-
-        // foreach ($request->game_cards as $card) {
-        //     OrderTicket::create([
-        //         'order_id' => $order->id,
-        //         'selected_numbers' => $card['selected_numbers'],
-        //         'selected_play_types' => $card['selected_play_types']
-        //     ]);
-        // }
 
         return response()->json([
             'message' => 'Order created successfully',

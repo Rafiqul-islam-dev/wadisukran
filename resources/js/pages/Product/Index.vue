@@ -187,24 +187,24 @@ watch(() => form.pick_number, (newPickNumber) => {
         const basePrizes = [
             {
                 type: 'bet',
-                name: 'straight',
-                prize: form.bet_prizes.find(p => p.name === 'straight')?.prize || 0,
+                name: 'Straight',
+                prize: form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0,
                 chance_number: null
             },
             {
                 type: 'bet',
-                name: 'rumble',
-                prize: form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0,
+                name: 'Rumble',
+                prize: form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0,
                 chance_number: null
             }
         ];
 
         // Add chance prizes based on pick_number
         for (let i = 1; i <= pickNum; i++) {
-            const existingPrize = form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i);
+            const existingPrize = form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i);
             basePrizes.push({
                 type: 'bet',
-                name: 'chance',
+                name: 'Chance',
                 prize: existingPrize?.prize || 0,
                 chance_number: i
             });
@@ -223,7 +223,7 @@ const chancePrizes = computed(() => {
 
 function updateBetPrize(name, chanceNumber, value) {
     const prizeIndex = form.bet_prizes.findIndex(p => {
-        if (name === 'chance') {
+        if (name === 'Chance') {
             return p.name === name && p.chance_number === chanceNumber;
         }
         return p.name === name;
@@ -237,7 +237,7 @@ function updateBetPrize(name, chanceNumber, value) {
             type: 'bet',
             name: name,
             prize: parseFloat(value) || 0,
-            chance_number: name === 'chance' ? chanceNumber : null
+            chance_number: name === 'Chance' ? chanceNumber : null
         });
     }
 }
@@ -571,9 +571,9 @@ const handleCategoryChange = (e: Event) => {
                                             <div class="grid grid-cols-2 gap-4 mt-5 mb-5">
                                                 <div>
                                                     <label class="flex items-center">
-                                                        <input v-model="form.regular_type" type="radio" value="daily"
+                                                        <input v-model="form.regular_type" type="radio" value="daily" :disabled="form.regular_type !== 'daily'"
                                                             name="regular_type"
-                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 disabled:cursor-not-allowed border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
                                                         <span class="ml-2 text-sm font-medium text-gray-700">
                                                             Daily Draw
                                                         </span>
@@ -582,7 +582,7 @@ const handleCategoryChange = (e: Event) => {
 
                                                 <div>
                                                     <label class="flex items-center">
-                                                        <input v-model="form.regular_type" type="radio"
+                                                        <input v-model="form.regular_type" type="radio" :disabled="form.regular_type !== 'hourly'"
                                                             name="regular_type" value="hourly"
                                                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
                                                         <span class="ml-2 text-sm font-medium text-gray-700">
@@ -712,8 +712,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>STRAIGHT</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'straight')?.prize || 0"
-                                                            @input="updateBetPrize('straight', null, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0"
+                                                            @input="updateBetPrize('Straight', null, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -721,8 +721,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>RUMBLE</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0"
-                                                            @input="updateBetPrize('rumble', null, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0"
+                                                            @input="updateBetPrize('Rumble', null, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -731,8 +731,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>CHANCE {{ i }}</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i)?.prize || 0"
-                                                            @input="updateBetPrize('chance', i, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i)?.prize || 0"
+                                                            @input="updateBetPrize('Chance', i, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
