@@ -90,6 +90,7 @@ class ProductService
                     'product_id' => $product->id,
                     'type'       => $prize['type'],
                     'name'       => $prize['name'],
+                    'chance_number'       => $prize['chance_number'],
                     'prize'      => $prize['prize']
                 ]);
             }
@@ -105,7 +106,7 @@ class ProductService
             }
             $product->prizes()->delete();
             $product->forceDelete();
-            
+
             return 'Product permanently deleted successfully.';
         }
         return 'Product not found.';
