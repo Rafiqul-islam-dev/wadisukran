@@ -82,16 +82,13 @@ class OrderSeeder extends Seeder
         // Keep stable ordering for matching logic
         sort($nums);
 
-        return array_map(
-            fn($n) => str_pad((string) $n, 2, '0', STR_PAD_LEFT),
-            $nums
-        );
+        return array_map(fn($n) => (string) $n, $nums);
     }
 
 
     private function randomPlayTypes(): array
     {
-        $types = ['Straight', 'Ramble', 'Chance'];
+        $types = ['Straight', 'Rumble', 'Chance'];
         shuffle($types);
 
         // at least 1, at most 3

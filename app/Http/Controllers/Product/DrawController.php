@@ -57,4 +57,9 @@ class DrawController extends Controller
             'wins' => $wins
         ]);
     }
+
+    public function histories_delete(Win $win){
+        $win->delete();
+        return back();
+    }
 }

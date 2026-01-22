@@ -127,7 +127,7 @@ const { product } = defineProps<{
                                 <div v-for="prize in product.prizes" :key="prize.key"
                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
                                     <span class="font-medium text-gray-700">{{ prize.name }} <span
-                                            v-if="prize.name === 'chance'">{{ prize.chance_number }} numbers</span>
+                                            v-if="prize.name === 'Chance'">{{ prize.chance_number }} numbers</span>
                                         <span v-if="prize.type === 'number'">Number Matches</span> :</span>
                                     <span class="font-semibold text-green-600">{{ prize.prize }} {{
                                         company_setting?.currency }}</span>

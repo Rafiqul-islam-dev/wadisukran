@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Input } from '@/components/ui/input';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { toast } from 'vue-sonner';
+import { can } from '@/helpers/permissions';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -15,7 +17,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 const { wins } = defineProps<{
     wins: Array<any>;
 }>();
-console.log(wins)
 
 const formatDate = (date) => {
     const parsedDate = new Date(date);
@@ -41,6 +42,18 @@ const formatTime = (time) => {
     }).format(date);
 };
 
+const deleteHistory = (id) => {
+    if(confirm('Are you sure to delete this History?')){
+        router.get(route('draws.histories-delete', id), {}, {
+            onSuccess: () => {
+                toast.success('History deleted successfully.');
+            },
+            onError: () => {
+                toast.error('Something went wrong when deleting History');
+            }
+        });
+    }
+}
 
 </script>
 
@@ -140,12 +153,12 @@ const formatTime = (time) => {
 
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
-                                            <Button variant="outline" size="sm"
+                                            <!-- <Button variant="outline" size="sm"
                                                 class="cursor-pointer px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 hover:text-white">
                                                 Edit
-                                            </Button>
+                                            </Button> -->
 
-                                            <Button size="sm" class="bg-red-500 hover:bg-red-700 cursor-pointer">
+                                            <Button v-if="can('draw history delete')" @Click="deleteHistory(win.id)" size="sm" class="bg-red-500 hover:bg-red-700 cursor-pointer">
                                                 Delete
                                             </Button>
                                         </div>

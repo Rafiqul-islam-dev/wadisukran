@@ -85,9 +85,11 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/', [DrawController::class, 'index'])->name('index');
         Route::post('store', [DrawController::class, 'store'])->name('store');
         Route::get('histories', [DrawController::class, 'histories'])->name('histories');
+        Route::get('histories/delete/{win}', [DrawController::class, 'histories_delete'])->name('histories-delete');
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
     Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
+    Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');

@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
+import { can } from '@/helpers/permissions';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -42,7 +43,7 @@ const formatCurrency = (amount: number) => {
             <!-- Metrics Cards -->
             <div class="grid gap-4 md:grid-cols-3">
                 <!-- Total Agents Card -->
-                <div
+                <div v-if="can('show total agents')"
                     class="group relative overflow-hidden rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition-all hover:shadow-md dark:border-orange-900/30 dark:from-orange-950/20 dark:to-gray-900">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -62,7 +63,7 @@ const formatCurrency = (amount: number) => {
                 </div>
 
                 <!-- Today Sales Card -->
-                <div
+                <div v-if="can('show today sales')"
                     class="group relative overflow-hidden rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm transition-all hover:shadow-md dark:border-amber-900/30 dark:from-amber-950/20 dark:to-gray-900">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -81,7 +82,7 @@ const formatCurrency = (amount: number) => {
                 </div>
 
                 <!-- Today Commission Card -->
-                <div
+                <div v-if="can('show today commission')"
                     class="group relative overflow-hidden rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition-all hover:shadow-md dark:border-orange-900/30 dark:from-orange-950/20 dark:to-gray-900">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">

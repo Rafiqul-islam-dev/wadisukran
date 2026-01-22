@@ -11,7 +11,7 @@ class OrderService
 {
     public function createOrder(array $data): Order
     {
-        $invoiceNumber = now()->format('YmdH') . random_int(1000, 9999);
+        $invoiceNumber = now()->format('YmdH') . random_int(1000000, 9999999);
 
         $agent = Agent::where('user_id', $data['user_id'])->first();
 
@@ -30,9 +30,10 @@ class OrderService
         ]);
 
         foreach ($data['game_cards'] as $card) {
+            $selected_numbers = array_map('intval', $card['selected_numbers']);
             OrderTicket::create([
                 'order_id' => $order->id,
-                'selected_numbers' => $card['selected_numbers'],
+                'selected_numbers' => $selected_numbers,
                 'selected_play_types' => $card['selected_play_types'] ?? null
             ]);
         }

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Product;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\OrderTicket;
+use App\Models\Product;
 use App\Services\CheckWinService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class CheckWinController extends Controller
@@ -29,11 +32,43 @@ class CheckWinController extends Controller
         $request->validate([
             'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
-        $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
+        $order = Order::where('invoice_no', $request->invoice_no)->first();
+        if ($order->is_claimed == 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invoice already claimed.'
+            ], 200);
+        }
 
-        return response()->json([
-            'success' => true,
-            'summery' => $summery
+        $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
+        if ($summery) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Your invoice has been successfully checked and you won the prize.',
+                'summery' => $summery
+            ], 200);
+        } else {
+            return response()->json([
+                'success' => true,
+                'message' => 'Your invoice has been successfully checked but you did not won any prize.',
+            ], 200);
+        }
+    }
+
+    public function claim_win(Request $request){
+        $request->validate([
+            'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
+        $order = Order::where('invoice_no', $request->invoice_no)->first();
+        if($order->is_claimed === 0){
+            $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
+            return response()->json([
+                'success' => true,
+                'message' => $claim_msg
+            ]);
+        }
+        else{
+            return 'This invoice already claimed';
+        }
     }
 }
