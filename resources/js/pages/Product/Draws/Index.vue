@@ -52,9 +52,7 @@ const handleNumberChange = (
     index: number,
     value: string
 ) => {
-    if (/^\d?$/.test(value)) {
-        drawNumbers[product.id][index] = value;
-    }
+    drawNumbers[product.id][index] = value;
 };
 
 const clearAll = () => {
@@ -178,7 +176,7 @@ const saveDraw = () => {
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
                                             <Input v-for="(_, idx) in product.pick_number" :key="idx" type="text"
-                                                :value="drawNumbers[product.id]?.[idx]"
+                                                v-model="drawNumbers[product.id][idx]"
                                                 @input="handleNumberChange(product, idx, $event.target.value)"
                                                 class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold" />
                                         </div>

@@ -20,6 +20,7 @@ const { filters, products, product_prizes, product, summary } = defineProps<{
     product: Array<any>;
 }>();
 
+console.log(summary)
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',

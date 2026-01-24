@@ -13,9 +13,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const { wins, products } = defineProps<{
+    wins: Array<any>;
+    products: Array<any>;
+}>();
 
 const invoice_no = ref('');
 const errors = ref([]);
+
+const form = useForm({
+    invoice_no: '',
+    product_id: ''
+});
 
 const showModal = ref(false);
 const isChecking = ref(false);
@@ -65,6 +74,18 @@ const handleCheck = async () => {
     }
 };
 
+const handleIndividualClaim = (invo) => {
+    invoice_no.value = invo;
+    handleCheck()
+}
+
+const handleSearch = () => {
+    form.get(route('check-wins'), {
+        showProgress: false,
+        preserveState: true
+    })
+}
+
 const handleClose = () => {
     showModal.value = false;
     checkData.value = [];
@@ -96,6 +117,22 @@ const claimWin = async () => {
     }
 }
 
+function goTo(url) {
+    if (!url) return
+
+    const page = new URL(url).searchParams.get('page')
+    const params = new URLSearchParams(window.location.search)
+
+    if (page) params.set('page', page)
+
+    router.visit(`${window.location.pathname}?${params.toString()}`, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        showProgress: false
+    })
+}
+
 </script>
 <template>
 
@@ -117,7 +154,28 @@ const claimWin = async () => {
                     </div>
                 </div>
             </div>
-
+            <div class="bg-white rounded-2xl shadow-lg">
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4 p-3 mb-2 items-center">
+                    <div>
+                        <select name="" id="" v-model="form.product_id"
+                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                            <option value="">Select Product</option>
+                            <option v-for="product in products" :key="product.id" :value="product.id">{{ product.title
+                                }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input v-model="form.invoice_no" type="text" placeholder="Invoice No.."
+                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                    </div>
+                    <div class="flex items-center flex-col">
+                        <button @click="handleSearch"
+                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-xl hover:from-teal-600 hover:to-green-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </div>
             <!-- Table View -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
@@ -155,9 +213,63 @@ const claimWin = async () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
+                            <tr v-for="win in wins?.data" :key="win.id"
+                                class="hover:bg-orange-50 transition-colors duration-200">
+                                <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{
+                                    win.invoice_no }}</td>
+                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
+                                        {{ win?.check_win?.tickets }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900">
+                                    <p class="font-medium text-gray-900">{{ win?.user?.name }}</p>
+                                    <p class="text-teal-600 text-xs mt-1" v-if="win.user?.agent?.username">{{
+                                        win?.user?.agent?.username }}</p>
+
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900">
+                                    <p class="  mt-1 truncate max-w-[180px]" v-if="win.user?.address">{{
+                                        win.user.address }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {{ win?.check_win?.total_prize }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">{{
+                                    win?.product?.title }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap">
+                                    <button v-if="win.is_claimed === 0" @click="handleIndividualClaim(win.invoice_no)"
+                                        class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                                            </path>
+                                        </svg>
+                                        Claim
+                                    </button>
+                                    <button v-else disabled
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg cursor-not-allowed">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                            </path>
+                                        </svg>
+                                        Claimed
+                                    </button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
-
+                    <div class="mt-4 flex justify-end py-5 px-6">
+                        <nav class="flex items-center space-x-1">
+                            <button v-for="(link, i) in wins?.links" :key="i" @click="goTo(link.url)"
+                                v-html="link.label" :disabled="!link.url" :class="[
+                                    'px-3 py-1 rounded border transition-all duration-200',
+                                    link.active ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 hover:bg-orange-100 border-gray-300',
+                                    !link.url ? 'opacity-50 cursor-not-allowed' : ''
+                                ]" />
+                        </nav>
+                    </div>
                     <!-- Empty State -->
                     <div class="text-center py-12" v-if="false">
                         <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor"
@@ -228,7 +340,8 @@ const claimWin = async () => {
                         <p class="text-gray-600 mb-6">Your winnings have been successfully claimed!</p>
                     </div>
                     <!-- Summary State -->
-                    <div class="text-center" v-if="!isChecking && !isClaimed && errors && Object.keys(errors).length == 0">
+                    <div class="text-center"
+                        v-if="!isChecking && !isClaimed && errors && Object.keys(errors).length == 0">
                         <!-- Success Icon -->
                         <div class="relative mx-auto w-16 h-16 mb-3">
                             <div class="absolute inset-0 bg-green-100 rounded-full"></div>

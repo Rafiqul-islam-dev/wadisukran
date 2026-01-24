@@ -22,9 +22,29 @@ class CheckWinController extends Controller
 
     public function index(Request $request)
     {
-        $wins = OrderTicket::get();
+        $wins = Order::where('is_winner', 1)
+                ->when($request->product_id, function($q, $product){
+                    $q->where('product_id', $product);
+                })
+                ->when($request->invoice_no, function($q, $invoice){
+                    $q->where('invoice_no', $invoice);
+                })
+                ->with(['user', 'product', 'user.agent', 'tickets'])
+                ->latest()
+                ->paginate(5);
 
-        return Inertia::render('CheckWin/Index');
+        $wins->getCollection()->transform(function ($item) {
+            $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
+
+            $item->check_win = $check_win;
+            return $item;
+        });
+
+        $products = Product::active()->get();
+        return Inertia::render('CheckWin/Index', [
+            'wins' => $wins,
+            'products' => $products
+        ]);
     }
 
     public function check_win(Request $request)
@@ -55,19 +75,19 @@ class CheckWinController extends Controller
         }
     }
 
-    public function claim_win(Request $request){
+    public function claim_win(Request $request)
+    {
         $request->validate([
             'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
         $order = Order::where('invoice_no', $request->invoice_no)->first();
-        if($order->is_claimed === 0){
+        if ($order->is_claimed === 0) {
             $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
             return response()->json([
                 'success' => true,
                 'message' => $claim_msg
             ]);
-        }
-        else{
+        } else {
             return 'This invoice already claimed';
         }
     }
