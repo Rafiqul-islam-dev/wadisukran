@@ -117,6 +117,9 @@ const deleteHistory = (id) => {
                                     <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
                                         SL
                                     </th>
+                                    <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-center">
+                                        Product
+                                    </th>
                                     <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 border-r">
                                         Date
                                     </th>
@@ -133,6 +136,10 @@ const deleteHistory = (id) => {
                                     <td
                                         class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
                                         {{ (wins?.current_page - 1) * wins?.per_page + index + 1 }}
+                                    </td>
+                                    <td
+                                        class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r text-center">
+                                        {{ win?.product?.title }}
                                     </td>
                                     <td class="px-6 py-4 border-r text-center">
                                         <p class="text-lg">
