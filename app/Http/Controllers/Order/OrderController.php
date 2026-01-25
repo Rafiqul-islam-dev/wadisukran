@@ -145,7 +145,7 @@ class OrderController extends Controller
 
             $orders = OrderTicket::query()
                 ->whereHas('order', function ($o) use ($request, $from, $to) {
-                    $o->where('product_id', $request->product_id);
+                    $o->where('status', 'Printed')->where('product_id', $request->product_id);
                     if ($from) {
                         $o->where('created_at', '>=', $from);
                     }

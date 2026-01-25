@@ -18,6 +18,8 @@ const { wins, products } = defineProps<{
     products: Array<any>;
 }>();
 
+console.log(wins)
+
 const invoice_no = ref('');
 const errors = ref([]);
 
@@ -218,8 +220,8 @@ function goTo(url) {
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{
                                     win.invoice_no }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
-                                        {{ win?.check_win?.tickets }}
+                                    <span v-for="ticket in win?.check_win?.tickets" class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block text-center rounded-lg text-xs font-semibold">
+                                        <span v-for="item in ticket" class="p-1">{{ item }}</span>
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">

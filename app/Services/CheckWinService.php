@@ -33,7 +33,7 @@ class CheckWinService
             $orders = OrderTicket::query()
                 ->where('order_id', $invoice->id)
                 ->whereHas('order', function ($q) {
-                    $q->where('is_claimed', 0);
+                    $q->where('status', 'Printed')->where('is_claimed', 0);
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $product, $numbersChance) {
@@ -326,7 +326,7 @@ class CheckWinService
 
             return [
                 'total_prize' => array_sum(array_column($summery, 'total_amount')),
-                'tickets' => $orders->pluck('id')->implode(',')
+                'tickets' => $orders->pluck('selected_numbers')->toArray()
             ];
         }
 
