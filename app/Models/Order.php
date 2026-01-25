@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
+    protected $appends = ['qr_url'];
 
     protected $fillable = [
         'user_id',
@@ -43,5 +44,12 @@ class Order extends Model
     public  function tickets()
     {
         return $this->hasMany(OrderTicket::class, 'order_id', 'id');
+    }
+
+    public function getQrUrlAttribute(): ?string
+    {
+        if (!$this->qr_code) return null;
+
+        return static_asset($this->qr_code);
     }
 }

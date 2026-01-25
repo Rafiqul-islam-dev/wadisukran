@@ -21,7 +21,7 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     filters: Record<string, any>;
     product_prizes: Array<any>;
 }>();
-
+console.log(orders)
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',
@@ -699,7 +699,7 @@ function goTo(url) {
                                     <!-- QR Code Section -->
                                     <div class="text-center mb-8">
                                         <div class="inline-block p-4 bg-white rounded-2xl shadow-lg">
-                                            <img src="https://via.placeholder.com/120" alt="QR Code"
+                                            <img :src="selectedOrder?.qr_url" alt="QR Code"
                                                 class="w-30 h-30 mx-auto mb-2" />
                                             <p class="text-sm text-gray-600">
                                                 Scan for verification

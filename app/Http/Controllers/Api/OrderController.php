@@ -87,7 +87,6 @@ class OrderController extends Controller
         ], 201);
     }
 
-
     public function orderInfo($id)
     {
         try {
@@ -116,6 +115,7 @@ class OrderController extends Controller
 
             // Append full image URL
             $order->image = $order->image ? url('storage/' . $order->image) : null;
+            $order->qr_code = static_asset($order->qr_code);
 
             return response()->json([
                 'success' => true,
@@ -129,8 +129,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
-
 
     /**
      * Get orders by user ID (API).

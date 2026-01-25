@@ -9,11 +9,17 @@ use Illuminate\Support\Facades\Auth;
 
 class OrderService
 {
+    protected $qrCodeService;
+    public function __construct(QrCodeService $qrCodeService)
+    {
+        $this->qrCodeService = $qrCodeService;
+    }
     public function createOrder(array $data): Order
     {
-        $invoiceNumber = now()->format('YmdH') . random_int(1000000, 9999999);
+        $invoiceNumber = now()->format('YmdH') . random_int(100000, 999999);
 
         $agent = Agent::where('user_id', $data['user_id'])->first();
+        $qr_code = $this->qrCodeService->generateQrCodeWithInvoice($invoiceNumber);
 
         $order = Order::create([
             'user_id' => $data['user_id'],
@@ -21,6 +27,7 @@ class OrderService
             'quantity' => $data['quantity'],
             'total_price' => $data['total_price'],
             'invoice_no' => $invoiceNumber,
+            'qr_code' => $qr_code,
             'sales_date' => today()->toDateString(),
             'draw_number' => 1,
             'vat_percentage' => company_setting()?->vat,
@@ -37,6 +44,8 @@ class OrderService
                 'selected_play_types' => $card['selected_play_types'] ?? null
             ]);
         }
+
+
         return $order;
     }
 }

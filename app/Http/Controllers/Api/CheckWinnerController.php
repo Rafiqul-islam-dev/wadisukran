@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\CheckWinService;
+use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -45,5 +46,10 @@ class CheckWinnerController extends Controller
                 'message' => 'Sorry, this invoice did not win any prize.',
             ], 200);
         }
+    }
+
+    public function generateQrCode(){
+        $qrService = new QrCodeService();
+        return $qrService->generateQrCodeWithInvoice('fdsafsatgergasf');
     }
 }
