@@ -24,7 +24,8 @@ class Order extends Model
         'commission_percentage',
         'vat_percentage',
         'is_winner',
-        'is_claimed'
+        'is_claimed',
+        'qr_code'
     ];
 
     protected $casts = [
@@ -38,8 +39,9 @@ class Order extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
+
 
     public  function tickets()
     {
