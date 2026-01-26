@@ -53,10 +53,17 @@ class CheckWinnerController extends Controller
         $validator = Validator::make($request->all(), [
             'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
-        if($validator->fails()){
+        $order = Order::where('invoice_no', $request->invoice_no)->where('user_id', Auth::id())->first();
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => $validator->errors()->first()
+            ], 400);
+        }
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid invoice no.'
             ], 400);
         }
         $order = Order::where('invoice_no', $request->invoice_no)->first();
