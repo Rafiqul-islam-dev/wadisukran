@@ -14,6 +14,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
         permission: 'show dashboard'
     },
+    
     {
         title: 'Agent',
         icon: Users,
