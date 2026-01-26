@@ -16,7 +16,6 @@ const { products, categories } = defineProps<{
     products: Array<any>;
     categories: Array<any>;
 }>();
-
 const { company_setting } = usePage().props;
 
 const showModal = ref(false);
