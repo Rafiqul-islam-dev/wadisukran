@@ -65,21 +65,19 @@ class ProductResource extends JsonResource
         $chancePrizes = [];
 
         foreach ($prizes as $prize) {
-
-            // chance গুলো একসাথে দেখানোর জন্য
-            if ($prize->name === 'chance') {
+            if (trim($prize->name) === 'Chance') {
                 $chancePrizes[] = (float) $prize->prize;
                 continue;
             }
 
             $formattedPrize = number_format((float) $prize->prize, 2, '.', '') . ' AED';
 
-            if ($prize->type == 'bet') {
+            if ($prize->type === 'bet') {
                 $prize_array[$prize->name] = $formattedPrize;
                 continue;
             }
 
-            if ($prize->type == 'number') {
+            if ($prize->type === 'number') {
                 $label = trim($prize->name) . ' Number';
                 $prize_array[$label] = $formattedPrize;
             } else {
@@ -88,15 +86,15 @@ class ProductResource extends JsonResource
             }
         }
 
-        rsort($chancePrizes);
-
+        sort($chancePrizes);
         if (!empty($chancePrizes)) {
-            $formatted = array_map(
-                fn($p) => number_format($p, 2, '.', '') . ' AED',
-                $chancePrizes
+            $prize_array['Chance'] = implode(
+                ', ',
+                array_map(
+                    fn($p) => number_format($p, 2, '.', '') . ' AED',
+                    $chancePrizes
+                )
             );
-
-            $prize_array['chance'] = implode(' , ', $formatted);
         }
 
         return $prize_array;
