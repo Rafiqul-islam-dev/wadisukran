@@ -349,7 +349,7 @@ function goTo(url) {
                                     {{ formatDate(order.sales_date) }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">{{
-                                    order.product.title }}</td>
+                                    order.product?.title }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0">
                                         <div class="flex flex-wrap gap-1">
@@ -475,7 +475,7 @@ function goTo(url) {
                                                     <div>
                                                         <p class="text-sm text-gray-600">Draw Date</p>
                                                         <p class="font-semibold">
-                                                            {{ formatDate(selectedOrder.product.draw_date) }}
+                                                            {{ formatDate(selectedOrder.product?.draw_date) }}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -489,7 +489,7 @@ function goTo(url) {
                                                     <div>
                                                         <p class="text-sm text-gray-600">Draw Time</p>
                                                         <p class="font-semibold">
-                                                            {{ selectedOrder.product.draw_time }}
+                                                            {{ selectedOrder.product?.draw_time }}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -506,7 +506,7 @@ function goTo(url) {
                                                     <div>
                                                         <p class="text-sm text-gray-600">Unit Price</p>
                                                         <p class="font-semibold text-green-600">
-                                                            {{ selectedOrder.product.price }} AED
+                                                            {{ selectedOrder.product?.price }} AED
                                                         </p>
                                                     </div>
                                                 </div>
@@ -590,7 +590,7 @@ function goTo(url) {
                                                 <div class="p-4 bg-gray-50 rounded-xl">
                                                     <p class="text-sm text-gray-600">Product Name</p>
                                                     <p class="font-semibold text-lg">
-                                                        {{ selectedOrder.product.title }}
+                                                        {{ selectedOrder.product?.title }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -604,8 +604,8 @@ function goTo(url) {
                                         </h3>
                                         <div class="flex justify-center mb-6">
                                             <div class="w-32 h-32 bg-white rounded-2xl shadow-lg overflow-hidden">
-                                                <img v-if="selectedOrder.product.image_url"
-                                                    :src="selectedOrder.product.image_url" alt="Product Image"
+                                                <img v-if="selectedOrder.product?.image_url"
+                                                    :src="selectedOrder.product?.image_url" alt="Product Image"
                                                     class="w-full h-full object-cover" />
                                                 <img v-else src="https://via.placeholder.com/128"
                                                     alt="Placeholder Image" class="w-full h-full object-cover" />
@@ -686,7 +686,7 @@ function goTo(url) {
                                             </div>
                                             <div class="p-4 bg-white rounded-xl shadow-sm">
                                                 <p class="text-sm text-gray-600">
-                                                    {{ selectedOrder.product.title }} Big Prize on
+                                                    {{ selectedOrder.product?.title }} Big Prize on
                                                     {{ formatDate(selectedOrder.sales_date) }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">
