@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\CheckWinService;
-use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class CheckWinnerController extends Controller
 {
@@ -48,8 +48,29 @@ class CheckWinnerController extends Controller
         }
     }
 
-    public function generateQrCode(){
-        $qrService = new QrCodeService();
-        return $qrService->generateQrCodeWithInvoice('fdsafsatgergasf');
+    public function claimWin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'invoice_no' => 'required|string|exists:orders,invoice_no'
+        ]);
+        if($validator->fails()){
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 400);
+        }
+        $order = Order::where('invoice_no', $request->invoice_no)->first();
+        if ($order->is_claimed === 0) {
+            $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
+            return response()->json([
+                'success' => true,
+                'message' => $claim_msg
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'This invoice already claimed'
+            ], 409);
+        }
     }
 }

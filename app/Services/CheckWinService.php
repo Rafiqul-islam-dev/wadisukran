@@ -193,7 +193,7 @@ class CheckWinService
         $summery = [];
 
         if ($win) {
-            $product = Product::find($invoice->product_id);
+            $product = Product::withTrashed()->find($invoice->product_id);
 
             $types = $product->prizes;
 

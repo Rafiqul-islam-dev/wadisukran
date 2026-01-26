@@ -24,4 +24,5 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/user-orders', [OrderController::class, 'apiOrdersByUser']);
     Route::get('/banner', [BannerController::class, 'getBanner']);
     Route::get('/check-win-by-invoice/{invoice_no}', [CheckWinnerController::class, 'checkWin']);
+    Route::post('/claim-win', [CheckWinnerController::class, 'claimWin']);
 });
