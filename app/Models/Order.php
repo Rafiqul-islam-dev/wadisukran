@@ -24,7 +24,8 @@ class Order extends Model
         'commission_percentage',
         'vat_percentage',
         'is_winner',
-        'is_claimed'
+        'is_claimed',
+        'qr_code'
     ];
 
     protected $casts = [
