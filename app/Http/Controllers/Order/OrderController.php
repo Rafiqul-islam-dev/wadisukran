@@ -14,6 +14,8 @@ use App\Services\CategoryService;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
+use function PHPSTORM_META\type;
+
 class OrderController extends Controller
 {
     protected $categoryService;
@@ -165,20 +167,21 @@ class OrderController extends Controller
                     $ticketTypes   = is_array($order->selected_play_types)
                         ? $order->selected_play_types
                         : (array) $order->selected_play_types;
-
                     $ticketNumbers = collect($order->selected_numbers)->values();
+
+
                     if ($product->prize_type === 'bet') {
                         foreach ($product->prizes->whereIn('name', ['Straight', 'Rumble']) as $type) {
                             if ($type->name === 'Straight' & in_array('Straight', $ticketTypes, true)) {
                                 $isStraightWinner =
                                     $ticketNumbers->count() === $len &&
-                                    $ticketNumbers->all() === $numbersStraight->all();
+                                    $ticketNumbers->all() == $numbersStraight->all();
                                 $data[$type->name] = $isStraightWinner;
                             } else if ($type->name === 'Rumble' && in_array('Rumble', $ticketTypes, true)) {
                                 if ($isStraightWinner == false) {
                                     $isRumbleWinner =
                                         $ticketNumbers->count() === $len &&
-                                        $ticketNumbers->sort()->values()->all() === $numbersSorted->all();
+                                        $ticketNumbers->sort()->values()->all() == $numbersSorted->all();
                                 }
                                 $data[$type->name] = $isRumbleWinner;
                             }
@@ -215,7 +218,6 @@ class OrderController extends Controller
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
-                        $isNumberWinner = false;
 
                         foreach ($numberPrizes as $prize) {
                             $key = 'Number ' . (int) $prize->name;
@@ -229,8 +231,14 @@ class OrderController extends Controller
                             }
                         }
                     }
-                    return $data;
-                });
+                    $orderHasWon = $isStraightWinner || $isRumbleWinner || $isChanceWinner || $isNumberWinner;
+
+                    if ($orderHasWon) {
+                        return $data;
+                    }
+
+                    return null;
+                })->filter();
 
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
