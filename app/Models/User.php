@@ -42,12 +42,16 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-   public function agent()
-{
-    return $this->hasOne(Agent::class, 'user_id');
-}
+    public function agent()
+    {
+        return $this->hasOne(Agent::class, 'user_id');
+    }
 
-
+    public function sales()
+    {
+        return $this->hasMany(Order::class, 'user_id')
+            ->where('status', 'Printed');
+    }
 
     public function hasPermission($permission)
     {

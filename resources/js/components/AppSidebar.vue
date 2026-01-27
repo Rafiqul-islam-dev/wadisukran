@@ -14,7 +14,7 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
         permission: 'show dashboard'
     },
-    
+
     {
         title: 'Agent',
         icon: Users,
@@ -30,6 +30,12 @@ const mainNavItems: NavItem[] = [
                 href: '/agents/trashed',
                 icon: Trash,
                 permission: 'show trashed agents'
+            },
+            {
+                title: 'Agent History',
+                href: '/agents/history',
+                icon: History,
+                permission: 'show agent history'
             },
         ],
         permission: 'show agent list'

@@ -4,6 +4,7 @@ use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Agent\AgentController;
+use App\Http\Controllers\Agent\AgentHistoryController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
@@ -63,6 +64,8 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/trashed', [AgentController::class, 'trashed_agents'])->middleware('can:show trashed agents')->name('trashed');
         Route::get('/restore/{user}', [AgentController::class, 'restore_agent'])->middleware('can:agent restore')->name('restore');
         Route::delete('/permanent-delete/{user}', [AgentController::class, 'permanent_delete_agent'])->middleware('can:agent permanent delete')->name('permanent-delete');
+
+        Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
     });
 
 
