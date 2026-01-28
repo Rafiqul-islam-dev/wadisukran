@@ -164,6 +164,7 @@ class OrderController extends Controller
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
+                    $isNumberWinner = false;
                     $ticketTypes   = is_array($order->selected_play_types)
                         ? $order->selected_play_types
                         : (array) $order->selected_play_types;
