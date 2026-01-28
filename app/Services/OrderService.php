@@ -44,8 +44,6 @@ class OrderService
                 'selected_play_types' => $card['selected_play_types'] ?? null
             ]);
         }
-
-
         return $order;
     }
 }
