@@ -29,7 +29,7 @@ class CheckWinService
             $numbersChance = collect($win->win_number)->reverse()->values();
             $numbersSorted   = collect($win->win_number)->sort()->values();
             $len             = $numbersStraight->count();
-
+            $total_prize = 0;
             $orders = OrderTicket::query()
                 ->where('order_id', $invoice->id)
                 ->whereHas('order', function ($q) {
@@ -117,39 +117,38 @@ class CheckWinService
 
                     return null;
                 })->filter();
-
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
                     if ($orders->where($name, true)->count() > 0) {
-                        $summery[$name] = [
+                        $summery[] = [
                             'match_type' => $name,
                             'number_of_ticket' =>  $orders->where($name, true)->count(),
                             'prize_per_winner' => $type->prize,
-                            'tickets' => $orders->where($name, true)->pluck('id')->implode(','),
-                            'total_amount' => ($orders->where($name, true)->count() * $type->prize)
+                            'tickets' => $orders->where($name, true)->pluck('selected_numbers')->map(fn ($numbers) => implode(',', $numbers))->values()->toArray()
                         ];
+                        $total_prize += ($orders->where($name, true)->count() * $type->prize);
                     }
                 } else if ($type->name === 'Chance') {
                     $name = $type->name . ' ' . $type->chance_number;
                     if ($orders->where($name, true)->count() > 0) {
-                        $summery[$name] = [
+                        $summery[] = [
                             'match_type' => $name,
                             'number_of_ticket' =>  $orders->where($name, true)->count(),
                             'prize_per_winner' => $type->prize,
-                            'tickets' => $orders->where($name, true)->pluck('id')->implode(','),
-                            'total_amount' => ($orders->where($name, true)->count() * $type->prize)
+                            'tickets' => $orders->where($name, true)->pluck('selected_numbers')->map(fn ($numbers) => implode(',', $numbers))->values()->toArray()
                         ];
+                        $total_prize += ($orders->where($name, true)->count() * $type->prize);
                     }
                 } else {
                     if ($orders->where($type->name, true)->count() > 0) {
-                        $summery[$type->name] = [
+                        $summery[] = [
                             'match_type' => $type->name,
                             'number_of_ticket' =>  $orders->where($type->name, true)->count(),
                             'prize_per_winner' => $type->prize,
-                            'tickets' => $orders->where($type->name, true)->pluck('id')->implode(','),
-                            'total_amount' => ($orders->where($type->name, true)->count() * $type->prize)
+                            'tickets' => $orders->where($type->name, true)->pluck('selected_numbers')->map(fn ($numbers) => implode(',', $numbers))->values()->toArray()
                         ];
+                        $total_prize += ($orders->where($type->name, true)->count() * $type->prize);
                     }
                 }
             }
@@ -159,7 +158,7 @@ class CheckWinService
             $invoice->is_winner = 1;
             $invoice->save();
         }
-        return $summery;
+        return ['summery' => $summery, 'total_prize' => $total_prize];
     }
 
     public function ClaimWin(string $invoice)

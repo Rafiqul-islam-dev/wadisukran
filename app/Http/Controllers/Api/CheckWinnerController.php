@@ -38,7 +38,8 @@ class CheckWinnerController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Congratulations this invoice won. and you can claim.',
-                'data' => $summery
+                'data' => $summery['summery'],
+                'total_prize' => $summery['total_prize']
             ], 200);
         } else {
             return response()->json([

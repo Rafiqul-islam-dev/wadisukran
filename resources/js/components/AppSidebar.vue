@@ -6,6 +6,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
 import { CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCog, Users, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+
 const page_path = usePage().url;
 const mainNavItems: NavItem[] = [
     {
@@ -14,7 +15,6 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
         permission: 'show dashboard'
     },
-
     {
         title: 'Agent',
         icon: Users,
@@ -44,17 +44,17 @@ const mainNavItems: NavItem[] = [
         title: 'Product',
         icon: Folder,
         items: [
+             {
+                title: 'Categories',
+                href: '/categories',
+                icon: Option,
+                permission: 'show categories'
+            },
             {
                 title: 'Product List',
                 href: '/products',
                 icon: Users,
                 permission: 'show product list'
-            },
-            {
-                title: 'Categories',
-                href: '/categories',
-                icon: Option,
-                permission: 'show categories'
             },
             {
                 title: 'Trashed Products',

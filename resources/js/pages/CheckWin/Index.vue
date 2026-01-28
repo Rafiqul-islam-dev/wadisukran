@@ -38,7 +38,7 @@ const summaryEntries = computed(() => Object.entries(checkData.value));
 
 const totalWonAmount = computed(() => {
     return summaryEntries.value.reduce((sum, [key, item]) => {
-        return sum + Number(item?.total_amount || 0);
+        return sum + Number((item?.number_of_ticket * item?.prize_per_winner) || 0);
     }, 0);
 });
 
@@ -60,7 +60,7 @@ const handleCheck = async () => {
         });
 
         if (response.data?.summery) {
-            checkData.value = response.data.summery;  // Assuming the response contains a `summery` key
+            checkData.value = response.data?.summery?.summery;  // Assuming the response contains a `summery` key
             console.log(response.data)
         }
         checkMsg.value = response.data?.message;
@@ -163,7 +163,7 @@ function goTo(url) {
                             class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">Select Product</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">{{ product.title
-                                }}</option>
+                            }}</option>
                         </select>
                     </div>
                     <div>
@@ -220,7 +220,8 @@ function goTo(url) {
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{
                                     win.invoice_no }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                    <span v-for="ticket in win?.check_win?.tickets" class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block text-center rounded-lg text-xs font-semibold">
+                                    <span v-for="ticket in win?.check_win?.tickets"
+                                        class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block text-center rounded-lg text-xs font-semibold">
                                         <span v-for="item in ticket" class="p-1">{{ item }}</span>
                                     </span>
                                 </td>
@@ -377,7 +378,7 @@ function goTo(url) {
                                     <tr v-for="([key, item], idx) in summaryEntries" :key="key"
                                         class="text-gray-800 text-center">
                                         <td class="py-2 px-3 font-semibold">
-                                            {{ key }}
+                                            {{ item.match_type }}
                                         </td>
 
                                         <td class="py-2 px-3">
@@ -385,11 +386,12 @@ function goTo(url) {
                                         </td>
 
                                         <td class="py-2 px-3 font-bold">
-                                            {{ item.total_amount }}
+                                            {{ item.number_of_ticket * item.prize_per_winner }}
                                         </td>
 
                                         <td class="py-2 px-3">
-                                            {{ item.tickets }}
+                                            <div v-for="ticket in item.tickets" :key="ticket" class="mb-1">{{ ticket }}
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
