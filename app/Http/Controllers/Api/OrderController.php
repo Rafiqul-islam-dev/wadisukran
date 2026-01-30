@@ -99,36 +99,76 @@ class OrderController extends Controller
     public function orderInfo($id)
     {
         try {
-            $order = Order::leftJoin('products', 'products.id', '=', 'orders.product_id')
-                ->leftJoin('users', 'users.id', '=', 'orders.user_id')
-                ->select(
-                    'orders.*',
-                    'products.title as product_title',
-                    'products.price as product_price',
-                    'products.image',
-                    'products.draw_date',
-                    'products.draw_time',
-                    'users.name as vendor_name',
-                    'users.email as vendor_email',
-                    'users.phone as trn'
-                )
-                ->where('orders.id', $id)
-                ->first();
-
+            $order = Order::find($id);
             if (!$order) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found'
+                    'message' => 'Order not found'
                 ], 404);
             }
+            $draw_time = null;
 
-            // Append full image URL
-            $order->image = $order->image ? url('storage/' . $order->image) : null;
-            $order->qr_code = static_asset($order->qr_code);
+            if ($order->product?->draw_type === 'daily') {
+                $draw_time = Carbon::parse($order->created_at)
+                    ->addDay()
+                    ->startOfDay()
+                    ->format('h:i A');
+            } else if ($order->product?->draw_type === 'hourly') {
+                $draw_time = Carbon::parse($order->created_at)
+                    ->addHour()
+                    ->startOfHour()
+                    ->format('h:i A');
+            } else if ($order->product?->draw_type === 'once') {
+                $createdAt = Carbon::parse($order->created_at);
+
+                $midDay = $createdAt->copy()->setTime(12, 0, 0);     // 12:00:00 PM
+                $endDay = $createdAt->copy()->addDay()->startOfDay();          // 23:59:59
+
+                // compare order created time with midday boundary
+                if ($createdAt->lt($createdAt->copy()->startOfDay()->addHours(12))) {
+                    // before 12:00 PM
+                    $draw_time = $midDay->format('h:i A');
+                } else {
+                    // 12:00 PM or after
+                    $draw_time = $endDay->format('h:i A');
+                }
+            }
+
+
+
+            $data = [
+                'id' => $order->id,
+                'product_id' => $order->product_id,
+                'invoice_no' => $order->invoice_no,
+                'quantity' => $order->quantity,
+                'total_price' => $order->total_price,
+                'vat' => $order->vat,
+                'vat_percentage' => $order->vat_percentage,
+                'sales_date' => $order->sales_date,
+                'draw_number' => $order->draw_number,
+                'product_title' => $order->product ? $order->product->title : null,
+                'product_price' => $order->product ? $order->product->price : null,
+                'image' => $order->product ? static_asset($order->product->image) : null,
+                'draw_date' => $order->created_at ? Carbon::parse($order->created_at)->format('d M, Y') : null,
+                'draw_time' => $draw_time,
+                'vendor_name' => $order->user ? $order->user->name : null,
+                'trn' => $order->user ? $order->user->trn : null,
+                'qr_url' => $order->qr_url,
+                'company_name' => company_setting() ? company_setting()->name : null,
+                'company_address' => company_setting() ? company_setting()->address : null,
+                'company_email' => company_setting() ? company_setting()->email : null,
+                'big_prize' => $order->product?->prizes ? $order->product->prizes->max('prize') : null,
+                'tickets' => $order->tickets->map(function ($ticket) {
+                    return [
+                        'selected_numbers' =>  implode(',', $ticket->selected_numbers),
+                        'selected_play_types' => $ticket->selected_play_types,
+                    ];
+                })
+            ];
 
             return response()->json([
                 'success' => true,
-                'data' => $order
+                'data' => $data
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
