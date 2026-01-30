@@ -28,6 +28,11 @@ class OrderController extends Controller
 
     public function orderStore(Request $request)
     {
+        if (company_setting()->order_status != 1) {
+            return response()->json([
+                'message' => 'Order placement is currently disabled.',
+            ], 403);
+        }
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
         ]);
@@ -41,7 +46,11 @@ class OrderController extends Controller
         $productData = $validator->validated();
 
         $product = Product::find($request->product_id);
-
+        if ($product->is_active != 1) {
+            return response()->json([
+                'message' => 'Product is not active',
+            ], 403);
+        }
         $validator = Validator::make($request->all(), [
             'game_cards' => 'required|array',
             'game_cards.*.selected_numbers' => [

@@ -31,6 +31,7 @@ const form = useForm({
     licence_no: company_setting?.licence_no ?? '',
     bank_account: company_setting?.bank_account ?? '',
     vat: company_setting?.vat ?? '',
+    order_status: company_setting?.order_status ?? '1',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -190,6 +191,17 @@ const saveChanges = () => {
                                     {{ form.errors.website }}
                                 </p>
                             </div>
+                            <div class="space-y-2">
+                                <Label for="order_status">Order Status</Label>
+
+                                <select name="order_status" id="order_status" v-model="form.order_status" class="w-full border rounded py-2 px-2">
+                                    <option value="1">Can Order</option>
+                                    <option value="0">Cannot Order</option>
+                                </select>
+                                <p v-if="form.errors.order_status" class="text-red-600 text-sm">
+                                    {{ form.errors.order_status }}
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Address -->
@@ -204,7 +216,7 @@ const saveChanges = () => {
 
                         <!-- Save Button -->
                         <div class="pt-4">
-                            <Button @click="saveChanges" class="bg-black hover:bg-gray-800 text-white">
+                            <Button @click="saveChanges" class="bg-black hover:bg-gray-800 text-white cursor-pointer">
                                 Save Changes
                             </Button>
                         </div>

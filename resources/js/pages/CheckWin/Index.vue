@@ -18,8 +18,6 @@ const { wins, products } = defineProps<{
     products: Array<any>;
 }>();
 
-console.log(wins)
-
 const invoice_no = ref('');
 const errors = ref([]);
 
