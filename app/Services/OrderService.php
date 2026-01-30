@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Agent;
 use App\Models\Order;
 use App\Models\OrderTicket;
+use App\Models\Win;
 use Illuminate\Support\Facades\Auth;
 
 class OrderService
@@ -20,6 +21,8 @@ class OrderService
 
         $agent = Agent::where('user_id', $data['user_id'])->first();
         $qr_code = $this->qrCodeService->generateQrCodeWithInvoice($invoiceNumber);
+        $draw_number = Win::where('product_id', $data['product_id'])
+            ->max('draw_number') + 1;
 
         $order = Order::create([
             'user_id' => $data['user_id'],
@@ -29,7 +32,7 @@ class OrderService
             'invoice_no' => $invoiceNumber,
             'qr_code' => $qr_code,
             'sales_date' => today()->toDateString(),
-            'draw_number' => 1,
+            'draw_number' => $draw_number,
             'vat_percentage' => company_setting()?->vat,
             'commission_percentage' => ($agent->commission ? $agent->commission : 0),
             'vat' => (company_setting() ? ($data['total_price'] * company_setting()->vat) / 100 : 0),
