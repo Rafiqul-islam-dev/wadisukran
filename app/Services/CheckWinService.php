@@ -161,7 +161,7 @@ class CheckWinService
         return ['summery' => $summery, 'total_prize' => $total_prize];
     }
 
-    public function ClaimWin(string $invoice)
+    public function ClaimWin(string $invoice) : string
     {
         $invoice = Order::where('invoice_no', $invoice)->first();
         $win = Win::where('product_id', $invoice->product_id)->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])->first();
