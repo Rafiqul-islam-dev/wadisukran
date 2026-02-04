@@ -261,4 +261,31 @@ class OrderController extends Controller
             'data' => $order,
         ], 200);
     }
+
+    public function cancelOrder(Order $order)
+    {
+        abort_if($order->user_id !== Auth::id(), 403, 'Unauthorized action');
+
+        if ($order->status === 'Printed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Printed orders cannot be cancelled',
+            ], 400);
+        }
+
+        if($order->status === 'Cancel') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order is already cancelled',
+            ], 400);
+        }
+        $order->update([
+            'status' => 'Cancel',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order cancelled successfully'
+        ]);
+    }
 }

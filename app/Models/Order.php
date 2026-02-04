@@ -25,6 +25,7 @@ class Order extends Model
         'vat_percentage',
         'is_winner',
         'is_claimed',
+        'status',
         'qr_code'
     ];
 
