@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CancelledOrderResource;
 use Illuminate\Http\Request;
 
 use App\Models\Product;
@@ -187,8 +188,6 @@ class OrderController extends Controller
      */
     public function apiOrdersByUser(Request $request)
     {
-        // dd($request->all());
-        // Ensure the user is authenticated
         if (!auth()->check()) {
             return response()->json([
                 'success' => false,
@@ -262,30 +261,50 @@ class OrderController extends Controller
         ], 200);
     }
 
-    public function cancelOrder(Order $order)
+    public function cancelledOrder(Request $request)
     {
-        abort_if($order->user_id !== Auth::id(), 403, 'Unauthorized action');
-
-        if ($order->status === 'Printed') {
+        if (!auth()->check()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Printed orders cannot be cancelled',
-            ], 400);
+                'message' => 'Unauthorized access',
+            ], 401);
         }
 
-        if($order->status === 'Cancel') {
+        try {
+            $query = Order::with(['user', 'product'])
+                ->where('user_id', auth()->id())
+                ->where('status', 'Cancel');
+
+            // Optional date filtering
+            if ($request->filled('from') && $request->filled('to')) {
+                $from = Carbon::parse($request->from)->format('Y-m-d');
+                $to   = Carbon::parse($request->to)->format('Y-m-d');
+
+                $query->whereDate('sales_date', '>=', $from)
+                    ->whereDate('sales_date', '<=', $to);
+            }
+
+            $orders = $query->get();
+
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No orders found for this user',
+                    'data' => [],
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cancelled orders retrieved successfully',
+                'data' => CancelledOrderResource::collection($orders),
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order is already cancelled',
-            ], 400);
+                'message' => 'An error occurred while fetching orders',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-        $order->update([
-            'status' => 'Cancel',
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Order cancelled successfully'
-        ]);
     }
 }

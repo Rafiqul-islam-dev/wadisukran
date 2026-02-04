@@ -21,8 +21,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/orders', [OrderController::class, 'orderStore']);
     Route::get('/orders/{id}', [OrderController::class, 'orderInfo']);
     Route::post('/orders-update/{id}', [OrderController::class, 'orderUpdate']);
-    Route::get('/order/cancel/{order}', [OrderController::class, 'cancelOrder']);
     Route::get('/user-orders', [OrderController::class, 'apiOrdersByUser']);
+    Route::get('/cancelled-orders', [OrderController::class, 'cancelledOrder']);
     Route::get('/banner', [BannerController::class, 'getBanner']);
     Route::get('/check-win-by-invoice/{invoice_no}', [CheckWinnerController::class, 'checkWin']);
     Route::post('/claim-win', [CheckWinnerController::class, 'claimWin']);
