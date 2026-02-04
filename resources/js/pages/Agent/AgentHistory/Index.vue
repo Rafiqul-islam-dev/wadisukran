@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
+import { Eye } from 'lucide-vue-next';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -65,7 +66,9 @@ const { users } = defineProps<{
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-gray-700">{{ user.address || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700 text-center">{{ user.sales_sum_total_price || "0.00" }}</td>
+                            <td class="px-6 py-4 text-gray-700 text-center flex gap-5">{{ user.sales_sum_total_price || "0.00" }}
+                                <button><Eye size="20" class="cursor-pointer" /></button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
