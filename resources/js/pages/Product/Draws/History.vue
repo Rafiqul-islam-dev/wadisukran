@@ -23,10 +23,7 @@ const formatDate = (date) => {
     const formattedDate = new Intl.DateTimeFormat('en-US', {
         month: 'long',
         day: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
+        year: 'numeric'
     }).format(parsedDate);
 
     return formattedDate.replace(' at', '');

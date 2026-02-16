@@ -14,38 +14,54 @@ class DrawService
     {
         if (is_array($data['products'])) {
             foreach ($data['products'] as $product) {
-                $last_draw = Win::where('product_id', $product['id'])->latest('to_time')->first();
-                $maxDrawNumber = Win::max('draw_number');
-
-                if ($last_draw) {
-                    if (Carbon::parse($data['to_time'])->gt(Carbon::parse($last_draw->to_time))) {
-                       $win = Win::create([
+                $maxDrawNumber = Win::where('product_id', $product['id'])->max('draw_number');
+                $productData = Product::find($product['id']);
+                if ($productData->draw_type === 'daily') {
+                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('created_at', $data['to_time'])->first();
+                    if (!$exists_draw) {
+                        $fromTime = Carbon::parse($data['to_time'])->startOfDay();
+                        $win = Win::create([
                             'product_id' => $product['id'],
-                            'from_time' => Carbon::parse($last_draw->to_time)->addSecond(),
+                            'from_time' => $fromTime,
                             'to_time' => $data['to_time'],
                             'draw_number' => ($maxDrawNumber + 1),
-                            'draw_time' => Carbon::parse($data['to_time'])->addMinute(),
+                            'draw_time' =>  $data['to_time'],
+                            'win_number' => $product['numbers']
+                        ]);
+                    } else {
+                        $win = $exists_draw;
+                    }
+                } else {
+                    $last_draw = Win::where('product_id', $product['id'])->latest('to_time')->first();
+                    if ($last_draw) {
+                        if (Carbon::parse($data['to_time'])->gt(Carbon::parse($last_draw->to_time))) {
+                            $win = Win::create([
+                                'product_id' => $product['id'],
+                                'from_time' => Carbon::parse($last_draw->to_time)->addSecond(),
+                                'to_time' => $data['to_time'],
+                                'draw_number' => ($maxDrawNumber + 1),
+                                'draw_time' =>  $data['to_time'],
+                                'win_number' => $product['numbers']
+                            ]);
+                        } else {
+                            $win = $last_draw;
+                        }
+                    } else {
+                        $productRaw = Product::find($product['id']);
+                        if ($productRaw->draw_type == 'daily') {
+                            $fromTime = Carbon::parse($data['to_time'])->subDay()->addSecond();
+                        } else {
+                            $fromTime = Carbon::parse($data['to_time'])->subHour()->addSecond();
+                        }
+                        $win = Win::create([
+                            'product_id' => $product['id'],
+                            'from_time' => $fromTime,
+                            'to_time' => $data['to_time'],
+                            'draw_number' => ($maxDrawNumber + 1),
+                            'draw_time' => $data['to_time'],
                             'win_number' => $product['numbers']
                         ]);
                     }
-                    else{
-                        $win = $last_draw;
-                    }
-                } else {
-                    $productRaw = Product::find($product['id']);
-                    if ($productRaw->draw_type == 'daily') {
-                        $fromTime = Carbon::parse($data['to_time'])->subDay()->addSecond();
-                    } else {
-                        $fromTime = Carbon::parse($data['to_time'])->subHour()->addSecond();
-                    }
-                   $win = Win::create([
-                        'product_id' => $product['id'],
-                        'from_time' => $fromTime,
-                        'to_time' => $data['to_time'],
-                        'draw_number' => ($maxDrawNumber + 1),
-                        'draw_time' => Carbon::parse($data['to_time'])->addMinute(),
-                        'win_number' => $product['numbers']
-                    ]);
                 }
                 $this->updateWinner($win);
             }
@@ -148,7 +164,7 @@ class DrawService
 
                 return null;
             })->filter();
-        foreach($orders as $order){
+        foreach ($orders as $order) {
             OrderTicket::find($order['id'])->update(['is_winner' => 1]);
             Order::find($order['order_id'])->update(['is_winner' => 1]);
         }

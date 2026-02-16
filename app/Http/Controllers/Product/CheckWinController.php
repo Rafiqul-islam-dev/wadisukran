@@ -62,7 +62,7 @@ class CheckWinController extends Controller
         }
 
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
-        if ($summery) {
+        if ($summery['summery']) {
             return response()->json([
                 'success' => true,
                 'message' => 'Your invoice has been successfully checked and you won the prize.',

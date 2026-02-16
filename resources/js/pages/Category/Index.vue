@@ -87,6 +87,14 @@ const confirmDelete = () => {
             onSuccess: () => {
                 toast.success('Category deleted successfully');
                 deleteModal.value = false;
+            },
+             onError: (errors) => {
+                if (errors.message) {
+                    toast.error(errors.message)
+                } else {
+                    toast.error('Something went wrong')
+                }
+                deleteModal.value = false
             }
         })
     }

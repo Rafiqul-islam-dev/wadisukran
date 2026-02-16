@@ -274,56 +274,60 @@ function goTo(url) {
 
             <!-- Table View -->
             <div class="bg-white rounded-3xl shadow-2xl border-2 border-orange-100">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-scroll max-w-full">
                     <table class="w-full min-w-max">
                         <thead class="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
                             <tr>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Invoice No
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                   Status
+                                </th>
+                                <th
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     User Type
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Vendor
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
                                     Sales Date
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Product
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Type
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Raffle Ticket
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Quantity
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Total Price
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Vat (%)
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Commission (%)
                                 </th>
                                 <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
@@ -331,12 +335,20 @@ function goTo(url) {
                         <tbody class="divide-y divide-gray-200">
                             <tr v-for="order in orders.data" :key="order.id"
                                 class="hover:bg-orange-50 transition-colors duration-200">
-                                <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{
+                                <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
                                     order.invoice_no }}</td>
-                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                <td class="px-4 py-4 text-sm text-gray-900">
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
                                         {{ order.user.user_type }}
                                     </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900">
+                                    <span v-if="order.status === 'Printed'" class="px-2 py-1 bg-green-500 text-xs text-white bg-opacity-40 rounded-lg font-semibold">
+                                        Printed
+                                    </span>
+                                    <span v-else-if="order.status === 'Pending'" class="px-2 py-1 bg-gray-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Pending</span>
+
+                                    <span v-else-if="order.status === 'Cancel'" class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <p class="font-medium text-gray-900">{{ order.user.name }}</p>
@@ -345,16 +357,16 @@ function goTo(url) {
                                     <p class="text-red-500 text-xs mt-1 truncate max-w-[180px]"
                                         v-if="order.user?.address">{{ order.user.address }}</p>
                                 </td>
-                                <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {{ formatDate(order.sales_date) }}
+                                <td class="px-4 py-4 text-sm text-gray-600">
+                                    {{ formatDate(order.created_at) }}
                                 </td>
-                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">{{
+                                <td class="px-4 py-4 text-sm text-gray-900 font-medium">{{
                                     order.product?.title }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0">
                                         <div class="flex flex-wrap gap-1">
                                             <span v-for="type in ticket.selected_play_types" :key="type"
-                                                class="bg-purple-100 text-purple-800 rounded px-2 py-1 text-xs font-medium whitespace-nowrap">
+                                                class="bg-purple-100 text-purple-800 rounded px-2 py-1 text-xs font-medium">
                                                 {{ type }}
                                             </span>
                                         </div>
@@ -370,7 +382,7 @@ function goTo(url) {
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap text-center">
+                                <td class="px-4 py-4 text-sm text-gray-900 text-center">
                                     <span
                                         class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
                                         {{ order.quantity }}

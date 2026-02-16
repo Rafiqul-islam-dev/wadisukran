@@ -4,6 +4,8 @@ import { ref, nextTick, watch, computed } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
 import { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,6 +21,8 @@ const { products, categories } = defineProps<{
 const { company_setting } = usePage().props;
 
 const showModal = ref(false);
+const deleteModal = ref(false);
+const deletingProduct = ref(null);
 const isEditing = ref(false);
 const editingProduct = ref(null);
 const imagePreview = ref(null);
@@ -156,10 +160,18 @@ function submitForm() {
     }
 }
 
-function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        router.delete(`/products/${id}`);
-    }
+function deleteProduct(product) {
+    deleteModal.value = true;
+    deletingProduct.value = product;
+}
+
+function confirmDelete(){
+    router.delete(`/products/${deletingProduct?.value?.id}`, {
+        onSuccess: () => {
+            deleteModal.value = false;
+            toast.success('Product deleted successfully.');
+        }
+    });
 }
 
 
@@ -429,7 +441,7 @@ const handleCategoryChange = (e: Event) => {
                                             Edit
                                         </button>
                                         <!-- Delete Button -->
-                                        <button @click="deleteProduct(product.id)"
+                                        <button @click="deleteProduct(product)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 hover:text-red-700 transition-all duration-200">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -811,5 +823,26 @@ const handleCategoryChange = (e: Event) => {
                 </div>
             </Teleport>
         </div>
+
+         <Dialog v-model:open="deleteModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                    <DialogDescription>
+                        This Product
+                        <span v-if="deletingProduct" class="font-semibold">"{{ deletingProduct?.title }}"</span>
+                        will delete permanently.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteModal = false">
+                        Cancel
+                    </Button>
+                    <Button variant="destructive" @click="confirmDelete">
+                        Delete
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

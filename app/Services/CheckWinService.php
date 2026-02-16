@@ -18,8 +18,9 @@ class CheckWinService
         $win = Win::where('product_id', $invoice->product_id)
             ->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])
             ->first();
-        $summery = [];
 
+        $summery = [];
+        $total_prize = 0;
         if ($win) {
             $product = Product::find($invoice->product_id);
 
@@ -29,7 +30,6 @@ class CheckWinService
             $numbersChance = collect($win->win_number)->reverse()->values();
             $numbersSorted   = collect($win->win_number)->sort()->values();
             $len             = $numbersStraight->count();
-            $total_prize = 0;
             $orders = OrderTicket::query()
                 ->where('order_id', $invoice->id)
                 ->whereHas('order', function ($q) {

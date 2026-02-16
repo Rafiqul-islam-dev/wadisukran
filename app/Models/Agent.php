@@ -18,4 +18,8 @@ class Agent extends Model
     ];
 
     protected $dates = ['join_date'];
+
+    public function user(){
+        return $this->belongsTo(User::class);
+    }
 }

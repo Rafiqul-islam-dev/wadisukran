@@ -191,7 +191,7 @@ class OrderController extends Controller
                             $matchCount = $ticketNumbers->reverse()
                                 ->values()
                                 ->zip($numbersChance)
-                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->takeWhile(fn($pair) => (string)$pair[0] == (string)$pair[1])
                                 ->count();
 
                             $chancePrizes = $product->prizes

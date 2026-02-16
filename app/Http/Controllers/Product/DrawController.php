@@ -58,7 +58,11 @@ class DrawController extends Controller
         ]);
     }
 
-    public function histories_delete(Win $win){
+    public function histories_delete(Win $win)
+    {
+        if ($win->claims->count() > 0) {
+            return back()->with('error', 'This draw already claimed some user.');
+        }
         $win->delete();
         return back();
     }

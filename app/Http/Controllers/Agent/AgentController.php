@@ -52,25 +52,16 @@ class AgentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|unique:agents,username,'.$user->agent?->id,
             'commission' => 'required|numeric|min:0|max:100',
             'trn' => 'required|string|unique:agents,trn,' . $user->agent?->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
             'address' => 'nullable|string',
             'role' => 'required|string|exists:roles,name',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048'
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'password' => 'nullable|string'
         ]);
-
-        $name = $validated['name'];
-        $firstWord = strtolower(strtok($name, ' '));
-        do {
-            $randomNumber = rand(100, 999);
-            $username = $firstWord . '-' . $randomNumber;
-        } while (Agent::where('username', $username)->exists());
-
-        $validated['username'] = $username;
-        $validated['password'] = $username;
-
         $this->agentService->updateUser($user, $validated);
 
         return back()->with('success', 'Agent updated successfully.');
