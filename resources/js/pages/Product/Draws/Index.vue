@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,17 +29,19 @@ const filter = ref({
 });
 
 const drawNumbers = reactive<Record<number, string[]>>({});
+const inputs = ref<Record<number, HTMLInputElement[]>>({});
 
 products.forEach((product: any) => {
     drawNumbers[product.id] = Array(product.pick_number).fill('');
 });
 
 const generateForProduct = (product: any) => {
-    drawNumbers[product.id] = Array.from(
-        { length: product.pick_number },
-        () => Math.floor(Math.random() * product.type_number).toString()
-    );
+  drawNumbers[product.id] = Array.from(
+    { length: product.pick_number },
+    () => (Math.floor(Math.random() * product.type_number) + 1).toString()
+  );
 };
+
 
 const copyProductNumbers = (product: any) => {
     navigator.clipboard.writeText(
@@ -48,12 +50,38 @@ const copyProductNumbers = (product: any) => {
 };
 
 const handleNumberChange = (
-    product: any,
-    index: number,
-    value: string
+  product: any,
+  index: number,
+  event: Event
 ) => {
-    drawNumbers[product.id][index] = value;
+  const target = event.target as HTMLInputElement;
+
+  let value = target.value.replace(/\D/g, ''); // only digits
+
+  const max = product.type_number;
+  const maxLength = max <= 9 ? 1 : 2;
+
+  // limit length
+  value = value.slice(0, maxLength);
+
+  // limit value
+  if (Number(value) > max) {
+    value = max.toString();
+  }
+
+  drawNumbers[product.id][index] = value;
+  target.value = value;
+
+  // auto focus next
+  if (value.length >= maxLength) {
+    nextTick(() => {
+      const next = inputs.value[product.id]?.[index + 1];
+      if (next) next.focus();
+    });
+  }
 };
+
+
 
 const clearAll = () => {
     products.forEach((product: any) => {
@@ -175,10 +203,22 @@ const saveDraw = () => {
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
-                                            <Input v-for="(_, idx) in product.pick_number" :key="idx" type="text"
+                                            <Input
+                                                v-for="(_, idx) in product.pick_number"
+                                                :key="idx"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9]*"
+                                                :ref="el => {
+                                                if (!el) return;
+                                                if (!inputs[product.id]) inputs[product.id] = [];
+                                                inputs[product.id][idx] = (el.$el as HTMLInputElement);
+                                                }"
+
+                                                @input="handleNumberChange(product, idx, $event)"
                                                 v-model="drawNumbers[product.id][idx]"
-                                                @input="handleNumberChange(product, idx, $event.target.value)"
-                                                class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold" />
+                                                class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold"
+                                            />
                                         </div>
                                     </td>
 

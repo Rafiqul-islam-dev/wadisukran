@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { BreadcrumbItem } from '@/types';
+import { toast } from 'vue-sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,7 +21,6 @@ const { filters, products, product_prizes, product, summary } = defineProps<{
     product: Array<any>;
 }>();
 
-console.log(summary)
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',
@@ -33,6 +33,41 @@ const filter = ref({
     pick_number: filters?.pick_number ?? [],
     btn: filters?.btn ?? ''
 });
+
+const inputs = ref<HTMLInputElement[]>([]);
+
+const handleInput = (index: number, event: Event) => {
+  const target = event.target as HTMLInputElement;
+  target.value = target.value.replace(/\D/g, '');
+  filter.value.pick_number[index] = target.value;
+
+  if (!product) return;
+
+  const maxLength = product.type_number <= 9 ? 1 : 2;
+
+  if (target.value.length >= maxLength) {
+    nextTick(() => {
+      const next = inputs.value[index + 1];
+      if (next) {
+        next.focus();
+      }
+    });
+  }
+};
+
+const copyNumbers = async () => {
+  if (!filter.value.pick_number.length) return;
+
+  const text = filter.value.pick_number.join(',');
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success('Copied: ' + text); // or use toast if you have one
+  } catch (err) {
+    console.error('Copy failed', err);
+  }
+};
+
 
 function resetFilters() {
     filter.value = {
@@ -132,17 +167,26 @@ const handleSearch = () => {
                 <div class="mt-3" v-if="product">
                     <label for="" class="block text-center font-bold mb-2">Number</label>
                     <div class="flex justify-center gap-2 md:gap-5 overflow-x-auto w-full">
-                        <input v-for="(_, index) in product.pick_number" :key="index" type="text" inputmode="numeric"
-                            pattern="[0-9]*" v-model="filter.pick_number[index]" class="h-10 md:h-12 w-10 md:w-12 border-2 border-gray-400 rounded-lg
-         flex items-center justify-center
-         text-center
-         text-lg font-semibold" />
-
+                       <input
+                            v-for="(_, index) in product.pick_number"
+                            :key="index"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            v-model="filter.pick_number[index]"
+                            @input="handleInput(index, $event)"
+                            ref="inputs"
+                            class="h-10 md:h-12 w-10 md:w-12 border-2 border-gray-400 rounded-lg text-center text-lg font-semibold"
+                        />
                     </div>
-                    <div class="text-center mt-3">
+                    <div class="text-center mt-3 flex gap-3 justify-center">
                         <button @click="generateRandomNumbers"
                             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer">
                             Generate Random Numbers
+                        </button>
+                       <button @click="copyNumbers"
+                            class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer border-none">
+                        Copy
                         </button>
                     </div>
                 </div>
