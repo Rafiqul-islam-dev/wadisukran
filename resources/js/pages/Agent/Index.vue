@@ -24,6 +24,7 @@ const showDeleteModal = ref(false);
 const deletingUser = ref(null);
 const isEditing = ref(false);
 const editingUser = ref(null);
+const search = ref('');
 const form = useForm({
     user_type: 'agent',
     role: 'Agent',
@@ -131,17 +132,39 @@ function toggleUserStatus(user) {
         }
     );
 }
+
+function handleSearch(){
+    router.get(
+        route('agents.index'),
+        { search: search.value },
+        {
+            preserveScroll: true,
+            replace: true,
+            showProgress: false,
+            preserveState: true
+        }
+    );
+}
 </script>
 
 <template>
-
     <Head title="Agent List" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Agents</h1>
+            <div class="flex flex-col md:flex-row gap-5 justify-between items-center mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="group">
+                        <input v-model="search" @keyup.enter="handleSearch" type="text" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200" placeholder="Enter agent name/email/username">
+                    </div>
+                    <button @click="handleSearch"
+                        class="px-4 cursor-pointer py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center w-[50%] m-auto">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Search
+                    </button>
                 </div>
                 <button v-if="can('agent create')" @click="openModal()"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
@@ -197,6 +220,8 @@ function toggleUserStatus(user) {
                     </div>
                 </div>
             </div>
+
+
 
             <!-- Users Table (Desktop) -->
             <div class="hidden md:block overflow-hidden bg-white rounded-2xl shadow-xl">
@@ -277,7 +302,7 @@ function toggleUserStatus(user) {
                                         : 'N/A'
                                 }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ user.agent?.trn || 'N/A' }}</td>
-                                <td class="px-6 py-4 text-gray-700">{{ user.agent?.commission+' %' || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ user.agent?.commission + ' %' || 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
                                         <button v-if="can('agent update')" @click="editModal(user)"
@@ -397,7 +422,8 @@ function toggleUserStatus(user) {
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Commission
                                             (%)</label>
-                                        <select v-model="form.commission" name="commission" id="commission" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
+                                        <select v-model="form.commission" name="commission" id="commission"
+                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
                                             <option value="" disabled>Select commission percentage</option>
 
                                             <option v-for="i in 100" :key="i" :value="i">
@@ -408,7 +434,7 @@ function toggleUserStatus(user) {
                                             {{ form.errors.commission }}
                                         </p>
                                     </div>
-                                     <div v-if="isEditing">
+                                    <div v-if="isEditing">
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">username
                                             *</label>
                                         <input v-model="form.username" type="text" value={{ form.username }}
@@ -418,9 +444,9 @@ function toggleUserStatus(user) {
                                             {{ form.errors.username }}
                                         </p>
                                     </div>
-                                     <div v-if="isEditing">
+                                    <div v-if="isEditing">
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">password
-                                            </label>
+                                        </label>
                                         <input v-model="form.password" type="text"
                                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                             placeholder="Enter new password" />
