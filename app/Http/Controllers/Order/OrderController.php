@@ -29,6 +29,9 @@ class OrderController extends Controller
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
+            ->when($request->invoice_no, function ($query, $invoice){
+                $query->where('invoice_no', $invoice);
+            })
             ->when($request->date_from, function ($query, $dateFrom) use ($request) {
                 $timeFrom = $request->time_from ?? '00:00:00';
                 $query->where('created_at', '>=', "$dateFrom $timeFrom");
@@ -87,6 +90,7 @@ class OrderController extends Controller
                 'match_type',
                 'category_id',
                 'product_id',
+                'invoice_no',
             ]),
         ]);
     }

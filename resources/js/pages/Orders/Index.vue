@@ -31,6 +31,7 @@ const filter = ref({
     match_type: filters?.match_type ?? '',
     category_id: filters?.category_id ?? '',
     product_id: filters?.product_id ?? '',
+    invoice_no: filters?.invoice_no ?? '',
 });
 
 const modalVisible = ref(false);
@@ -47,6 +48,7 @@ function resetFilters() {
         match_type: '',
         category_id: '',
         product_id: '',
+        invoice_no: '',
     };
     handleSearch();
 }
@@ -109,19 +111,13 @@ function goTo(url) {
 </script>
 
 <template>
+
     <Head title="Daily Sales Report" />
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-6">
-
+        <div class="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-3">
             <div
-                class="bg-white rounded-3xl shadow-2xl p-6 mb-6 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
-                <div class="flex items-center mb-4">
-                    <div class="w-1 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full mr-3"></div>
-                    <h2 class="text-xl font-bold text-gray-800">Search Filters</h2>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-
+                class="bg-white rounded-3xl shadow-2xl p-5 mb-3 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-2">
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
@@ -249,11 +245,23 @@ function goTo(url) {
                         <input v-model="filter.time_to" type="time"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gradient-to-br from-white to-orange-50 hover:border-orange-300" />
                     </div>
+                    <div class="group">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 14h6m-6-4h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h8l4 4v9a2 2 0 01-2 2z"/>
+                            </svg>
+                            Invoice No
+                        </label>
+                        <input v-model="filter.invoice_no" type="text" placeholder="Invoice no"
+                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-gradient-to-br from-white to-orange-50 hover:border-orange-300" />
+                    </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 pt-4 border-t-2 border-gray-100">
+                <div class="flex items-center justify-end gap-3 pt-2 border-t-2 border-gray-100">
                     <button @click="resetFilters"
-                        class="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
+                        class="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
@@ -262,7 +270,7 @@ function goTo(url) {
                         Reset
                     </button>
                     <button @click="handleSearch"
-                        class="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                        class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -274,60 +282,47 @@ function goTo(url) {
 
             <!-- Table View -->
             <div class="bg-white rounded-3xl shadow-2xl border-2 border-orange-100">
-                <div class="overflow-x-scroll max-w-full">
-                    <table class="w-full min-w-max">
+                <div class="overflow-x-auto max-w-full">
+                    <table class="w-full">
                         <thead class="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
                             <tr>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Invoice No
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                                   Status
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                    Status
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     User Type
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Vendor
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
                                     Sales Date
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Product
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Type
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Raffle Ticket
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Quantity
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Total Price
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Vat (%)
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Commission (%)
                                 </th>
-                                <th
-                                    class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
@@ -338,17 +333,20 @@ function goTo(url) {
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
                                     order.invoice_no }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
+                                    <span v-if="order.status === 'Printed'"
+                                        class="px-2 py-1 bg-green-500 text-xs text-white bg-opacity-40 rounded-lg font-semibold">
+                                        Printed
+                                    </span>
+                                    <span v-else-if="order.status === 'Pending'"
+                                        class="px-2 py-1 bg-gray-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Pending</span>
+
+                                    <span v-else-if="order.status === 'Cancel'"
+                                        class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900">
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
                                         {{ order.user.user_type }}
                                     </span>
-                                </td>
-                                <td class="px-4 py-4 text-sm text-gray-900">
-                                    <span v-if="order.status === 'Printed'" class="px-2 py-1 bg-green-500 text-xs text-white bg-opacity-40 rounded-lg font-semibold">
-                                        Printed
-                                    </span>
-                                    <span v-else-if="order.status === 'Pending'" class="px-2 py-1 bg-gray-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Pending</span>
-
-                                    <span v-else-if="order.status === 'Cancel'" class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <p class="font-medium text-gray-900">{{ order.user.name }}</p>
@@ -357,14 +355,14 @@ function goTo(url) {
                                     <p class="text-red-500 text-xs mt-1 truncate max-w-[180px]"
                                         v-if="order.user?.address">{{ order.user.address }}</p>
                                 </td>
-                                <td class="px-4 py-4 text-sm text-gray-600">
+                                <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {{ formatDate(order.created_at) }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 font-medium">{{
                                     order.product?.title }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0">
-                                        <div class="flex flex-wrap gap-1">
+                                        <div class="flex gap-1">
                                             <span v-for="type in ticket.selected_play_types" :key="type"
                                                 class="bg-purple-100 text-purple-800 rounded px-2 py-1 text-xs font-medium">
                                                 {{ type }}
@@ -373,10 +371,10 @@ function goTo(url) {
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
-                                    <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0">
-                                        <div class="flex flex-wrap gap-1 max-w-[200px]">
+                                    <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0 w-full whitespace-nowrap">
+                                        <div class="flex gap-1">
                                             <span v-for="number in ticket.selected_numbers" :key="number"
-                                                class="bg-orange-100 text-orange-800 rounded px-2 py-1 text-xs font-bold whitespace-nowrap">
+                                                class="bg-orange-100 text-orange-800 rounded px-2 py-1 text-xs font-bold">
                                                 {{ number }}
                                             </span>
                                         </div>
@@ -414,7 +412,7 @@ function goTo(url) {
                         </tbody>
                     </table>
 
-                    <div class="mt-4 flex justify-end py-5 px-6">
+                    <div class="flex justify-end py-2 px-6">
                         <nav class="flex items-center space-x-1">
                             <button v-for="(link, i) in orders.links" :key="i" @click="goTo(link.url)"
                                 v-html="link.label" :disabled="!link.url" :class="[
