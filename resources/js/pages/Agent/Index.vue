@@ -145,6 +145,10 @@ function handleSearch(){
         }
     );
 }
+
+const loginAgent = (user) => {
+    router.get(route('login-as-agent'), { agent_id: user.id })
+}
 </script>
 
 <template>
@@ -305,6 +309,16 @@ function handleSearch(){
                                 <td class="px-6 py-4 text-gray-700">{{ user.agent?.commission + ' %' || 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
+                                       <button v-if="can('login as agent')"
+                                                @click="loginAgent(user)"
+                                                class="text-green-600 hover:text-green-800 cursor-pointer font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:bg-green-50 hover:shadow-md">
+                                            <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 12h14M12 5l7 7-7 7"/>
+                                            </svg>
+                                            Login
+                                        </button>
                                         <button v-if="can('agent update')" @click="editModal(user)"
                                             class="text-blue-600 hover:text-blue-800 font-medium transition-all duration-200 px-3 py-1 rounded-lg hover:bg-blue-50 hover:shadow-md">
                                             <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor"

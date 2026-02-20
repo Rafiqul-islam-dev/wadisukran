@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCog, Users, Wind } from 'lucide-vue-next';
+import { CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -159,6 +159,20 @@ const mainNavItems: NavItem[] = [
             }
         ],
         permission: 'show settings'
+    },
+    {
+        title: 'Customers',
+        href: '/customers',
+        icon: UserCircle,
+        items: [
+            {
+                title: 'Customer List',
+                href: '/customers',
+                icon: List,
+                permission: 'show customers'
+            }
+        ],
+        permission: 'show customers'
     },
     {
         title: 'Users',

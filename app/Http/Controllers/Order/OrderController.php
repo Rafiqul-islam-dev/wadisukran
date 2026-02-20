@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductPrize;
 use App\Services\CategoryService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 use function PHPSTORM_META\type;
@@ -29,6 +30,9 @@ class OrderController extends Controller
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
+            ->when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
+                $query->where('user_id', Auth::id());
+            })
             ->when($request->invoice_no, function ($query, $invoice){
                 $query->where('invoice_no', $invoice);
             })
@@ -137,6 +141,7 @@ class OrderController extends Controller
         $product = Product::find($request->product_id);
 
         $summery = [];
+        $orders = null;
         if ($request->btn === 'search' && $request->pick_number && $request->product_id) {
             $match_type = ProductPrize::find($request->match_type);
 
@@ -159,12 +164,13 @@ class OrderController extends Controller
                         $o->where('created_at', '<=', $to);
                     }
                 })
+                ->with('order.user')
                 ->when($request->match_type, function ($q) use ($match_type) {
                     $q->whereJsonContains('selected_play_types', $match_type->name);
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
-                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers];
+                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers, 'vendor_name' => $order->order->user->name];
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
@@ -280,6 +286,38 @@ class OrderController extends Controller
                     }
                 }
             }
+
+           $orders->transform(function ($order) use ($summery) {
+                $order['win_amount'] = 0;
+                $order['match_type'] = null;
+
+                if (!empty($order['Straight']) && $order['Straight'] === true) {
+                    $order['win_amount'] = $summery['Straight']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Straight';
+                }
+
+                if (!empty($order['Rumble']) && $order['Rumble'] === true) {
+                    $order['win_amount'] = $summery['Rumble']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Rumble';
+                }
+
+                // Chance types
+                foreach ($summery as $key => $sum) {
+                    if (str_starts_with($key, 'Chance') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+                // Number types
+                foreach ($summery as $key => $sum) {
+                    if (str_starts_with($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+
+                return $order;
+            });
         }
 
         return Inertia::render('Orders/ProbableWins', [
@@ -295,7 +333,15 @@ class OrderController extends Controller
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,
-            'summary' => $summery
+            'summary' => $summery,
+            'orders' => $orders
         ]);
+    }
+
+    public function updateStatus(Order $order, Request $request){
+        $order->status = $request->status;
+        $order->save();
+
+        return back();
     }
 }

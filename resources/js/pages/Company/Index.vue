@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +30,7 @@ const form = useForm({
     bank_account: company_setting?.bank_account ?? '',
     vat: company_setting?.vat ?? '',
     order_status: company_setting?.order_status ?? '1',
+    max_win_amount: company_setting?.max_win_amount ?? '1',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -204,6 +203,15 @@ const saveChanges = () => {
                             </div>
                         </div>
 
+                        <!-- Max Win amount -->
+                        <div class="space-y-2">
+                            <Label for="max_win_amount">Max win amount</Label>
+                            <Input id="max_win_amount" v-model="form.max_win_amount" type="number" placeholder="https://example.com"
+                                    class="max-w-4xl" />
+                            <p v-if="form.errors.max_win_amount" class="text-red-600 text-sm">
+                                {{ form.errors.max_win_amount }}
+                            </p>
+                        </div>
                         <!-- Address -->
                         <div class="space-y-2">
                             <Label for="address">Address</Label>

@@ -11,15 +11,27 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AgentController extends Controller
 {
+
     protected $agentService;
     function __construct(AgentService $agentService)
     {
         $this->agentService = $agentService;
     }
+
+     public static function middleware(): array
+    {
+        return [
+            new Middleware('can:login as agent', only: ['loginAs'])
+        ];
+    }
+
     public function index(Request $request)
     {
         $users = User::where('user_type', 'agent')
@@ -141,5 +153,27 @@ class AgentController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
+    }
+
+    public function top_ten_agents(){
+        return Inertia::render('User/TopTen', [
+            'agents' => $this->agentService->topTen()
+        ]);
+    }
+
+    public function loginAs(Request $request): RedirectResponse
+    {
+        $user = User::findOrFail($request->agent_id);
+        if (Auth::id() === $user->id) {
+            return back()->with('error', 'You are already logged in as this user.');
+        }
+        session(['impersonator_id' => Auth::id()]);
+        Auth::logout();
+
+        Auth::login($user);
+
+        request()->session()->regenerate();
+
+        return redirect()->route('dashboard');
     }
 }

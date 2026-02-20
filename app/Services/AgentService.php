@@ -45,4 +45,17 @@ class AgentService
         $this->userService->delete($user);
         return 'Agent deleted successfully';
     }
+
+     public function topTen(){
+        return User::select('users.*')
+            ->leftJoin('orders', 'orders.user_id', '=', 'users.id')
+            ->whereMonth('orders.created_at', now()->month)
+            ->whereYear('orders.created_at', now()->year)
+            ->selectRaw('SUM(orders.total_price) as total_sale')
+            ->selectRaw('COUNT(orders.id) as orders_count')
+            ->groupBy('users.id')
+            ->orderByDesc('total_sale')
+            ->limit(10)
+            ->get();
+    }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { can } from '@/helpers/permissions';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -12,26 +12,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const { company_setting } = usePage().props;
-const { agent_count, today_sales, today_commissions } = defineProps<{
+const { agent_count, today_sales, today_commissions, top_ten_customers, top_ten_agents } = defineProps<{
     agent_count: string;
     today_sales: string;
     today_commissions: string;
+    top_ten_customers: Array<any>;
+    top_ten_agents: Array<any>;
 }>();
 
-// Sample data - replace with your actual data
-const metrics = {
-    totalAgents: 42,
-    todaySales: 125000,
-    todayCommission: 8750,
-};
+console.log(top_ten_agents)
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-    }).format(amount);
-};
 </script>
 
 <template>
@@ -99,6 +89,117 @@ const formatCurrency = (amount: number) => {
                     </div>
                     <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-400 to-orange-600">
                     </div>
+                </div>
+
+                <!-- Top 3 Agents Card -->
+                <div v-if="can('show top agents')"
+                    class="group relative overflow-hidden rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition-all hover:shadow-md dark:border-orange-900/30 dark:from-orange-950/20 dark:to-gray-900 md:col-span-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-md font-medium text-orange-600 dark:text-orange-400">Top 10 Agents This Month</p>
+                        </div>
+                        <Link :href="route('agents.top-ten')" class="flex items-center gap-x-2">
+                            <button
+                                class="flex items-center gap-1 rounded-lg border border-orange-200 cursor-pointer bg-white px-3 py-1.5 text-xs font-medium text-orange-600 transition hover:bg-orange-50 dark:border-orange-800 dark:bg-gray-800 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                                View All
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </Link>
+                    </div>
+
+                    <div class="divide-y divide-orange-100 dark:divide-orange-900/30">
+                        <div v-for="(agent, index) in top_ten_agents.slice(0, 3)" :key="agent.id"
+                            class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+
+                            <!-- Rank Badge -->
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                                :class="{
+                                    'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400': index === 0,
+                                    'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400': index === 1,
+                                    'bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400': index === 2,
+                                }">
+                                {{ index + 1 }}
+                            </div>
+
+                            <!-- Avatar -->
+                            <div class="relative">
+                                <img v-if="agent.avatar" :src="agent.avatar" alt="User Photo"
+                                    class="w-12 h-12 object-contain rounded-full border-4 border-indigo-100 shadow-md" />
+                                <div v-else
+                                    class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
+                                    <span class="text-white font-bold text-lg">{{ agent.name.charAt(0)
+                                        }}</span>
+                                </div>
+                                <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
+                                    :class="agent.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0">
+                                <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ agent.name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ agent.orders_count }} sales</p>
+                            </div>
+
+                            <!-- Commission -->
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-orange-600 dark:text-orange-400">
+                                    {{ agent.total_sale }} {{ company_setting?.currency }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-400 to-amber-500"></div>
+                </div>
+                <!-- Top 3 Customer Card -->
+                <div v-if="can('show top customers')"
+                    class="group relative overflow-hidden rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition-all hover:shadow-md dark:border-orange-900/30 dark:from-orange-950/20 dark:to-gray-900 md:col-span-1">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-md font-medium text-orange-600 dark:text-orange-400">Top 10 Customers This Month</p>
+                        </div>
+                        <Link :href="route('customers.top-ten')" class="flex items-center gap-x-2">
+                            <button
+                                class="flex items-center gap-1 rounded-lg border border-orange-200 cursor-pointer bg-white px-3 py-1.5 text-xs font-medium text-orange-600 transition hover:bg-orange-50 dark:border-orange-800 dark:bg-gray-800 dark:text-orange-400 dark:hover:bg-orange-900/20">
+                                View All
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </Link>
+                    </div>
+
+                    <div class="divide-y divide-orange-100 dark:divide-orange-900/30">
+                        <div v-for="(customer, index) in top_ten_customers.slice(0, 3)" :key="customer.id"
+                            class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+
+                            <!-- Rank Badge -->
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold"
+                                :class="{
+                                    'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400': index === 0,
+                                    'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400': index === 1,
+                                    'bg-orange-100 text-orange-500 dark:bg-orange-900/30 dark:text-orange-400': index === 2,
+                                }">
+                                {{ index + 1 }}
+                            </div>
+                            <!-- Info -->
+                            <div class="flex-1 min-w-0">
+                                <p class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ customer.phone }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ customer.orders_count }} orders</p>
+                            </div>
+
+                            <!-- Commission -->
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-orange-600 dark:text-orange-400">
+                                    {{ customer.total_sale }} {{ company_setting?.currency }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-orange-400 to-amber-500"></div>
                 </div>
             </div>
 

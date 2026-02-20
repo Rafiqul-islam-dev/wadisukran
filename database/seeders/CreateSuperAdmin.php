@@ -20,6 +20,8 @@ class CreateSuperAdmin extends Seeder
             "agent restore",
             "agent update",
             "draw history delete",
+            "login as agent",
+            "order status change",
             "permission create",
             "permission delete",
             "permission update",
@@ -27,12 +29,14 @@ class CreateSuperAdmin extends Seeder
             "role delete",
             "role permission",
             "role update",
+            "show agent history",
             "show agent list",
             "show banner list",
             "show cancel order",
             "show categories",
             "show check winners",
             "show company settings",
+            "show customers",
             "show daily summery report",
             "show dashboard",
             "show draw history",
@@ -46,6 +50,8 @@ class CreateSuperAdmin extends Seeder
             "show settings",
             "show today commission",
             "show today sales",
+            "show top agents",
+            "show top customers",
             "show total agents",
             "show trashed agents",
             "show trashed products",
@@ -59,7 +65,7 @@ class CreateSuperAdmin extends Seeder
             "user restore",
             "user status change",
             "user update"
-        ];
+            ];
 
         foreach ($required_permissions as $permission) {
             Permission::updateOrCreate([
@@ -80,6 +86,7 @@ class CreateSuperAdmin extends Seeder
                 'user_type' => 'admin',
                 'name' => 'Super Admin',
                 'password' => Hash::make('12345678'),
+                'join_date' => now()
             ]
         );
         if (! $user->hasRole('Super Admin')) {

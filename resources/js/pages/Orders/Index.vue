@@ -3,6 +3,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { BreadcrumbItem } from '@/types';
+import { Edit } from 'lucide-vue-next';
+import { can } from '@/helpers/permissions';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -21,7 +23,6 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     filters: Record<string, any>;
     product_prizes: Array<any>;
 }>();
-console.log(orders)
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',
@@ -106,6 +107,35 @@ function goTo(url) {
         replace: true,
         showProgress: false
     })
+}
+
+function printInvoice() {
+    window.print();
+}
+
+const statusModal = ref(false);
+const statusOrder = ref<any | null>(null);
+const selectedStatus = ref('');
+
+function openStatusModal(order: any) {
+    statusOrder.value = order;
+    selectedStatus.value = order.status;
+    statusModal.value = true;
+}
+
+function closeStatusModal() {
+    statusModal.value = false;
+    statusOrder.value = null;
+    selectedStatus.value = '';
+}
+
+function updateStatus() {
+    router.post(route('orders.update-status', statusOrder.value.id), {
+        status: selectedStatus.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => closeStatusModal(),
+    });
 }
 
 </script>
@@ -332,7 +362,7 @@ function goTo(url) {
                                 class="hover:bg-orange-50 transition-colors duration-200">
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
                                     order.invoice_no }}</td>
-                                <td class="px-4 py-4 text-sm text-gray-900">
+                                <td class="px-4 py-4 text-sm text-gray-900 flex gap-1">
                                     <span v-if="order.status === 'Printed'"
                                         class="px-2 py-1 bg-green-500 text-xs text-white bg-opacity-40 rounded-lg font-semibold">
                                         Printed
@@ -342,6 +372,10 @@ function goTo(url) {
 
                                     <span v-else-if="order.status === 'Cancel'"
                                         class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
+
+                                    <div v-if="can('order status change') && order.status !== 'Printed'"  class="cursor-pointer" @click="openStatusModal(order)">
+                                        <Edit class="text-teal-500" />
+                                    </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
@@ -441,7 +475,7 @@ function goTo(url) {
                 <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
                     <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
                         :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
-                    <div class="flex items-center justify-center min-h-screen p-4">
+                    <div id="printDiv" class="flex items-center justify-center min-h-screen p-4">
                         <div
                             class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all">
                             <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
@@ -767,7 +801,7 @@ function goTo(url) {
                                     Generated on {{ new Date().toLocaleDateString() }}
                                 </div>
                                 <div class="flex space-x-3">
-                                    <button @click="window.print()"
+                                    <button @click="printInvoice"
                                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -782,6 +816,75 @@ function goTo(url) {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </Teleport>
+
+            <!-- Change Status Modal -->
+            <Teleport to="body">
+                <div v-if="statusModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div class="fixed inset-0 bg-black opacity-50" @click="closeStatusModal"></div>
+                    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+                        <!-- Header -->
+                        <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-5 rounded-t-2xl text-white">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-xl font-bold">Change Order Status</h2>
+                                    <p class="text-sm mt-1">Invoice #{{ statusOrder?.invoice_no }}</p>
+                                </div>
+                                <button @click="closeStatusModal"
+                                    class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <p class="text-sm text-gray-500 mb-1">Current Status</p>
+                                <span
+                                    :class="{
+                                        'bg-green-100 text-green-800': statusOrder?.status === 'Printed',
+                                        'bg-gray-100 text-gray-800': statusOrder?.status === 'Pending',
+                                        'bg-red-100 text-red-800': statusOrder?.status === 'Cancel',
+                                    }"
+                                    class="px-3 py-1 rounded-full text-xs font-semibold">
+                                    {{ statusOrder?.status }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Select New Status
+                                </label>
+                                <select v-model="selectedStatus"
+                                    class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200 bg-white">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Printed">Printed</option>
+                                    <option value="Cancel">Cancel</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="px-6 pb-6 flex justify-end gap-3">
+                            <button @click="closeStatusModal"
+                                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
+                                Cancel
+                            </button>
+                            <button @click="updateStatus"
+                                class="px-4 py-2 bg-gradient-to-r cursor-pointer from-orange-500 to-amber-600 text-white rounded-xl hover:from-orange-600 hover:to-amber-700 transition-all duration-200 font-bold shadow-md hover:shadow-lg flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Update Status
+                            </button>
                         </div>
                     </div>
                 </div>

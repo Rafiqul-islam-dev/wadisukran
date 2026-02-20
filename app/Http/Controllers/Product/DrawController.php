@@ -50,11 +50,42 @@ class DrawController extends Controller
         return back();
     }
 
-    public function histories()
+    public function histories(Request $request)
     {
-        $wins = Win::latest()->with('product')->paginate(10);
+        $wins = Win::latest()
+            ->when($request->product_id, function ($query, $product_id) {
+                $query->where('product_id', $product_id);
+            })
+            ->when($request->start_date || $request->start_time, function ($query) use ($request) {
+                $from = null;
+                if ($request->start_date) {
+                    $from = Carbon::parse(
+                        $request->start_date . ' ' . ($request->start_time ?? '00:00:00')
+                    );
+                }
+                if ($from) {
+                    $query->where('from_time', '>=', $from);
+                }
+            })
+            ->when($request->end_date || $request->end_time, function ($query) use ($request) {
+                $to = null;
+                if ($request->end_date) {
+                    $to = Carbon::parse(
+                        $request->end_date . ' ' . ($request->end_time ?? '23:59:59')
+                    );
+                }
+                if ($to) {
+                    $query->where('to_time', '<=', $to);
+                }
+            })
+            ->with('product')
+            ->paginate(10);
+
+        $products = Product::orderBy('title')->get();
+
         return Inertia::render('Product/Draws/History', [
-            'wins' => $wins
+            'wins' => $wins,
+            'products' => $products
         ]);
     }
 
