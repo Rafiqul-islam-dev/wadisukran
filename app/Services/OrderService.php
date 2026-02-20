@@ -26,6 +26,7 @@ class OrderService
 
         $order = Order::create([
             'user_id' => $data['user_id'],
+            'customer_id' => $data['customer_id'] ?? null,
             'product_id' => $data['product_id'],
             'quantity' => $data['quantity'],
             'total_price' => $data['total_price'],

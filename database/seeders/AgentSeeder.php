@@ -88,6 +88,7 @@ class AgentSeeder extends Seeder
                 [
                     'username' => $username,
                     'trn'      => $agentData['trn'],
+                    'commission' => 10
                 ]
             );
         }

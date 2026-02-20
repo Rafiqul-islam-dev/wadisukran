@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
@@ -60,6 +61,7 @@ class OrderSeeder extends Seeder
             $data['game_cards'] = $gameCards;
             $data['quantity'] = $quantity;
             $data['total_price'] = $totalPrice;
+            $data['customer_id'] = Customer::inRandomOrder()->first()->id;
 
             $this->orderService->createOrder($data);
         }
