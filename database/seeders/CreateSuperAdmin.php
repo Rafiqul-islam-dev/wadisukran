@@ -77,8 +77,12 @@ class CreateSuperAdmin extends Seeder
         $superAdminRole = Role::firstOrCreate(
             ['name' => 'Super Admin', 'guard_name' => 'web']
         );
+        $agentRole = Role::firstOrCreate(
+            ['name' => 'Agent', 'guard_name' => 'web']
+        );
         $permissions = Permission::pluck('name')->toArray();
         $superAdminRole->syncPermissions($permissions);
+        $agentRole->syncPermissions(['show dashboard', 'show today commission', 'show today sales', 'show report', 'show daily summery report']);
 
         $user = User::firstOrCreate(
             ['email' => 'superadmin@gmail.com'],

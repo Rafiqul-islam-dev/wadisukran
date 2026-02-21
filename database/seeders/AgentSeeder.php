@@ -81,6 +81,7 @@ class AgentSeeder extends Seeder
                 'address'   => $agentData['address'],
                 'photo'     => $agentData['photo'],
                 'join_date' => $agentData['join_date'],
+                'role_id'   => 2
             ]);
 
             Agent::updateOrCreate(
@@ -91,6 +92,9 @@ class AgentSeeder extends Seeder
                     'commission' => 10
                 ]
             );
+            if (! $user->hasRole('Agent')) {
+                $user->syncRoles(['Agent']);
+            }
         }
     }
 }
