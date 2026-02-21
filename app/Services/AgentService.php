@@ -46,7 +46,7 @@ class AgentService
         return 'Agent deleted successfully';
     }
 
-     public function topTen(){
+    public function topTen(){
         return User::select('users.*')
             ->leftJoin('orders', 'orders.user_id', '=', 'users.id')
             ->whereMonth('orders.created_at', now()->month)

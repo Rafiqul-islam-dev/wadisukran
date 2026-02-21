@@ -39,6 +39,7 @@ class DashboardController extends Controller
                         ->whereDate('created_at', Carbon::today())->sum('commission');
         $top_ten_customers = $this->customerService->topTen();
         $top_ten_agents = $this->agentService->topTen();
+        // return $top_ten_customers;
         return Inertia::render('Dashboard', [
             'agent_count' => number_format($agent_count),
             'today_sales' => number_format($today_sales),

@@ -28,14 +28,20 @@ class CustomerService
         return Customer::create($data);
     }
 
-    public function topTen(){
-        return Customer::select('customers.*')
+   public function topTen()
+    {
+        return Customer::query()
+            ->select(
+                'customers.id',
+                'customers.name',
+                'customers.phone'
+            )
             ->leftJoin('orders', 'orders.customer_id', '=', 'customers.id')
             ->whereMonth('orders.created_at', now()->month)
             ->whereYear('orders.created_at', now()->year)
             ->selectRaw('SUM(orders.total_price) as total_sale')
             ->selectRaw('COUNT(orders.id) as orders_count')
-            ->groupBy('customers.id')
+            ->groupBy('customers.id', 'customers.name', 'customers.phone')
             ->orderByDesc('total_sale')
             ->limit(10)
             ->get();
