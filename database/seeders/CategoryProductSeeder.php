@@ -48,6 +48,7 @@ class CategoryProductSeeder extends Seeder
                 'pick_number' => 3,
                 'type_number' => 9,
                 'prize_type'  => 'bet',
+                'image'       => 'uploads/products/product-1.png',
                 'is_active'   => true,
                 'prizes' => [
                     ['type' => 'bet', 'name' => 'Straight', 'chance_number' => null, 'prize' => 500],
@@ -63,6 +64,7 @@ class CategoryProductSeeder extends Seeder
                 'pick_number' => 6,
                 'type_number' => 49,
                 'prize_type'  => 'bet',
+                'image'       => 'uploads/products/product-1.png',
                 'is_active'   => true,
                 'prizes' => [
                     ['type' => 'bet', 'name' => 'Straight',      'chance_number' => null, 'prize' => 1000000],
@@ -78,6 +80,7 @@ class CategoryProductSeeder extends Seeder
                 'pick_number' => 5,
                 'type_number' => 39,
                 'prize_type'  => 'number',
+                'image'       => 'uploads/products/product-1.png',
                 'is_active'   => true,
                 'prizes' => [
                     ['type' => 'number', 'name' => 'number',  'chance_number' => 1, 'prize' => 5000000],
@@ -92,6 +95,7 @@ class CategoryProductSeeder extends Seeder
                 'draw_time'   => '19:30:00',
                 'pick_number' => 4,
                 'type_number' => 9,
+                'image'       => 'uploads/products/product-1.png',
                 'prize_type'  => 'number',
                 'is_active'   => true,
                 'prizes' => [
@@ -108,6 +112,7 @@ class CategoryProductSeeder extends Seeder
                 'pick_number' => 6,
                 'type_number' => 59,
                 'prize_type'  => 'bet',
+                'image'       => 'uploads/products/product-1.png',
                 'is_active'   => true,
                 'prizes' => [
                     ['type' => 'bet', 'name' => 'Straignt', 'chance_number' => null, 'prize' => 10000000],
