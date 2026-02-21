@@ -47,13 +47,30 @@ class AgentService
     }
 
     public function topTen(){
-        return User::select('users.*')
-            ->leftJoin('orders', 'orders.user_id', '=', 'users.id')
-            ->whereMonth('orders.created_at', now()->month)
-            ->whereYear('orders.created_at', now()->year)
-            ->selectRaw('SUM(orders.total_price) as total_sale')
+        $start = now()->startOfMonth();
+        $end   = now()->endOfMonth();
+
+        return User::query()
+            ->select(
+                'users.id',
+                'users.name',
+                'users.photo',
+                'users.status'
+            )
+            ->leftJoin('orders', function ($join) use ($start, $end) {
+                $join->on('orders.user_id', '=', 'users.id')
+                    ->where('orders.status', 'Printed')
+                    ->whereBetween('orders.created_at', [$start, $end]);
+            })
+            ->where('users.user_type', 'agent')
+            ->selectRaw('COALESCE(SUM(orders.total_price),0) as total_sale')
             ->selectRaw('COUNT(orders.id) as orders_count')
-            ->groupBy('users.id')
+            ->groupBy(
+                'users.id',
+                'users.name',
+                'users.photo',
+                'users.status'
+            )
             ->orderByDesc('total_sale')
             ->limit(10)
             ->get();

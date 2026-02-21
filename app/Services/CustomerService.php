@@ -28,15 +28,21 @@ class CustomerService
         return Customer::create($data);
     }
 
-   public function topTen()
+    public function topTen()
     {
+        $start = now()->startOfMonth();
+        $end   = now()->endOfMonth();
         return Customer::query()
             ->select(
                 'customers.id',
                 'customers.name',
                 'customers.phone'
             )
-            ->leftJoin('orders', 'orders.customer_id', '=', 'customers.id')
+            ->leftJoin('orders', function ($join) use ($start, $end) {
+                $join->on('orders.customer_id', '=', 'customers.id')
+                    ->where('orders.status', 'Printed')
+                    ->whereBetween('orders.created_at', [$start, $end]);
+            })
             ->whereMonth('orders.created_at', now()->month)
             ->whereYear('orders.created_at', now()->year)
             ->selectRaw('SUM(orders.total_price) as total_sale')
