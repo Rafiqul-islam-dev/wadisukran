@@ -27,11 +27,13 @@
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/vite": "^4.1.1",
         "@vitejs/plugin-vue": "^5.2.1",
+        "@vueform/multiselect": "^2.6.11",
         "@vueuse/core": "^12.8.2",
         "axios": "^1.13.2",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "concurrently": "^9.0.1",
+        "dayjs": "^1.11.19",
         "laravel-vite-plugin": "^1.0",
         "lucide-vue-next": "^0.468.0",
         "reka-ui": "^2.7.0",
@@ -42,6 +44,7 @@
         "vite": "^6.2.0",
         "vue": "^3.5.13",
         "vue-sonner": "^2.0.9",
+        "vue3-print-nb": "^0.1.4",
         "ziggy-js": "^2.4.2"
     },
     "optionalDependencies": {

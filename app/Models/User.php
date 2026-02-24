@@ -74,4 +74,14 @@ class User extends Authenticatable
         }
         return null;
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'user_id');
+    }
+
+    public function claims()
+    {
+        return $this->hasMany(Claim::class, 'user_id');
+    }
 }

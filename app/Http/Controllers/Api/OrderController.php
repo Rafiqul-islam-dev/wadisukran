@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\ProductOrderResource;
 use App\Models\OrderTicket;
+use App\Services\AgentAccountService;
 use App\Services\OrderService;
 
 class OrderController extends Controller
@@ -243,13 +244,24 @@ class OrderController extends Controller
             ], 404);
         }
 
-        // Check if remarks is provided (for cancellation)
         if (isset($request->remarks) && !empty($request->remarks)) {
             $order->status = 'Cancel';
             $order->remarks = $request->remarks;
         } else {
             // If no remarks, set status to Printed
             $order->status = 'Printed';
+
+            $accountService = new AgentAccountService();
+            $accountService->store([
+                'user_id' => $order->user_id,
+                'type' => 'sell',
+                'amount' => $order->total_price
+            ]);
+            $accountService->store([
+                'user_id' => $order->user_id,
+                'type' => 'commission',
+                'amount' => $order->commission
+            ]);
         }
 
         $order->save();

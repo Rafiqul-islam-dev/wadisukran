@@ -10,6 +10,7 @@ use App\Models\CompannySetting;
 use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\ProductPrize;
+use App\Services\AgentAccountService;
 use App\Services\CategoryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -320,6 +321,7 @@ class OrderController extends Controller
             });
         }
 
+        // return $summery;
         return Inertia::render('Orders/ProbableWins', [
             'products' => $products,
             'filters' => request()->only([
@@ -340,6 +342,19 @@ class OrderController extends Controller
 
     public function updateStatus(Order $order, Request $request){
         $order->status = $request->status;
+        if($request->status === "Printed"){
+            $accountService = new AgentAccountService();
+            $accountService->store([
+                'user_id' => $order->user_id,
+                'type' => 'sell',
+                'amount' => $order->total_price
+            ]);
+            $accountService->store([
+                'user_id' => $order->user_id,
+                'type' => 'commission',
+                'amount' => $order->commission
+            ]);
+        }
         $order->save();
 
         return back();

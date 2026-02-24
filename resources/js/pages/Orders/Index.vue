@@ -109,10 +109,6 @@ function goTo(url) {
     })
 }
 
-function printInvoice() {
-    window.print();
-}
-
 const statusModal = ref(false);
 const statusOrder = ref<any | null>(null);
 const selectedStatus = ref('');
@@ -475,7 +471,7 @@ function updateStatus() {
                 <div v-if="showModal" class="fixed inset-0 z-50 overflow-y-auto" @click.self="closeModal">
                     <div class="fixed inset-0 bg-black transition-opacity duration-300 ease-out"
                         :class="modalVisible ? 'opacity-50' : 'opacity-0'"></div>
-                    <div id="printDiv" class="flex items-center justify-center min-h-screen p-4">
+                    <div class="flex items-center justify-center min-h-screen p-4">
                         <div
                             class="relative bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden transform transition-all">
                             <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
@@ -495,7 +491,7 @@ function updateStatus() {
                                     </button>
                                 </div>
                             </div>
-                            <div class="overflow-y-auto max-h-[calc(90vh-180px)]">
+                            <div id="printDiv" class="overflow-y-auto max-h-[calc(90vh-180px)]">
                                 <div v-if="selectedOrder" class="p-8">
                                     <!-- Product Information -->
                                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 mb-8">
@@ -801,7 +797,7 @@ function updateStatus() {
                                     Generated on {{ new Date().toLocaleDateString() }}
                                 </div>
                                 <div class="flex space-x-3">
-                                    <button @click="printInvoice"
+                                    <button v-print="'#printDiv'"
                                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
