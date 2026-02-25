@@ -34,7 +34,7 @@ class OrderController extends Controller
             ->when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
                 $query->where('user_id', Auth::id());
             })
-            ->when($request->invoice_no, function ($query, $invoice){
+            ->when($request->invoice_no, function ($query, $invoice) {
                 $query->where('invoice_no', $invoice);
             })
             ->when($request->date_from, function ($query, $dateFrom) use ($request) {
@@ -60,7 +60,7 @@ class OrderController extends Controller
                 });
             })
             ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->latest()->paginate(10);
-        $users = User::select('id', 'name')->get();
+        $users = User::where('user_type', 'agent')->select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();
         $products = Product::where('category_id', $request->category_id)->active()->orderBy('title')->get();
@@ -288,7 +288,7 @@ class OrderController extends Controller
                 }
             }
 
-           $orders->transform(function ($order) use ($summery) {
+            $orders->transform(function ($order) use ($summery) {
                 $order['win_amount'] = 0;
                 $order['match_type'] = null;
 
@@ -340,9 +340,10 @@ class OrderController extends Controller
         ]);
     }
 
-    public function updateStatus(Order $order, Request $request){
+    public function updateStatus(Order $order, Request $request)
+    {
         $order->status = $request->status;
-        if($request->status === "Printed"){
+        if ($request->status === "Printed") {
             $accountService = new AgentAccountService();
             $accountService->store([
                 'user_id' => $order->user_id,
