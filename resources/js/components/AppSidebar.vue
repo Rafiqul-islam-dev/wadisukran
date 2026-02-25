@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wind } from 'lucide-vue-next';
+import { BarChart3, Book, CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -36,6 +36,25 @@ const mainNavItems: NavItem[] = [
                 href: '/agents/history',
                 icon: History,
                 permission: 'show agent history'
+            },
+        ],
+        permission: 'show agent list'
+    },
+    {
+        title: 'Account',
+        icon: Wallet,
+        items: [
+            {
+                title: 'Accounts Summery',
+                href: '/accounts/summery',
+                icon: BarChart3,
+                permission: 'show accounts summery'
+            },
+            {
+                title: 'Ledger',
+                href: '/accounts/ledger',
+                icon: Book,
+                permission: 'show accounts ledger'
             },
         ],
         permission: 'show agent list'

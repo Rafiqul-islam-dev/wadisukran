@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AgentAccount;
 use App\Models\Claim;
 use App\Models\Order;
 use App\Models\OrderTicket;
@@ -156,6 +157,16 @@ class CheckWinService
 
         if ($summery) {
             $invoice->is_winner = 1;
+            $exists = AgentAccount::where('order_id', $invoice->id)->exists();
+            if(!$exists){
+                $accountService = new AgentAccountService();
+                $accountService->store([
+                    'user_id' => $invoice->user_id,
+                    'type' => 'win',
+                    'amount' => $total_prize,
+                    'order_id' => $invoice->id
+                ]);
+            }
             $invoice->save();
         }
         return ['summery' => $summery, 'total_prize' => $total_prize];
@@ -166,7 +177,7 @@ class CheckWinService
         $invoice = Order::where('invoice_no', $invoice)->first();
         $win = Win::where('product_id', $invoice->product_id)->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])->first();
         $check_summery = $this->CheckWinByInvoice($invoice->invoice_no);
-        $totalWonAmount = collect($check_summery)->sum('total_amount');
+        $totalWonAmount = $check_summery['total_prize'];
 
         Claim::create([
             'user_id' => $invoice->user_id,
@@ -177,6 +188,12 @@ class CheckWinService
         ]);
 
         $invoice->is_claimed = 1;
+        $accountService = new AgentAccountService();
+        $accountService->store([
+            'user_id' => $invoice->user_id,
+            'type' => 'claim',
+            'amount' => $totalWonAmount
+        ]);
         $invoice->save();
 
         return 'Win Claimed successfully.';

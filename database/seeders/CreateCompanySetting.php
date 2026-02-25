@@ -14,7 +14,12 @@ class CreateCompanySetting extends Seeder
     public function run(): void
     {
         CompannySetting::firstOrCreate(
-            ['name' => 'Wadi Shukran']
+            [
+                'name' => 'Wadi Shukran',
+                'logo' => 'uploads/company/company-logo.png',
+                'currency' => 'AED',
+                'vat' => 5,
+            ]
         );
 
         $this->command->info('✅ Company Setting created.');

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Accounts\AccountsLedgerController;
+use App\Http\Controllers\Accounts\AccountsSummeryController;
 use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -68,6 +70,12 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/top-ten', [AgentController::class, 'top_ten_agents'])->name('top-ten');
 
         Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
+    });
+
+    Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {
+        Route::get('/summery', [AccountsSummeryController::class, 'index'])->name('summery');
+        Route::get('/ledger', [AccountsLedgerController::class, 'index'])->name('ledger');
+        Route::post('/ledger-store', [AccountsLedgerController::class, 'store'])->name('ledger-store');
     });
 
 
