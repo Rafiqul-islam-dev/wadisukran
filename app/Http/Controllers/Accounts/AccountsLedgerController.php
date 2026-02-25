@@ -41,13 +41,17 @@ class AccountsLedgerController extends Controller
     public function store(Request $request){
         $request->validate([
             'agent' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:1'
+            'amount' => 'required|numeric|min:1',
+            'description' => 'nullable|string',
+            'payment_type' => 'required|string'
         ]);
 
         $data = [
             'user_id' => $request->agent,
             'type'    => 'posting',
-            'amount'  => $request->amount
+            'amount'  => $request->amount,
+            'description' => $request->description,
+            'payment_type' => $request->payment_type
         ];
 
         $this->agentAccountService->store($data);

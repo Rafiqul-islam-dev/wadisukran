@@ -24,6 +24,8 @@ const showModal = ref(false);
 const form = useForm({
     amount: '',
     agent: '',
+    description: '',
+    payment_type: '',
     from_date: '',
     to_date: ''
 });
@@ -153,6 +155,12 @@ const submitForm = () => {
                                Amount
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                               Payment Type
+                            </th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                               Description
+                            </th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
                                 Created At
                             </th>
                         </tr>
@@ -162,6 +170,8 @@ const submitForm = () => {
                             class="hover:bg-orange-50 transition-colors duration-200">
                             <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
+                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type || 'N/A' }}</td>
+                            <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) : "N/A" }}</td>
                         </tr>
                     </tbody>
@@ -230,12 +240,31 @@ const submitForm = () => {
                                 </div>
                                  <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Amount
-                                        *</label>
+                                        <span class="text-red-500">*</span></label>
                                     <input v-model="form.amount" type="text" placeholder="Write amount here"
                                         class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
                                          />
                                     <p v-if="form.errors.amount" class="text-red-600 text-sm">
                                         {{ form.errors.amount }}
+                                    </p>
+                                </div>
+                                 <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Type <span class="text-red-500">*</span></label>
+                                    <select name="" v-model="form.payment_type" id="" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
+                                        <option value="">Select Payment Type</option>
+                                        <option value="Agent Payment Receive">Agent Payment Receive</option>
+                                    </select>
+                                    <p v-if="form.errors.payment_type" class="text-red-600 text-sm">
+                                        {{ form.errors.payment_type }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-1 gap-3 mt-2">
+                                 <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                                        <textarea placeholder="Write description here" name="" v-model="form.description" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"></textarea>
+                                    <p v-if="form.errors.description" class="text-red-600 text-sm">
+                                        {{ form.errors.description }}
                                     </p>
                                 </div>
                             </div>

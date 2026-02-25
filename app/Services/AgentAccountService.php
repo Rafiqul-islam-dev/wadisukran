@@ -10,12 +10,12 @@ class AgentAccountService
 
     public function store(array $data)
     {
-        $old_balance = 0;
-        $current_balance = 0;
+        $old_due = 0;
+        $current_due = 0;
 
         $last_posting = AgentAccount::where('type', 'posting')->latest()->first();
         if ($last_posting) {
-            $old_balance = $last_posting->current_balance;
+            $old_due = $last_posting->old_due;
         }
 
         if ($data['type'] === 'posting') {
@@ -28,19 +28,27 @@ class AgentAccountService
                 })
                 ->sum('amount');
 
-            if ($old_balance > $total_commission) {
-                $total_payable = $old_balance - $total_commission;
-            } else {
-                $total_payable = $total_commission - $old_balance;
-            }
-            $current_balance = $total_payable - $data['amount'];
+            $total_sell = AgentAccount::where('user_id', $data['user_id'])
+                ->where('type', 'sell')
+                ->when($fromDate, function ($q) use ($fromDate) {
+                    $q->where('created_at', '>', $fromDate);
+                })
+                ->sum('amount');
+
+            $agent_payable = $total_sell;
+
+            $company_payable = $total_commission + $old_due;
+
+            $remaining_payable = $agent_payable - $company_payable;
+            $current_due = $remaining_payable - $data['amount'];
         }
         AgentAccount::create([
             'user_id' => $data['user_id'],
             'type' => $data['type'],
             'amount' => $data['amount'],
-            'old_balance' => $old_balance,
-            'current_balance' => $current_balance,
+            'old_due' => $current_due,
+            'description' => $data['description'] ?? null,
+            'payment_type' => $data['payment_type'] ?? null,
             'order_id' => $data['order_id'] ?? null,
             'created_by' => Auth::id()
         ]);

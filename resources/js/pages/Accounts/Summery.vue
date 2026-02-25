@@ -78,7 +78,7 @@ const handleSearch = () => {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
-                                    Old Balance
+                                    Old Due
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
@@ -111,7 +111,7 @@ const handleSearch = () => {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 rounded-full font-medium bg-green-100 text-green-700">
-                                        + {{ user.total_commission }}
+                                         {{ user.total_commission }}
                                     </span>
                                 </td>
 
@@ -127,17 +127,17 @@ const handleSearch = () => {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 rounded-full font-medium bg-purple-100 text-purple-700">
-                                        + {{ user.total_claim }}
+                                         {{ user.total_claim }}
                                     </span>
                                 </td>
 
                                 <!-- Old Balance -->
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span :class="Number(user.old_balance) < 0
+                                    <span :class="Number(user.old_due) < 0
                                         ? 'bg-red-100 text-red-700'
                                         : 'bg-gray-100 text-gray-600'"
                                         class="inline-flex items-center px-2.5 py-1 rounded-full font-medium">
-                                        {{ user.old_balance }}
+                                        {{ user.old_due }}
                                     </span>
                                 </td>
 
@@ -146,26 +146,23 @@ const handleSearch = () => {
                                     <div class="space-y-1">
                                         <div class="flex items-center justify-between gap-4">
                                             <span class="text-gray-600 font-semibold">Commission</span>
-                                            <span class="text-green-600 font-medium">+ {{ user.total_commission
+                                            <span class="text-green-600 font-medium"> {{ user.total_commission
                                                 }}</span>
                                         </div>
                                         <div class="flex items-center justify-between gap-4">
                                             <span class="text-gray-600 font-semibold">Claim</span>
-                                            <span class="text-green-600 font-medium">+ {{ user.total_claim }}</span>
+                                            <span class="text-green-600 font-medium"> {{ user.total_claim }}</span>
                                         </div>
                                         <div class="flex items-center justify-between gap-4">
-                                            <span class="text-gray-600 font-semibold">Old Balance</span>
-                                            <span v-if="Number(user.old_balance) < 0"
-                                                class="text-green-600 font-medium">+ {{ user.old_balance }}</span>
-                                            <span v-else class="text-red-500 font-medium">- {{ user.old_balance
-                                                }}</span>
+                                            <span class="text-gray-600 font-semibold">Old Due</span>
+                                            <span class="text-green-600 font-medium"> {{ user.old_due }}</span>
                                         </div>
                                         <div
                                             class="border-t border-dashed border-gray-200 pt-1 flex items-center justify-between gap-4">
                                             <span class="text-gray-600 font-semibold">Net</span>
                                             <span class="text-orange-600 font-bold">
-                                                {{ (Number(user.total_commission) + Number(user.total_claim)) -
-                                                Number(user.old_balance) }}
+                                                {{ (Number(user.total_commission) + Number(user.total_claim)) +
+                                                Number(user.old_due) }}
                                             </span>
                                         </div>
                                     </div>
@@ -281,9 +278,9 @@ const handleSearch = () => {
                             <td class="border px-3 py-2">Net Amount</td>
                             <td class="border px-3 py-2 text-right">
                                 {{
-                                    (Number(selectedUser?.total_commission) +
-                                        Number(selectedUser?.total_claim)) -
-                                    Number(selectedUser?.old_balance)
+                                    Number(selectedUser?.total_sell) - (Number(selectedUser?.total_commission) +
+                                        Number(selectedUser?.total_claim))
+
                                 }}
                             </td>
                         </tr>
@@ -291,7 +288,7 @@ const handleSearch = () => {
                         <tr>
                             <td class="border px-3 py-2">Old Balance Pending</td>
                             <td class="border px-3 py-2 text-right">
-                                {{ selectedUser?.old_balance }}
+                                {{ selectedUser?.old_due }}
                             </td>
                         </tr>
                         <tr>
@@ -306,9 +303,8 @@ const handleSearch = () => {
                             <td class="border px-3 py-2">Total Due As per Statement</td>
                             <td class="border px-3 py-2 text-right">
                                 {{
-                                    (Number(selectedUser?.total_commission) +
-                                        Number(selectedUser?.total_claim)) -
-                                    Number(selectedUser?.old_balance)
+                                     (Number(selectedUser?.total_sell) + Number(selectedUser?.old_due)) - (Number(selectedUser?.total_commission) +
+                                        Number(selectedUser?.total_claim))
                                 }}
                             </td>
                         </tr>

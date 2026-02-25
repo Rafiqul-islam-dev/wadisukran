@@ -34,7 +34,7 @@ class AccountsSummeryController extends Controller
                 'total_commission' => !empty($account['commission']) ? $account['commission'] : 0,
                 'total_win' => !empty($account['win']) ? $account['win'] : 0,
                 'total_claim' => !empty($account['claim']) ? $account['claim'] : 0,
-                'old_balance' => !empty($last_posting->current_balance) ? $last_posting->current_balance : 0
+                'old_due' => !empty($last_posting->old_due) ? 500.00 : 0,
             ];
         }
 
