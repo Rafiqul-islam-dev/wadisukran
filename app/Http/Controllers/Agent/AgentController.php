@@ -11,18 +11,43 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AgentController extends Controller
 {
+
     protected $agentService;
     function __construct(AgentService $agentService)
     {
         $this->agentService = $agentService;
     }
-    public function index()
+
+     public static function middleware(): array
     {
-        $users = User::where('user_type', 'agent')->whereHas('agent')->with('agent:user_id,username,trn,commission')->latest()->get();
+        return [
+            new Middleware('can:login as agent', only: ['loginAs'])
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $users = User::where('user_type', 'agent')
+            ->when($request->search, function ($q, $search) {
+                $q->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHas('agent', function ($q) use ($search) {
+                            $q->where('username', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->whereHas('agent')
+            ->with('agent:user_id,username,trn,commission')
+            ->latest()
+            ->get();
 
         return Inertia::render('Agent/Index', [
             'users' => $users,
@@ -52,25 +77,16 @@ class AgentController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|unique:agents,username,' . $user->agent?->id,
             'commission' => 'required|numeric|min:0|max:100',
             'trn' => 'required|string|unique:agents,trn,' . $user->agent?->id,
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
             'address' => 'nullable|string',
             'role' => 'required|string|exists:roles,name',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048'
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
+            'password' => 'nullable|string'
         ]);
-
-        $name = $validated['name'];
-        $firstWord = strtolower(strtok($name, ' '));
-        do {
-            $randomNumber = rand(100, 999);
-            $username = $firstWord . '-' . $randomNumber;
-        } while (Agent::where('username', $username)->exists());
-
-        $validated['username'] = $username;
-        $validated['password'] = $username;
-
         $this->agentService->updateUser($user, $validated);
 
         return back()->with('success', 'Agent updated successfully.');
@@ -137,5 +153,27 @@ class AgentController extends Controller
         } catch (\Throwable $th) {
             throw $th;
         }
+    }
+
+    public function top_ten_agents(){
+        return Inertia::render('User/TopTen', [
+            'agents' => $this->agentService->topTen()
+        ]);
+    }
+
+    public function loginAs(Request $request): RedirectResponse
+    {
+        $user = User::findOrFail($request->agent_id);
+        if (Auth::id() === $user->id) {
+            return back()->with('error', 'You are already logged in as this user.');
+        }
+        session(['impersonator_id' => Auth::id()]);
+        Auth::logout();
+
+        Auth::login($user);
+
+        request()->session()->regenerate();
+
+        return redirect()->route('dashboard');
     }
 }

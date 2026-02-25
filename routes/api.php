@@ -6,11 +6,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\CheckWinnerController;
+use App\Http\Controllers\Api\DailySummeryController;
+use App\Http\Controllers\User\CustomerController;
 
 Route::prefix('v1/auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
-
 
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
@@ -21,6 +23,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'orderInfo']);
     Route::post('/orders-update/{id}', [OrderController::class, 'orderUpdate']);
     Route::get('/user-orders', [OrderController::class, 'apiOrdersByUser']);
+    Route::get('/cancelled-orders', [OrderController::class, 'cancelledOrder']);
+    Route::post('/order-customer-update/{order}', [CustomerController::class, 'orderCustomerUpdate']);
     Route::get('/banner', [BannerController::class, 'getBanner']);
+    Route::get('/check-win-by-invoice/{invoice_no}', [CheckWinnerController::class, 'checkWin']);
+    Route::post('/claim-win', [CheckWinnerController::class, 'claimWin']);
 
+    Route::post('/daily-summery', [DailySummeryController::class, 'index']);
 });

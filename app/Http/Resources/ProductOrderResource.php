@@ -32,6 +32,7 @@ class ProductOrderResource extends JsonResource
             'total_price' => number_format($this->total_price, 2) . ' AED',
             'sales_date' => $this->sales_date ? \Carbon\Carbon::parse($this->sales_date)->format('Y-m-d') : 'N/A',
             'game_cards' => $this->game_cards ?? [],
+            'big_prize' => $this->product?->prizes ? $this->product->prizes->max('prize') : null
         ];
     }
 }

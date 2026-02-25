@@ -88,7 +88,13 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        Category::find($id)->delete();
+        $category = Category::find($id);
+        if($category->products->count() > 0){
+            return redirect()->back()->withErrors([
+                'message' => 'This category cannot be deleted. Because it has products.'
+            ]);
+        }
+        $category->delete();
         return back();
     }
 

@@ -14,6 +14,14 @@ import { MoreHorizontal } from 'lucide-vue-next';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { toast } from 'vue-sonner';
 import { can } from '@/helpers/permissions';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Permissions',
+        href: '/permissions',
+    },
+];
 
 const isModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
@@ -106,7 +114,7 @@ const buttonText = computed(() =>
 <template>
 
     <Head title="Permissions" />
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">

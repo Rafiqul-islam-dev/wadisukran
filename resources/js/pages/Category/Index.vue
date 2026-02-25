@@ -5,9 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import { BreadcrumbItem } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Categories',
+        href: '/categories',
+    },
+];
 
 const { categories } = defineProps<{
     categories: Array<any>;
@@ -79,6 +87,14 @@ const confirmDelete = () => {
             onSuccess: () => {
                 toast.success('Category deleted successfully');
                 deleteModal.value = false;
+            },
+             onError: (errors) => {
+                if (errors.message) {
+                    toast.error(errors.message)
+                } else {
+                    toast.error('Something went wrong')
+                }
+                deleteModal.value = false
             }
         })
     }
@@ -100,7 +116,8 @@ const statusChange = (id) => {
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Categories" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">

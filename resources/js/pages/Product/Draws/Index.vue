@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { nextTick, reactive, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
+import { BreadcrumbItem } from '@/types';
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Draw',
+        href: '/draws',
+    },
+];
 
 const { categories, products, filters } = defineProps<{
     categories: Array<any>;
@@ -13,8 +20,8 @@ const { categories, products, filters } = defineProps<{
     products: Array<any>;
 }>();
 const form = useForm({
-    date: '',
-    time: '11:59',
+    date: new Date().toISOString().split('T')[0],
+    time: '23:59',
     products: []
 });
 const filter = ref({
@@ -22,16 +29,19 @@ const filter = ref({
 });
 
 const drawNumbers = reactive<Record<number, string[]>>({});
+const inputs = ref<Record<number, HTMLInputElement[]>>({});
+
 products.forEach((product: any) => {
     drawNumbers[product.id] = Array(product.pick_number).fill('');
 });
 
 const generateForProduct = (product: any) => {
-    drawNumbers[product.id] = Array.from(
-        { length: product.pick_number },
-        () => Math.floor(Math.random() * 10).toString()
-    );
+  drawNumbers[product.id] = Array.from(
+    { length: product.pick_number },
+    () => (Math.floor(Math.random() * product.type_number) + 1).toString()
+  );
 };
+
 
 const copyProductNumbers = (product: any) => {
     navigator.clipboard.writeText(
@@ -40,14 +50,38 @@ const copyProductNumbers = (product: any) => {
 };
 
 const handleNumberChange = (
-    product: any,
-    index: number,
-    value: string
+  product: any,
+  index: number,
+  event: Event
 ) => {
-    if (/^\d?$/.test(value)) {
-        drawNumbers[product.id][index] = value;
-    }
+  const target = event.target as HTMLInputElement;
+
+  let value = target.value.replace(/\D/g, ''); // only digits
+
+  const max = product.type_number;
+  const maxLength = max <= 9 ? 1 : 2;
+
+  // limit length
+  value = value.slice(0, maxLength);
+
+  // limit value
+  if (Number(value) > max) {
+    value = max.toString();
+  }
+
+  drawNumbers[product.id][index] = value;
+  target.value = value;
+
+  // auto focus next
+  if (value.length >= maxLength) {
+    nextTick(() => {
+      const next = inputs.value[product.id]?.[index + 1];
+      if (next) next.focus();
+    });
+  }
 };
+
+
 
 const clearAll = () => {
     products.forEach((product: any) => {
@@ -55,8 +89,8 @@ const clearAll = () => {
     });
 
     // Optional resets
-    form.date = '';
-    form.time = '11:59';
+    form.date = new Date().toISOString().split('T')[0];
+    form.time = '23:59';
 };
 
 
@@ -73,12 +107,21 @@ const handleSearch = () => {
 };
 
 const saveDraw = () => {
-    form.products = products.map((p: any) => ({
-        id: p.id,
-        numbers: (drawNumbers[p.id] ?? [])
-            .filter((n) => n !== '')          // remove empty inputs
-            .map((n) => Number(n)),           // convert to number
-    }));
+    form.products = products
+        .map((p: any) => {
+            const numbers = (drawNumbers[p.id] ?? [])
+                .filter((n) => n !== '')     // remove empty inputs
+                .map((n) => Number(n));      // convert to number
+
+            // return null if no numbers
+            if (numbers.length === 0) return null;
+
+            return {
+                id: p.id,
+                numbers,
+            };
+        })
+        .filter(Boolean);
 
     form.post(route('draws.store'), {
         onSuccess: () => {
@@ -93,7 +136,9 @@ const saveDraw = () => {
 </script>
 
 <template>
-    <AppLayout>
+
+    <Head title="Draws" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-2 bg-gradient-to-br from-gray-50 to-gray-100">
 
             <div class="mx-auto">
@@ -158,11 +203,22 @@ const saveDraw = () => {
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
-                                            <Input v-for="(_, idx) in product.pick_number" :key="idx" type="text"
-                                                :value="drawNumbers[product.id]?.[idx]"
-                                                @input="handleNumberChange(product, idx, $event.target.value)"
+                                            <Input
+                                                v-for="(_, idx) in product.pick_number"
+                                                :key="idx"
+                                                type="text"
+                                                inputmode="numeric"
+                                                pattern="[0-9]*"
+                                                :ref="el => {
+                                                if (!el) return;
+                                                if (!inputs[product.id]) inputs[product.id] = [];
+                                                inputs[product.id][idx] = (el.$el as HTMLInputElement);
+                                                }"
+
+                                                @input="handleNumberChange(product, idx, $event)"
+                                                v-model="drawNumbers[product.id][idx]"
                                                 class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold"
-                                                maxlength="1" />
+                                            />
                                         </div>
                                     </td>
 
@@ -184,7 +240,7 @@ const saveDraw = () => {
 
                     <!-- Action Buttons -->
                     <div class="flex gap-3 mt-6">
-                        <Button @click="saveDraw" class="bg-blue-500 hover:bg-blue-600 text-white">
+                        <Button @click="saveDraw" class="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer">
                             Save Draw
                         </Button>
                         <Button variant="destructive" @click="clearAll">

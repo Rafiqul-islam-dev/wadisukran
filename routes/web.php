@@ -4,16 +4,21 @@ use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Agent\AgentController;
+use App\Http\Controllers\Agent\AgentHistoryController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
 use App\Http\Controllers\Category\CategoryController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Product\CheckWinController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
 use App\Http\Controllers\Role\PermissionController;
+use App\Http\Controllers\Report\CancelReportController;
+use App\Http\Controllers\User\CustomerController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -23,9 +28,7 @@ require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
 Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->middleware('can:show dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->middleware('can:show dashboard')->name('dashboard');
     // Role Management Routes
     Route::prefix('roles')->name('roles.')->middleware('can:show roles')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
@@ -62,6 +65,9 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/trashed', [AgentController::class, 'trashed_agents'])->middleware('can:show trashed agents')->name('trashed');
         Route::get('/restore/{user}', [AgentController::class, 'restore_agent'])->middleware('can:agent restore')->name('restore');
         Route::delete('/permanent-delete/{user}', [AgentController::class, 'permanent_delete_agent'])->middleware('can:agent permanent delete')->name('permanent-delete');
+        Route::get('/top-ten', [AgentController::class, 'top_ten_agents'])->name('top-ten');
+
+        Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
     });
 
 
@@ -83,20 +89,30 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('draws')->name('draws.')->middleware('can:show draws')->group(function () {
         Route::get('/', [DrawController::class, 'index'])->name('index');
         Route::post('store', [DrawController::class, 'store'])->name('store');
-        Route::get('/{draw}', [OrderController::class, 'drawDetails'])->name('details');
+        Route::get('histories', [DrawController::class, 'histories'])->name('histories');
+        Route::get('histories/delete/{win}', [DrawController::class, 'histories_delete'])->name('histories-delete');
     });
+    Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
+    Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
+    Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::post('/update-status/{order}', [OrderController::class, 'updateStatus'])->name('update-status');
     });
 
     Route::prefix('probable-wins')->name('probable-wins.')->middleware('can:show probable wins')->group(function () {
         Route::get('/', [OrderController::class, 'probableWins'])->name('index');
     });
 
+    Route::prefix('customers')->name('customers.')->middleware('can:show customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'customer_list'])->name('index');
+        Route::get('top-ten', [CustomerController::class, 'top_ten_customers'])->name('top-ten');
+    });
+
+
     // Additional banner routes
     Route::prefix('banners')->name('banners.')->group(function () {
-
         // Toggle banner status
         Route::patch('{banner}/toggle-status', [AppBannerController::class, 'toggleStatus'])
             ->name('toggle-status');
@@ -115,11 +131,14 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('winner-report', [WinnerReportController::class, 'winnerReport'])->name('winner-report');
+        Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
     });
 
 
-      Route::prefix('payments')->name('payments.')->group(function () {
+    Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('all-payment', [PaymentController::class, 'allPayment'])->name('all-payment');
     });
+
+    Route::get('login-as-agent', [AgentController::class, 'loginAs'])->middleware('can:login as agent')->name('login-as-agent');
 
 });

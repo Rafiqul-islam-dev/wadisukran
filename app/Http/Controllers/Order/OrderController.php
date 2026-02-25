@@ -12,7 +12,10 @@ use App\Models\Product;
 use App\Models\ProductPrize;
 use App\Services\CategoryService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+
+use function PHPSTORM_META\type;
 
 class OrderController extends Controller
 {
@@ -27,6 +30,12 @@ class OrderController extends Controller
         $orders = Order::when($request->user_id, function ($query, $userId) {
             $query->where('user_id', $userId);
         })
+            ->when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->when($request->invoice_no, function ($query, $invoice){
+                $query->where('invoice_no', $invoice);
+            })
             ->when($request->date_from, function ($query, $dateFrom) use ($request) {
                 $timeFrom = $request->time_from ?? '00:00:00';
                 $query->where('created_at', '>=', "$dateFrom $timeFrom");
@@ -49,7 +58,7 @@ class OrderController extends Controller
                     );
                 });
             })
-            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->paginate(10);
+            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->latest()->paginate(10);
         $users = User::select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();
@@ -85,6 +94,7 @@ class OrderController extends Controller
                 'match_type',
                 'category_id',
                 'product_id',
+                'invoice_no',
             ]),
         ]);
     }
@@ -131,6 +141,7 @@ class OrderController extends Controller
         $product = Product::find($request->product_id);
 
         $summery = [];
+        $orders = null;
         if ($request->btn === 'search' && $request->pick_number && $request->product_id) {
             $match_type = ProductPrize::find($request->match_type);
 
@@ -145,7 +156,7 @@ class OrderController extends Controller
 
             $orders = OrderTicket::query()
                 ->whereHas('order', function ($o) use ($request, $from, $to) {
-                    $o->where('product_id', $request->product_id);
+                    $o->where('status', 'Printed')->where('product_id', $request->product_id);
                     if ($from) {
                         $o->where('created_at', '>=', $from);
                     }
@@ -153,32 +164,35 @@ class OrderController extends Controller
                         $o->where('created_at', '<=', $to);
                     }
                 })
+                ->with('order.user')
                 ->when($request->match_type, function ($q) use ($match_type) {
                     $q->whereJsonContains('selected_play_types', $match_type->name);
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
-                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers];
+                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers, 'vendor_name' => $order->order->user->name];
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
+                    $isNumberWinner = false;
                     $ticketTypes   = is_array($order->selected_play_types)
                         ? $order->selected_play_types
                         : (array) $order->selected_play_types;
-
                     $ticketNumbers = collect($order->selected_numbers)->values();
+
+
                     if ($product->prize_type === 'bet') {
                         foreach ($product->prizes->whereIn('name', ['Straight', 'Rumble']) as $type) {
                             if ($type->name === 'Straight' & in_array('Straight', $ticketTypes, true)) {
                                 $isStraightWinner =
                                     $ticketNumbers->count() === $len &&
-                                    $ticketNumbers->all() === $numbersStraight->all();
+                                    $ticketNumbers->all() == $numbersStraight->all();
                                 $data[$type->name] = $isStraightWinner;
                             } else if ($type->name === 'Rumble' && in_array('Rumble', $ticketTypes, true)) {
                                 if ($isStraightWinner == false) {
                                     $isRumbleWinner =
                                         $ticketNumbers->count() === $len &&
-                                        $ticketNumbers->sort()->values()->all() === $numbersSorted->all();
+                                        $ticketNumbers->sort()->values()->all() == $numbersSorted->all();
                                 }
                                 $data[$type->name] = $isRumbleWinner;
                             }
@@ -187,7 +201,7 @@ class OrderController extends Controller
                             $matchCount = $ticketNumbers->reverse()
                                 ->values()
                                 ->zip($numbersChance)
-                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->takeWhile(fn($pair) => (string)$pair[0] == (string)$pair[1])
                                 ->count();
 
                             $chancePrizes = $product->prizes
@@ -215,7 +229,6 @@ class OrderController extends Controller
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
-                        $isNumberWinner = false;
 
                         foreach ($numberPrizes as $prize) {
                             $key = 'Number ' . (int) $prize->name;
@@ -229,8 +242,14 @@ class OrderController extends Controller
                             }
                         }
                     }
-                    return $data;
-                });
+                    $orderHasWon = $isStraightWinner || $isRumbleWinner || $isChanceWinner || $isNumberWinner;
+
+                    if ($orderHasWon) {
+                        return $data;
+                    }
+
+                    return null;
+                })->filter();
 
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
@@ -267,6 +286,38 @@ class OrderController extends Controller
                     }
                 }
             }
+
+           $orders->transform(function ($order) use ($summery) {
+                $order['win_amount'] = 0;
+                $order['match_type'] = null;
+
+                if (!empty($order['Straight']) && $order['Straight'] === true) {
+                    $order['win_amount'] = $summery['Straight']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Straight';
+                }
+
+                if (!empty($order['Rumble']) && $order['Rumble'] === true) {
+                    $order['win_amount'] = $summery['Rumble']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Rumble';
+                }
+
+                // Chance types
+                foreach ($summery as $key => $sum) {
+                    if (str_starts_with($key, 'Chance') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+                // Number types
+                foreach ($summery as $key => $sum) {
+                    if (str_starts_with($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+
+                return $order;
+            });
         }
 
         return Inertia::render('Orders/ProbableWins', [
@@ -282,7 +333,15 @@ class OrderController extends Controller
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,
-            'summary' => $summery
+            'summary' => $summery,
+            'orders' => $orders
         ]);
+    }
+
+    public function updateStatus(Order $order, Request $request){
+        $order->status = $request->status;
+        $order->save();
+
+        return back();
     }
 }

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderTicket extends Model
 {
-    protected $fillable = ['order_id', 'selected_numbers', 'selected_play_types'];
+    protected $fillable = ['order_id', 'selected_numbers', 'selected_play_types', 'is_winner', 'is_claimed'];
 
     protected $casts = [
         'selected_numbers' => 'array',

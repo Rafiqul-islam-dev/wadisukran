@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +29,8 @@ const form = useForm({
     licence_no: company_setting?.licence_no ?? '',
     bank_account: company_setting?.bank_account ?? '',
     vat: company_setting?.vat ?? '',
+    order_status: company_setting?.order_status ?? '1',
+    max_win_amount: company_setting?.max_win_amount ?? '1',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -190,8 +190,28 @@ const saveChanges = () => {
                                     {{ form.errors.website }}
                                 </p>
                             </div>
+                            <div class="space-y-2">
+                                <Label for="order_status">Order Status</Label>
+
+                                <select name="order_status" id="order_status" v-model="form.order_status" class="w-full border rounded py-2 px-2">
+                                    <option value="1">Can Order</option>
+                                    <option value="0">Cannot Order</option>
+                                </select>
+                                <p v-if="form.errors.order_status" class="text-red-600 text-sm">
+                                    {{ form.errors.order_status }}
+                                </p>
+                            </div>
                         </div>
 
+                        <!-- Max Win amount -->
+                        <div class="space-y-2">
+                            <Label for="max_win_amount">Max win amount</Label>
+                            <Input id="max_win_amount" v-model="form.max_win_amount" type="number" placeholder="https://example.com"
+                                    class="max-w-4xl" />
+                            <p v-if="form.errors.max_win_amount" class="text-red-600 text-sm">
+                                {{ form.errors.max_win_amount }}
+                            </p>
+                        </div>
                         <!-- Address -->
                         <div class="space-y-2">
                             <Label for="address">Address</Label>
@@ -204,7 +224,7 @@ const saveChanges = () => {
 
                         <!-- Save Button -->
                         <div class="pt-4">
-                            <Button @click="saveChanges" class="bg-black hover:bg-gray-800 text-white">
+                            <Button @click="saveChanges" class="bg-black hover:bg-gray-800 text-white cursor-pointer">
                                 Save Changes
                             </Button>
                         </div>

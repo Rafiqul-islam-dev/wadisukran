@@ -25,8 +25,12 @@ class ProductController extends Controller
     public function index()
     {
         $categories = Category::where('status', 1)->orderBy('name')->get();
-        $products = Product::latest()->with(['category', 'prizes:id,product_id,type,name,prize'])->paginate(10);
-        // return $products;
+        $products = Product::latest()->with(['category', 'prizes:id,product_id,type,name,prize,chance_number'])->paginate(10);
+
+        $products->getCollection()->transform(function ($item) {
+            $item->draw_time = Carbon::parse($item->draw_time)->format('H:i');
+            return $item;
+        });
 
         return Inertia::render('Product/Index', [
             'products' => $products,

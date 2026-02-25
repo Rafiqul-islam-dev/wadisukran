@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Win;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Carbon\Carbon;
@@ -15,14 +16,32 @@ class ProductResource extends JsonResource
      */
     public function toArray($request)
     {
-        $draw_date = $this->draw_date;
-        $draw_time = $this->draw_time;
+        $draw_date = Carbon::today();
+        $draw_time = Carbon::today()->endOfDay();
 
-        if ($this->draw_type == 'daily') {
-            $draw_date = Carbon::today();
-        } else if ($this->draw_type == 'hourly') {
-            $draw_date = Carbon::today();
-            $draw_time = Carbon::parse($this->draw_time)->addHour();
+        if ($this->draw_type === 'daily') {
+            $exists_win = Win::where('product_id', $this->id)
+                ->whereDate('to_time', Carbon::today())
+                ->first();
+
+            if ($exists_win) {
+                $draw_time = Carbon::parse($exists_win->to_time);
+            } else {
+                $draw_time = Carbon::today()->endOfDay();
+            }
+        } elseif ($this->draw_type === 'hourly') {
+            $startOfHour = Carbon::now()->startOfHour();
+            $endOfHour   = Carbon::now()->endOfHour();
+
+            $exists_win = Win::where('product_id', $this->id)
+                ->whereBetween('to_time', [$startOfHour, $endOfHour])
+                ->first();
+
+            if ($exists_win) {
+                $draw_time = Carbon::parse($exists_win->to_time);
+            } else {
+                $draw_time = $endOfHour;
+            }
         }
 
         return [
@@ -43,28 +62,39 @@ class ProductResource extends JsonResource
     public function formatPrizes($prizes)
     {
         $prize_array = [];
-
         $chancePrizes = [];
 
         foreach ($prizes as $prize) {
-
-            if ($prize->name === 'chance') {
+            if (trim($prize->name) === 'Chance') {
                 $chancePrizes[] = (float) $prize->prize;
                 continue;
             }
-            $prize_array[$prize->name] =
-                number_format((float) $prize->prize, 2, '.', '') . ' AED';
+
+            $formattedPrize = number_format((float) $prize->prize, 2, '.', '') . ' AED';
+
+            if ($prize->type === 'bet') {
+                $prize_array[$prize->name] = $formattedPrize;
+                continue;
+            }
+
+            if ($prize->type === 'number') {
+                $label = trim($prize->name) . ' Number';
+                $prize_array[$label] = $formattedPrize;
+            } else {
+                $label = trim($prize->name) . ' ' . ucfirst($prize->type);
+                $prize_array[$label] = $formattedPrize;
+            }
         }
 
-        rsort($chancePrizes);
-
+        sort($chancePrizes);
         if (!empty($chancePrizes)) {
-            $formatted = array_map(
-                fn($p) => number_format($p, 2, '.', '') . ' AED',
-                $chancePrizes
+            $prize_array['Chance'] = implode(
+                ', ',
+                array_map(
+                    fn($p) => number_format($p, 2, '.', '') . ' AED',
+                    $chancePrizes
+                )
             );
-
-            $prize_array['chance'] = implode(' , ', $formatted);
         }
 
         return $prize_array;

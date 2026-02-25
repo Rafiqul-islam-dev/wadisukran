@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Folder, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCog, Users, Wind } from 'lucide-vue-next';
+import { CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
+
 const page_path = usePage().url;
 const mainNavItems: NavItem[] = [
     {
@@ -31,6 +31,12 @@ const mainNavItems: NavItem[] = [
                 icon: Trash,
                 permission: 'show trashed agents'
             },
+            {
+                title: 'Agent History',
+                href: '/agents/history',
+                icon: History,
+                permission: 'show agent history'
+            },
         ],
         permission: 'show agent list'
     },
@@ -38,17 +44,17 @@ const mainNavItems: NavItem[] = [
         title: 'Product',
         icon: Folder,
         items: [
+             {
+                title: 'Categories',
+                href: '/categories',
+                icon: Option,
+                permission: 'show categories'
+            },
             {
                 title: 'Product List',
                 href: '/products',
                 icon: Users,
                 permission: 'show product list'
-            },
-            {
-                title: 'Categories',
-                href: '/categories',
-                icon: Option,
-                permission: 'show categories'
             },
             {
                 title: 'Trashed Products',
@@ -61,11 +67,35 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Draw',
-        href: '/draws',
         icon: Shuffle,
+        items: [
+            {
+                title: 'Daily Draw',
+                href: '/draws',
+                icon: Shuffle,
+                permission: 'show draws'
+            },
+            {
+                title: 'Probability Wins',
+                href: '/probable-wins',
+                icon: Wind,
+                permission: 'show probable wins'
+            },
+            {
+                title: 'Check Winners',
+                href: '/check-wins',
+                icon: CheckCheck,
+                permission: 'show check winners'
+            },
+            {
+                title: 'Draw History',
+                href: '/draws/histories',
+                icon: History,
+                permission: 'show draw history'
+            }
+        ],
         permission: 'show draws'
     },
-
     {
         title: 'App Banner',
         icon: Folder,
@@ -84,22 +114,16 @@ const mainNavItems: NavItem[] = [
         icon: Folder,
         items: [
             {
-                title: 'Daily Summary Report',
+                title: 'Daily Sales Report',
                 href: '/orders',
                 icon: Users,
                 permission: 'show daily summery report'
             },
             {
                 title: 'Cancel order',
-                href: '/cancel-report',
+                href: '/reports/cancel-report',
                 icon: Users,
                 permission: 'show cancel order'
-            },
-            {
-                title: 'Order History',
-                href: '/oder-history',
-                icon: Users,
-                permission: 'show order history'
             },
             {
                 title: 'Winner Report',
@@ -109,12 +133,6 @@ const mainNavItems: NavItem[] = [
             },
         ],
         permission: 'show report'
-    },
-    {
-        title: 'Probability Wins',
-        href: '/probable-wins',
-        icon: Wind,
-        permission: 'show probable wins'
     },
     {
         title: 'Payment',
@@ -141,6 +159,20 @@ const mainNavItems: NavItem[] = [
             }
         ],
         permission: 'show settings'
+    },
+    {
+        title: 'Customers',
+        href: '/customers',
+        icon: UserCircle,
+        items: [
+            {
+                title: 'Customer List',
+                href: '/customers',
+                icon: List,
+                permission: 'show customers'
+            }
+        ],
+        permission: 'show customers'
     },
     {
         title: 'Users',

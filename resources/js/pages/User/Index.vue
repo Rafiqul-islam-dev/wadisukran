@@ -6,6 +6,14 @@ import { toast } from 'vue-sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'User List',
+        href: '/users',
+    },
+];
 
 const { users, roles } = defineProps<{
     users: Array<any>;
@@ -122,15 +130,14 @@ function toggleUserStatus(user) {
 </script>
 
 <template>
-
     <Head title="Users" />
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Users Management</h1>
-                    <p class="text-gray-600 hidden md:block">Manage system users and their roles</p>
+                    <h1 class="lg:text-xl font-bold text-gray-900 mb-2">Users Management</h1>
+                    <!-- <p class="text-gray-600 hidden md:block">Manage system users and their roles</p> -->
                 </div>
                 <button v-if="can('user create')" @click="openModal()"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
@@ -161,8 +168,8 @@ function toggleUserStatus(user) {
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
                                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
-                                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                    v-for="role in user.roles">
+                                <span v-for="role in user.roles" :key="role.id ?? role.name"
+                                    class="inline-block px-3 py-1 rounded-full text-sm font-medium border">
                                     {{ role?.name || 'No Role' }}
                                 </span>
                             </div>
@@ -232,7 +239,7 @@ function toggleUserStatus(user) {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -248,10 +255,11 @@ function toggleUserStatus(user) {
                                     <div class="text-gray-500 text-sm">{{ user.phone || 'No phone' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        v-for="role in user.roles">
+                                    <span v-for="role in user.roles" :key="role.id ?? role.name"
+                                        class="inline-block px-3 py-1 rounded-full text-sm font-medium border">
                                         {{ role?.name || 'No Role' }}
                                     </span>
+
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">

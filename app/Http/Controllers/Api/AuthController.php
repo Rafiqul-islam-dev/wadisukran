@@ -18,6 +18,12 @@ class AuthController extends Controller
 
         $agent = Agent::where('username', $credentials['name'])->first();
 
+        if($agent && $agent->user?->status != 'active'){
+            return response()->json([
+                'message' => "Inactive user. You cannot login at this moment."
+            ], 400);
+        }
+
         if (Auth::attempt(['id' => $agent->user_id, 'password' => $credentials['password']])) {
             $user = Auth::user();
             $token = $user->createToken('auth_token')->plainTextToken;

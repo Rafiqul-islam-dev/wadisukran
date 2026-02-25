@@ -15,8 +15,16 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             CreateSuperAdmin::class,
-            CreateCompanySetting::class,
-            OrderSeeder::class
+            CreateCompanySetting::class
         ]);
+
+        if (env('DEMO')) {
+            $this->call([
+                CategoryProductSeeder::class,
+                AgentSeeder::class,
+                CustomerSeeder::class,
+                OrderSeeder::class,
+            ]);
+        }
     }
 }

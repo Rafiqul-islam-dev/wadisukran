@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CancelledOrderResource;
 use Illuminate\Http\Request;
 
 use App\Models\Product;
@@ -28,6 +29,11 @@ class OrderController extends Controller
 
     public function orderStore(Request $request)
     {
+        if (company_setting()->order_status != 1) {
+            return response()->json([
+                'message' => 'Order placement is currently disabled.',
+            ], 403);
+        }
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
         ]);
@@ -41,7 +47,11 @@ class OrderController extends Controller
         $productData = $validator->validated();
 
         $product = Product::find($request->product_id);
-
+        if ($product->is_active != 1) {
+            return response()->json([
+                'message' => 'Product is not active',
+            ], 403);
+        }
         $validator = Validator::make($request->all(), [
             'game_cards' => 'required|array',
             'game_cards.*.selected_numbers' => [
@@ -52,7 +62,7 @@ class OrderController extends Controller
                 'required',
                 'numeric',
                 'min:0',
-                'max:' . $product->pick_number,
+                'max:' . $product->type_number,
             ],
             'game_cards.*.selected_play_types' => [
                 Rule::requiredIf($product->prize_type === 'bet'),
@@ -61,7 +71,7 @@ class OrderController extends Controller
             'game_cards.*.selected_play_types.*' => [
                 'required',
                 'string',
-                Rule::in(['Straight', 'Ramble', 'Chance']),
+                Rule::in(['Straight', 'Rumble', 'Chance']),
             ],
             'quantity' => 'required|integer|min:1',
             'total_price' => 'required|numeric|min:0',
@@ -79,91 +89,7 @@ class OrderController extends Controller
 
         $validated['user_id'] = Auth::id();
 
-
         $order = $this->orderService->createOrder($validated);
-
-        // $product = Product::find($request->product_id);
-
-        // if (!$product) {
-        //     return response()->json([
-        //         'message' => 'Product not found',
-        //     ], 404);
-        // }
-
-        // $date = Carbon::parse($request->draw_date)->toDateString(); // "2025-08-02"
-        // $time = date('H:i:s', strtotime($request->draw_time)); // "17:00:00"
-        // $drawDateTimeString = $date . ' ' . $time; // "2025-08-02 17:00:00"
-        // $drawDateTime = Carbon::parse($drawDateTimeString);
-
-        // if (now()->gt($drawDateTime)) {
-        //     return response()->json([
-        //         'message' => 'Ticket not available.',
-        //     ], 403);
-        // }
-
-        // // Verify selected_numbers count matches pick_number
-        // foreach ($request->game_cards as $card) {
-        //     if (count($card['selected_numbers']) != $product->pick_number) {
-        //         return response()->json([
-        //             'message' => 'Invalid number of selected numbers',
-        //         ], 422);
-        //     }
-        //     // Verify selected_play_types for prizes type
-        //     if ($product->prize_type == 'bet' && empty($card['selected_play_types'])) {
-        //         return response()->json([
-        //             'message' => 'At least one play type is required for prizes type',
-        //         ], 422);
-        //     }
-        // }
-
-        // $invoiceNumber = now()->format('YmdH') . random_int(1000, 9999);
-
-        // // Before creating the order
-        // $today = today()->toDateString();
-
-        // // Step 1: Check today's draw_number using created_at
-        // $todayDraw = Order::whereDate('created_at', today())
-        //     ->whereNotNull('draw_number')
-        //     ->orderBy('draw_number', 'desc')
-        //     ->value('draw_number');
-
-        // // dd($todayDraw);
-
-        // if ($todayDraw) {
-        //     // Use same number for all today's orders
-        //     $drawNumber = $todayDraw;
-        // } else {
-        //     // Step 2: No draw today, get last draw from previous days
-        //     $lastPrevious = Order::orderBy('sales_date', 'desc')
-        //         ->orderBy('draw_number', 'desc')
-        //         ->value('draw_number');
-
-        //     if ($lastPrevious) {
-        //         $drawNumber = $lastPrevious + 1;
-        //     } else {
-        //         // Step 3: No orders at all
-        //         $drawNumber = 1;
-        //     }
-        // }
-
-
-        // $order = Order::create([
-        //     'user_id' => Auth::id(),
-        //     'product_id' => $request->product_id,
-        //     'quantity' => $request->quantity,
-        //     'total_price' => $request->total_price,
-        //     'invoice_no' => $invoiceNumber,
-        //     'sales_date' => today()->toDateString(),
-        //     'draw_number' => $drawNumber,
-        // ]);
-
-        // foreach ($request->game_cards as $card) {
-        //     OrderTicket::create([
-        //         'order_id' => $order->id,
-        //         'selected_numbers' => $card['selected_numbers'],
-        //         'selected_play_types' => $card['selected_play_types']
-        //     ]);
-        // }
 
         return response()->json([
             'message' => 'Order created successfully',
@@ -171,39 +97,79 @@ class OrderController extends Controller
         ], 201);
     }
 
-
     public function orderInfo($id)
     {
         try {
-            $order = Order::leftJoin('products', 'products.id', '=', 'orders.product_id')
-                ->leftJoin('users', 'users.id', '=', 'orders.user_id')
-                ->select(
-                    'orders.*',
-                    'products.title as product_title',
-                    'products.price as product_price',
-                    'products.image',
-                    'products.draw_date',
-                    'products.draw_time',
-                    'users.name as vendor_name',
-                    'users.email as vendor_email',
-                    'users.phone as trn'
-                )
-                ->where('orders.id', $id)
-                ->first();
-
+            $order = Order::find($id);
             if (!$order) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Product not found'
+                    'message' => 'Order not found'
                 ], 404);
             }
+            $draw_time = null;
 
-            // Append full image URL
-            $order->image = $order->image ? url('storage/' . $order->image) : null;
+            if ($order->product?->draw_type === 'daily') {
+                $draw_time = Carbon::parse($order->created_at)
+                    ->addDay()
+                    ->startOfDay()
+                    ->format('h:i A');
+            } else if ($order->product?->draw_type === 'hourly') {
+                $draw_time = Carbon::parse($order->created_at)
+                    ->addHour()
+                    ->startOfHour()
+                    ->format('h:i A');
+            } else if ($order->product?->draw_type === 'once') {
+                $createdAt = Carbon::parse($order->created_at);
+
+                $midDay = $createdAt->copy()->setTime(12, 0, 0);     // 12:00:00 PM
+                $endDay = $createdAt->copy()->addDay()->startOfDay();          // 23:59:59
+
+                // compare order created time with midday boundary
+                if ($createdAt->lt($createdAt->copy()->startOfDay()->addHours(12))) {
+                    // before 12:00 PM
+                    $draw_time = $midDay->format('h:i A');
+                } else {
+                    // 12:00 PM or after
+                    $draw_time = $endDay->format('h:i A');
+                }
+            }
+
+
+
+            $data = [
+                'id' => $order->id,
+                'product_id' => $order->product_id,
+                'invoice_no' => $order->invoice_no,
+                'quantity' => $order->quantity,
+                'total_price' => $order->total_price,
+                'vat' => $order->vat,
+                'vat_percentage' => $order->vat_percentage,
+                'sales_date' => $order->sales_date,
+                'draw_number' => $order->draw_number,
+                'product_title' => $order->product ? $order->product->title : null,
+                'product_price' => $order->product ? $order->product->price : null,
+                'image' => $order->product ? static_asset($order->product->image) : null,
+                'draw_date' => $order->created_at ? Carbon::parse($order->created_at)->format('d M, Y') : null,
+                'draw_time' => $draw_time,
+                'vendor_name' => $order->user ? $order->user->name : null,
+                'trn' => $order->user ? $order->user->trn : null,
+                'qr_url' => $order->qr_url,
+                'company_name' => company_setting() ? company_setting()->name : null,
+                'company_address' => company_setting() ? company_setting()->address : null,
+                'company_email' => company_setting() ? company_setting()->email : null,
+                'big_prize' => $order->product?->prizes ? $order->product->prizes->max('prize') : null,
+                'tickets' => $order->tickets->map(function ($ticket) {
+                    return [
+                        'selected_numbers' =>  implode(',', $ticket->selected_numbers),
+                        'selected_play_types' => $ticket->selected_play_types,
+                    ];
+                })
+            ];
 
             return response()->json([
                 'success' => true,
-                'data' => $order
+                'data' => $data
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -214,8 +180,6 @@ class OrderController extends Controller
         }
     }
 
-
-
     /**
      * Get orders by user ID (API).
      *
@@ -224,8 +188,6 @@ class OrderController extends Controller
      */
     public function apiOrdersByUser(Request $request)
     {
-        // dd($request->all());
-        // Ensure the user is authenticated
         if (!auth()->check()) {
             return response()->json([
                 'success' => false,
@@ -297,5 +259,52 @@ class OrderController extends Controller
             'message' => 'Order updated successfully',
             'data' => $order,
         ], 200);
+    }
+
+    public function cancelledOrder(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access',
+            ], 401);
+        }
+
+        try {
+            $query = Order::with(['user', 'product'])
+                ->where('user_id', auth()->id())
+                ->where('status', 'Cancel');
+
+            // Optional date filtering
+            if ($request->filled('from') && $request->filled('to')) {
+                $from = Carbon::parse($request->from)->format('Y-m-d');
+                $to   = Carbon::parse($request->to)->format('Y-m-d');
+
+                $query->whereDate('sales_date', '>=', $from)
+                    ->whereDate('sales_date', '<=', $to);
+            }
+
+            $orders = $query->get();
+
+            if ($orders->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No orders found for this user',
+                    'data' => [],
+                ], 200);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cancelled orders retrieved successfully',
+                'data' => CancelledOrderResource::collection($orders),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching orders',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

@@ -25,7 +25,7 @@ const isActive = (href?: string) => {
     if (!href) return false
 
     return props.currentPath === href ||
-        props.currentPath.startsWith(href + '/')
+        props.currentPath.startsWith(href + '?')
 }
 
 const isExpanded = (items?: NavItem[]) => {

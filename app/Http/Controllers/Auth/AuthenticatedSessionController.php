@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Mail\LoginAlertMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +20,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
-        
+
         return Inertia::render('auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
@@ -30,10 +32,23 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        // dd($request);
         $request->authenticate();
 
         $request->session()->regenerate();
+        if(auth()->user()->getRoleNames()?->first() != 'Super Admin'){
+            $loginData = [
+                'name'     => auth()->user()->name,
+                'email'    => auth()->user()->email,
+                'role'     => auth()->user()->getRoleNames()?->first() ?? 'Staff',
+                'date'     => now()->format('d M Y'),
+                'time'     => now()->format('h:i A') . ' (GMT+6)',
+                'ip'       => $request->ip(),
+                'browser'  => $request->header('User-Agent')
+            ];
+            if(company_setting()?->email){
+                Mail::to(company_setting()?->email)->send(new LoginAlertMail($loginData));
+            }
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

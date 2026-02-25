@@ -13,7 +13,8 @@ class CategoryService
     function createCategory(array $data): string {
         Category::create([
             'name' => $data['name'],
-            'description' => $data['description']
+            'description' => $data['description'],
+            'draw_type' => $data['draw_type']
         ]);
         return 'Category created successfully';
     }

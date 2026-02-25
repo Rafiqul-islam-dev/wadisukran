@@ -7,13 +7,21 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { can } from '@/helpers/permissions';
 import { Rotate3D } from 'lucide-vue-next';
+import { BreadcrumbItem } from '@/types';
 
-const { users, roles } = defineProps<{
+const breadcrumbs: BreadcrumbItem[] = [
+
+    {
+        title: 'Trashed Users',
+        href: '/users/trashed',
+    },
+];
+
+const { users } = defineProps<{
     users: Array<any>;
     roles: Array<any>;
 }>();
 
-const showModal = ref(false);
 const showDeleteModal = ref(false);
 const deletingUser = ref(null);
 
@@ -37,7 +45,7 @@ const restoreUser = (id) => {
         return;
     }
 
-    router.get(route('users.restore', id),{}, {
+    router.get(route('users.restore', id), {}, {
         onSuccess: () => {
             toast.success('User restored successfully.');
         }
@@ -48,15 +56,15 @@ const restoreUser = (id) => {
 
 <template>
 
-    <Head title="Users" />
-    <AppLayout>
+    <Head title="Trashed Users" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
-            <div class="flex justify-between items-center mb-8">
+            <!-- <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="lg:text-4xl font-bold text-gray-900 mb-2">Trashed Users</h1>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Users Cards Grid (Mobile) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 md:hidden">
@@ -76,7 +84,7 @@ const restoreUser = (id) => {
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
                                 <p class="text-gray-500 text-sm">{{ user.email }}</p>
                                 <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                    v-for="role in user.roles">
+                                    v-for="role in user.roles" :key="role.id">
                                     {{ role?.name || 'No Role' }}
                                 </span>
                             </div>
@@ -141,7 +149,7 @@ const restoreUser = (id) => {
                                             <div v-else
                                                 class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md">
                                                 <span class="text-white font-bold text-lg">{{ user.name.charAt(0)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white"
                                                 :class="user.is_active ? 'bg-green-500' : 'bg-gray-400'"></div>
@@ -158,7 +166,7 @@ const restoreUser = (id) => {
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-block px-3 py-1 rounded-full text-sm font-medium border"
-                                        v-for="role in user.roles">
+                                        v-for="role in user.roles" :key="role.id">
                                         {{ role?.name || 'No Role' }}
                                     </span>
                                 </td>

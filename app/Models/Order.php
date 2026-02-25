@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
+    protected $appends = ['qr_url'];
 
     protected $fillable = [
         'user_id',
+        'customer_id',
         'product_id',
         'game_cards',
         'quantity',
@@ -18,6 +20,14 @@ class Order extends Model
         'invoice_no',
         'sales_date',
         'draw_number',
+        'commission',
+        'vat',
+        'commission_percentage',
+        'vat_percentage',
+        'is_winner',
+        'is_claimed',
+        'status',
+        'qr_code'
     ];
 
     protected $casts = [
@@ -31,11 +41,19 @@ class Order extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
     }
+
 
     public  function tickets()
     {
         return $this->hasMany(OrderTicket::class, 'order_id', 'id');
+    }
+
+    public function getQrUrlAttribute(): ?string
+    {
+        if (!$this->qr_code) return null;
+
+        return static_asset($this->qr_code);
     }
 }

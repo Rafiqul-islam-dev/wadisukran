@@ -1,17 +1,28 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, nextTick, watch, computed } from 'vue';
-import { router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { toast } from 'vue-sonner';
+import { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Product List',
+        href: '/products',
+    },
+];
 
 const { products, categories } = defineProps<{
     products: Array<any>;
     categories: Array<any>;
 }>();
-
 const { company_setting } = usePage().props;
 
 const showModal = ref(false);
+const deleteModal = ref(false);
+const deletingProduct = ref(null);
 const isEditing = ref(false);
 const editingProduct = ref(null);
 const imagePreview = ref(null);
@@ -149,10 +160,18 @@ function submitForm() {
     }
 }
 
-function deleteProduct(id) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        router.delete(`/products/${id}`);
-    }
+function deleteProduct(product) {
+    deleteModal.value = true;
+    deletingProduct.value = product;
+}
+
+function confirmDelete(){
+    router.delete(`/products/${deletingProduct?.value?.id}`, {
+        onSuccess: () => {
+            deleteModal.value = false;
+            toast.success('Product deleted successfully.');
+        }
+    });
 }
 
 
@@ -179,24 +198,24 @@ watch(() => form.pick_number, (newPickNumber) => {
         const basePrizes = [
             {
                 type: 'bet',
-                name: 'straight',
-                prize: form.bet_prizes.find(p => p.name === 'straight')?.prize || 0,
+                name: 'Straight',
+                prize: form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0,
                 chance_number: null
             },
             {
                 type: 'bet',
-                name: 'rumble',
-                prize: form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0,
+                name: 'Rumble',
+                prize: form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0,
                 chance_number: null
             }
         ];
 
         // Add chance prizes based on pick_number
         for (let i = 1; i <= pickNum; i++) {
-            const existingPrize = form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i);
+            const existingPrize = form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i);
             basePrizes.push({
                 type: 'bet',
-                name: 'chance',
+                name: 'Chance',
                 prize: existingPrize?.prize || 0,
                 chance_number: i
             });
@@ -215,7 +234,7 @@ const chancePrizes = computed(() => {
 
 function updateBetPrize(name, chanceNumber, value) {
     const prizeIndex = form.bet_prizes.findIndex(p => {
-        if (name === 'chance') {
+        if (name === 'Chance') {
             return p.name === name && p.chance_number === chanceNumber;
         }
         return p.name === name;
@@ -229,7 +248,7 @@ function updateBetPrize(name, chanceNumber, value) {
             type: 'bet',
             name: name,
             prize: parseFloat(value) || 0,
-            chance_number: name === 'chance' ? chanceNumber : null
+            chance_number: name === 'Chance' ? chanceNumber : null
         });
     }
 }
@@ -261,7 +280,8 @@ const handleCategoryChange = (e: Event) => {
 </script>
 
 <template>
-    <AppLayout>
+    <Head title="Product List" />
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
@@ -421,7 +441,7 @@ const handleCategoryChange = (e: Event) => {
                                             Edit
                                         </button>
                                         <!-- Delete Button -->
-                                        <button @click="deleteProduct(product.id)"
+                                        <button @click="deleteProduct(product)"
                                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 hover:text-red-700 transition-all duration-200">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -562,9 +582,9 @@ const handleCategoryChange = (e: Event) => {
                                             <div class="grid grid-cols-2 gap-4 mt-5 mb-5">
                                                 <div>
                                                     <label class="flex items-center">
-                                                        <input v-model="form.regular_type" type="radio" value="daily"
+                                                        <input v-model="form.regular_type" type="radio" value="daily" :disabled="form.regular_type !== 'daily'"
                                                             name="regular_type"
-                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
+                                                            class="w-4 h-4 text-blue-600 bg-gray-100 disabled:cursor-not-allowed border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
                                                         <span class="ml-2 text-sm font-medium text-gray-700">
                                                             Daily Draw
                                                         </span>
@@ -573,7 +593,7 @@ const handleCategoryChange = (e: Event) => {
 
                                                 <div>
                                                     <label class="flex items-center">
-                                                        <input v-model="form.regular_type" type="radio"
+                                                        <input v-model="form.regular_type" type="radio" :disabled="form.regular_type !== 'hourly'"
                                                             name="regular_type" value="hourly"
                                                             class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2" />
                                                         <span class="ml-2 text-sm font-medium text-gray-700">
@@ -703,8 +723,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>STRAIGHT</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'straight')?.prize || 0"
-                                                            @input="updateBetPrize('straight', null, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0"
+                                                            @input="updateBetPrize('Straight', null, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -712,8 +732,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>RUMBLE</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'rumble')?.prize || 0"
-                                                            @input="updateBetPrize('rumble', null, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0"
+                                                            @input="updateBetPrize('Rumble', null, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -722,8 +742,8 @@ const handleCategoryChange = (e: Event) => {
                                                     <div class="flex justify-between">
                                                         <label>CHANCE {{ i }}</label>
                                                         <input type="number"
-                                                            :value="form.bet_prizes.find(p => p.name === 'chance' && p.chance_number === i)?.prize || 0"
-                                                            @input="updateBetPrize('chance', i, $event.target.value)"
+                                                            :value="form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i)?.prize || 0"
+                                                            @input="updateBetPrize('Chance', i, $event.target.value)"
                                                             class="border-1 border-gray-200 px-4 py-1 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300">
                                                     </div>
                                                 </div>
@@ -803,5 +823,26 @@ const handleCategoryChange = (e: Event) => {
                 </div>
             </Teleport>
         </div>
+
+         <Dialog v-model:open="deleteModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Are you sure?</DialogTitle>
+                    <DialogDescription>
+                        This Product
+                        <span v-if="deletingProduct" class="font-semibold">"{{ deletingProduct?.title }}"</span>
+                        will delete permanently.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteModal = false">
+                        Cancel
+                    </Button>
+                    <Button variant="destructive" @click="confirmDelete">
+                        Delete
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

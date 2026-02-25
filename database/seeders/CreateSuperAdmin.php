@@ -19,6 +19,9 @@ class CreateSuperAdmin extends Seeder
             "agent permanent delete",
             "agent restore",
             "agent update",
+            "draw history delete",
+            "login as agent",
+            "order status change",
             "permission create",
             "permission delete",
             "permission update",
@@ -26,13 +29,17 @@ class CreateSuperAdmin extends Seeder
             "role delete",
             "role permission",
             "role update",
+            "show agent history",
             "show agent list",
             "show banner list",
             "show cancel order",
             "show categories",
+            "show check winners",
             "show company settings",
+            "show customers",
             "show daily summery report",
             "show dashboard",
+            "show draw history",
             "show draws",
             "show order history",
             "show permissions",
@@ -41,18 +48,24 @@ class CreateSuperAdmin extends Seeder
             "show report",
             "show roles",
             "show settings",
+            "show today commission",
+            "show today sales",
+            "show top agents",
+            "show top customers",
+            "show total agents",
             "show trashed agents",
             "show trashed products",
             "show trashed users",
             "show user list",
             "show users",
+            "show winner report",
             "user create",
             "user delete",
             "user permanent delete",
             "user restore",
             "user status change",
             "user update"
-        ];
+            ];
 
         foreach ($required_permissions as $permission) {
             Permission::updateOrCreate([
@@ -64,8 +77,12 @@ class CreateSuperAdmin extends Seeder
         $superAdminRole = Role::firstOrCreate(
             ['name' => 'Super Admin', 'guard_name' => 'web']
         );
+        $agentRole = Role::firstOrCreate(
+            ['name' => 'Agent', 'guard_name' => 'web']
+        );
         $permissions = Permission::pluck('name')->toArray();
         $superAdminRole->syncPermissions($permissions);
+        $agentRole->syncPermissions(['show dashboard', 'show today commission', 'show today sales', 'show report', 'show daily summery report']);
 
         $user = User::firstOrCreate(
             ['email' => 'superadmin@gmail.com'],
@@ -73,6 +90,7 @@ class CreateSuperAdmin extends Seeder
                 'user_type' => 'admin',
                 'name' => 'Super Admin',
                 'password' => Hash::make('12345678'),
+                'join_date' => now()
             ]
         );
         if (! $user->hasRole('Super Admin')) {

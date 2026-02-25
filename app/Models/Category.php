@@ -12,4 +12,8 @@ class Category extends Model
     {
         return $query->where('status', 1);
     }
+
+    public function products(){
+        return $this->hasMany(Product::class);
+    }
 }

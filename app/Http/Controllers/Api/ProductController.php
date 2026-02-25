@@ -16,7 +16,6 @@ class ProductController extends Controller
         $products = Product::active()
             ->orderBy('id', 'desc')
             ->get();
-        // return $products;
 
         return ProductResource::collection($products);
     }

@@ -11,6 +11,14 @@ import { Check } from 'lucide-vue-next';
 import { Permission } from '@/types/permission';
 import { toast } from 'vue-sonner';
 import { can } from '@/helpers/permissions';
+import { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Roles',
+        href: '/roles',
+    },
+];
 
 const props = defineProps<{
     permissions: Permission[]
@@ -102,7 +110,7 @@ function handleSubmit() {
 
 <template>
     <Head title="Roles" />
-    <AppLayout>
+    <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
