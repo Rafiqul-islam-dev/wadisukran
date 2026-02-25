@@ -150,6 +150,12 @@ const mainNavItems: NavItem[] = [
                 icon: Users,
                 permission: 'show winner report'
             },
+            {
+                title: 'Winner Report Agent',
+                href: '/reports/winner-report-agent',
+                icon: Users,
+                permission: 'show winner report agent'
+            },
         ],
         permission: 'show report'
     },
