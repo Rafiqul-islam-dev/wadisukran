@@ -60,6 +60,10 @@ const handleSearch = () => {
 }
 
 const generateBill = async () => {
+    if(!form.to) {
+        toast.error('Please select a valid "To Date" to generate bill.');
+        return;
+    }
     try {
         const response = await axios.post(
             route('accounts.generate-bill'),
@@ -81,12 +85,15 @@ const generateBill = async () => {
         link.click();
 
         window.URL.revokeObjectURL(url);
-
         toast.success('Bills downloaded successfully!');
-
+        // location.reload();
     } catch (error) {
-        toast.error('Failed to generate bill');
-        console.error(error);
+        if(error.response.status === 422) {
+            toast.error('Invalid Date selected. Please select a valid date.');
+        }
+        else{
+            toast.error('Failed to generate bill');
+        }
     }
 };
 </script>

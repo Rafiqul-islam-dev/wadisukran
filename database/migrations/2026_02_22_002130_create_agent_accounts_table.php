@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('agent_accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->enum('type', ['sell', 'posting', 'commission', 'win', 'claim']);
+            $table->enum('type', ['sell', 'posting', 'commission', 'win', 'claim', 'bill']);
             $table->decimal('amount', 10, 2);
             $table->decimal('old_due', 10, 2);
             $table->enum('is_checked', [0,1])->default(0);

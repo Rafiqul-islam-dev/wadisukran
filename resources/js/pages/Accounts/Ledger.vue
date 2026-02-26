@@ -27,7 +27,8 @@ const form = useForm({
     description: '',
     payment_type: '',
     from_date: '',
-    to_date: ''
+    to_date: '',
+    date: '',
 });
 
 const handleSearch = () => {
@@ -83,8 +84,8 @@ const submitForm = () => {
             toast.success('Payment added successfully');
             closeModal();
         },
-        onError: () => {
-            toast.error('Something went wrong while adding payment.');
+        onError: (error) => {
+            toast.error(error.error || 'An error occurred while adding payment');
         }
     });
 }
@@ -236,6 +237,16 @@ const submitForm = () => {
 
                                     <p v-if="form.errors.agent" class="text-red-600 text-sm">
                                         {{ form.errors.agent }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date
+                                        <span class="text-red-500">*</span></label>
+                                    <input v-model="form.date" type="date" placeholder="Write date here"
+                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
+                                         />
+                                    <p v-if="form.errors.date" class="text-red-600 text-sm">
+                                        {{ form.errors.date }}
                                     </p>
                                 </div>
                                  <div>

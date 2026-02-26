@@ -153,7 +153,7 @@
     <!-- Header -->
     <div class="header">
         <h2>Account Statement</h2>
-        <p>Statement Date: <strong>{{ now()->format('d M, Y') }}</strong></p>
+        <p>Statement Date: <strong>{{ $agent['from'] }}</strong> to <strong>{{ $agent['to'] }}</strong></p>
     </div>
 
     <!-- Vendor Info -->

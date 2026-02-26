@@ -29,6 +29,7 @@ class AccountsLedgerController extends Controller
 
                     $q->whereBetween('created_at', [$from, $to]);
                 })
+                ->where('amount', '>', 0)
                 ->with('user')
                 ->latest()
                 ->paginate(10);
@@ -43,12 +44,30 @@ class AccountsLedgerController extends Controller
             'agent' => 'required|exists:users,id',
             'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string',
+            'date' => 'required|date',
             'payment_type' => 'required|string'
         ]);
+
+
+        $bill_generation = AgentAccount::where('type', 'posting')->where('type', 'posting')->where('user_id', $request->agent)->where('amount', 0)->first();
+        $last_posting = AgentAccount::where('type', 'posting')->latest()->first();
+        if ($last_posting &&
+            Carbon::parse($request->date)->gt(
+                Carbon::parse($last_posting->created_at)->format('Y-m-d')
+            )
+        ) {
+            return back()->withErrors([
+                'error' => 'Invalid date selected. Please check the date.'
+            ]);
+        }
+        if(!$bill_generation){
+            return back()->withErrors(['error' => 'No bill generated on this day. Please generate bill first. or check the day.']);
+        }
 
         $data = [
             'user_id' => $request->agent,
             'type'    => 'posting',
+            'created_at' => Carbon::parse($request->date)->endOfDay(),
             'amount'  => $request->amount,
             'description' => $request->description,
             'payment_type' => $request->payment_type

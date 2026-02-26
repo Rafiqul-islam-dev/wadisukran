@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AgentAccount extends Model
 {
-    protected $fillable = ['user_id', 'type', 'transaction_type', 'amount', 'old_due', 'is_checked', 'created_by', 'order_id', 'payment_type', 'description'];
+    protected $fillable = ['user_id', 'type', 'transaction_type', 'amount', 'old_due', 'is_checked', 'created_by', 'order_id', 'payment_type', 'description', 'created_at'];
 
     public function user()
     {
