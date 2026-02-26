@@ -245,7 +245,7 @@ class OrderController extends Controller
         }
 
         if (isset($request->remarks) && !empty($request->remarks)) {
-            $order->status = 'Cancel';
+            $order->status = 'Cancel-Request';
             $order->remarks = $request->remarks;
         } else {
             $order->status = 'Printed';

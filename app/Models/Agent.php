@@ -15,6 +15,7 @@ class Agent extends Model
         'username',
         'trn',
         'commission',
+        'temp_password',
     ];
 
     protected $dates = ['join_date'];

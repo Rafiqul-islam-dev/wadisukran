@@ -138,12 +138,19 @@ const mainNavItems: NavItem[] = [
                 icon: Users,
                 permission: 'show daily summery report'
             },
+             {
+                title: 'Cancel Request',
+                href: '/reports/cancel-request',
+                icon: Users,
+                permission: 'show cancel request'
+            },
             {
                 title: 'Cancel order',
                 href: '/reports/cancel-report',
                 icon: Users,
                 permission: 'show cancel order'
             },
+
             {
                 title: 'Winner Report',
                 href: '/reports/winner-report',

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Agent;
 use App\Models\User;
+use Illuminate\Support\Facades\Crypt;
 
 class AgentService
 {
@@ -22,9 +23,13 @@ class AgentService
             ['user_id' => $user->id],
             [
                 'username' => $data['username'],
-                'trn' => $data['trn'],
+                'trn' => $data['trn'] ?? null,
+                'temp_password' => isset($data['plain_password'])
+                    ? Crypt::encryptString($data['plain_password'])
+                    : null,
             ]
         );
+
         return 'Agent created successfully';
     }
 

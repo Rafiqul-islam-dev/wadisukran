@@ -149,6 +149,12 @@ function handleSearch(){
 const loginAgent = (user) => {
     router.get(route('login-as-agent'), { agent_id: user.id })
 }
+function printPdf() {
+    const url = route('agents.printPdf', { search: search.value });
+
+    // download in new tab
+    window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -169,7 +175,13 @@ const loginAgent = (user) => {
                         </svg>
                         Search
                     </button>
+                    
                 </div>
+                <button @click="printPdf"
+                    class="px-4 cursor-pointer py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                    Print Pdf
+                    </button>
+
                 <button v-if="can('agent create')" @click="openModal()"
                     class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -22,6 +22,7 @@ use App\Http\Controllers\Role\PermissionController;
 use App\Http\Controllers\Report\CancelReportController;
 use App\Http\Controllers\User\CustomerController;
 use App\Http\Controllers\Report\WinnerReportAgentController;
+use App\Http\Controllers\Report\CancelRequestController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -71,6 +72,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/top-ten', [AgentController::class, 'top_ten_agents'])->name('top-ten');
 
         Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
+        Route::get('/print-pdf', [AgentController::class, 'printPdf'])->name('printPdf');
     });
 
     Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {
@@ -144,6 +146,8 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('winner-report-agent', [WinnerReportAgentController::class, 'winnerReportAgent'])->name('winner-report-agent');
         Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
         Route::get('winner-report-agent/details', [WinnerReportAgentController::class, 'winnerReportAgentDetails'])->name('winner-report-agent.details');
+        Route::get('cancel-request', [CancelRequestController::class, 'cancelRequest'])->name('cancel-request');
+        Route::put('cancel-accept/{order}', [CancelRequestController::class, 'acceptCancel'])->name('cancel-accept');
     });
 
 
