@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
-import { Head, router, useForm, usePage, Inertia } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, Ref, ref } from 'vue';
 import { toast } from 'vue-sonner';
@@ -134,7 +134,6 @@ function goTo(url) {
 
 </script>
 <template>
-
     <Head title="Check Wins" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">

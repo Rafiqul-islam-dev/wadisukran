@@ -77,6 +77,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/summery', [AccountsSummeryController::class, 'index'])->name('summery');
         Route::get('/ledger', [AccountsLedgerController::class, 'index'])->name('ledger');
         Route::post('/ledger-store', [AccountsLedgerController::class, 'store'])->name('ledger-store');
+        Route::post('/generate-bill', [AccountsSummeryController::class, 'generateBill'])->name('generate-bill');
     });
 
 

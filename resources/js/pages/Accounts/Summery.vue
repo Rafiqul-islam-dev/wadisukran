@@ -2,10 +2,13 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import { Eye } from 'lucide-vue-next';
+import { Download, Eye } from 'lucide-vue-next';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { can } from '@/helpers/permissions';
+import Multiselect from '@vueform/multiselect';
+import { toast } from 'vue-sonner';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,16 +19,20 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { company_setting } = usePage().props;
 const formattedNow = dayjs().format('DD MMM, YY hh:mm A');
-const { users } = defineProps<{
+const { users, from_date } = defineProps<{
     users: Array<any>;
+    agents: Array<any>;
+    from_date: string;
 }>();
 
 const form = useForm({
-    from: '',
-    to: ''
+    from: from_date,
+    to: '',
+    agent_id: '',
 });
 
 const showModal = ref(false);
+const generateModal = ref(false);
 const selectedUser = ref<any>(null);
 
 const openModal = (user: any) => {
@@ -36,6 +43,13 @@ const openModal = (user: any) => {
 const closeModal = () => {
     showModal.value = false;
 };
+const closeGenerateModal = () => {
+    generateModal.value = false;
+};
+
+const openGenerateModal = () => {
+    generateModal.value = true;
+};
 
 const handleSearch = () => {
     form.get(route('accounts.summery'), {
@@ -44,16 +58,63 @@ const handleSearch = () => {
         preserveState: true
     });
 }
+
+const generateBill = async () => {
+    try {
+        const response = await axios.post(
+            route('accounts.generate-bill'),
+            {
+                from: form.from,
+                to: form.to
+            },
+            {
+                responseType: 'blob'
+            }
+        );
+
+        const blob = new Blob([response.data], { type: 'application/zip' });
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'agent-bills.zip'; // ZIP file
+        link.click();
+
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Bills downloaded successfully!');
+
+    } catch (error) {
+        toast.error('Failed to generate bill');
+        console.error(error);
+    }
+};
 </script>
 <template>
 
     <Head title="Agent Histories" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="md:px-4">
-            <div class="flex flex-col md:flex-row gap-5 justify-between items-center mb-8">
+            <div class="flex flex-col md:flex-row gap-5 justify-between items-center p-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="group">
-                        <input v-model="form.from" @keyup.enter="handleSearch" type="text" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200" placeholder="Enter agent name/email/username">
+                        <label for="agent">Select Agent</label>
+                        <div class="mt-2"></div>
+                        <Multiselect v-model="form.agent_id" :options="agents" valueProp="id" label="name"
+                            placeholder="Agent..." :searchable="true"
+                            class="w-full border-2 border-gray-200 px-2 py-1 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200" />
+                    </div>
+                    <div class="group">
+                        <label for="from" class="mb-1">From Date</label>
+                        <input v-model="form.from" type="date" id="from" disabled="true"
+                            class="disabled:bg-gray-200 cursor-not-allowed mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                            placeholder="Enter agent name/email/username">
+                    </div>
+                    <div class="group">
+                        <label for="to" class="mb-1">To Date</label>
+                        <input v-model="form.to" type="date" id="to"
+                            class="mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                            placeholder="Enter agent name/email/username">
                     </div>
                     <button @click="handleSearch"
                         class="px-4 cursor-pointer py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center w-[50%] m-auto">
@@ -64,12 +125,9 @@ const handleSearch = () => {
                         Search
                     </button>
                 </div>
-                <button v-if="can('generate bill')" @click="openModal()"
-                    class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
+                <button v-if="can('generate bill')" @click="openGenerateModal()"
+                    class="cursor-pointer bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm md:text-md px-3 py-3 rounded-xl shadow-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 font-semibold flex items-center gap-2">
+                    <Download :size="16" />
                     Generate Bill
                 </button>
             </div>
@@ -135,7 +193,7 @@ const handleSearch = () => {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 rounded-full font-medium bg-green-100 text-green-700">
-                                         {{ user.total_commission }}
+                                        {{ user.total_commission }}
                                     </span>
                                 </td>
 
@@ -151,7 +209,7 @@ const handleSearch = () => {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="inline-flex items-center px-2.5 py-1 rounded-full font-medium bg-purple-100 text-purple-700">
-                                         {{ user.total_claim }}
+                                        {{ user.total_claim }}
                                     </span>
                                 </td>
 
@@ -171,7 +229,7 @@ const handleSearch = () => {
                                         <div class="flex items-center justify-between gap-4">
                                             <span class="text-gray-600 font-semibold">Commission</span>
                                             <span class="text-green-600 font-medium"> {{ user.total_commission
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="flex items-center justify-between gap-4">
                                             <span class="text-gray-600 font-semibold">Claim</span>
@@ -186,7 +244,7 @@ const handleSearch = () => {
                                             <span class="text-gray-600 font-semibold">Net</span>
                                             <span class="text-orange-600 font-bold">
                                                 {{ (Number(user.total_commission) + Number(user.total_claim)) +
-                                                Number(user.old_due) }}
+                                                    Number(user.old_due) }}
                                             </span>
                                         </div>
                                     </div>
@@ -327,7 +385,8 @@ const handleSearch = () => {
                             <td class="border px-3 py-2">Total Due As per Statement</td>
                             <td class="border px-3 py-2 text-right">
                                 {{
-                                     (Number(selectedUser?.total_sell) + Number(selectedUser?.old_due)) - (Number(selectedUser?.total_commission) +
+                                    (Number(selectedUser?.total_sell) + Number(selectedUser?.old_due)) -
+                                    (Number(selectedUser?.total_commission) +
                                         Number(selectedUser?.total_claim))
                                 }}
                             </td>
@@ -358,7 +417,7 @@ const handleSearch = () => {
                         </tbody>
                     </table>
                 </div>
-                <div class="hidden-print m-auto w-full text-center mt-3">
+                <!-- <div class="hidden-print m-auto w-full text-center mt-3">
                     <button v-print="'#printDiv'"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg text-center m-auto hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,9 +427,73 @@ const handleSearch = () => {
                         </svg>
                         <span>Print</span>
                     </button>
-                </div>
+                </div> -->
             </div>
         </div>
+
+        <Teleport to="body">
+            <div v-if="generateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black opacity-50" @click="closeGenerateModal"></div>
+                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-5 rounded-t-2xl text-white">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-xl font-bold">Generate Bill</h2>
+                            </div>
+                            <button @click="closeGenerateModal"
+                                class="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-all duration-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-700 mb-1">Disclaimer</p>
+                            <span class=" py-1 rounded-full text-sm font-semibold text-red-500">
+                                This will generate bill for all agents based on the current statement. Please make sure to generate bill.
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                            <div class="group">
+                                <label for="from" class="mb-1">From Date</label>
+                                <input v-model="form.from" type="date" id="from" disabled="true"
+                                    class="disabled:bg-gray-200 cursor-not-allowed mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                    placeholder="Enter agent name/email/username">
+                            </div>
+                            <div class="group">
+                                <label for="to" class="mb-1">To Date</label>
+                                <input v-model="form.to" type="date" id="to"
+                                    class="mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
+                                    placeholder="Enter agent name/email/username">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 pb-6 flex justify-end gap-3">
+                        <button @click="closeGenerateModal"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 font-semibold">
+                            Cancel
+                        </button>
+                        <button @click="generateBill"
+                            class="px-4 py-2 bg-gradient-to-r cursor-pointer from-orange-500 to-amber-600 text-white rounded-xl hover:from-orange-600 hover:to-amber-700 transition-all duration-200 font-bold shadow-md hover:shadow-lg flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Generate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>
 
