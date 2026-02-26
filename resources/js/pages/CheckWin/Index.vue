@@ -59,7 +59,6 @@ const handleCheck = async () => {
 
         if (response.data?.summery) {
             checkData.value = response.data?.summery?.summery;  // Assuming the response contains a `summery` key
-            console.log(response.data)
         }
         checkMsg.value = response.data?.message;
         // Handle other actions after success

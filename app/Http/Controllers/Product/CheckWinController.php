@@ -92,4 +92,5 @@ class CheckWinController extends Controller
             return 'This invoice already claimed';
         }
     }
+
 }

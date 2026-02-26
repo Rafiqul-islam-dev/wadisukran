@@ -8,6 +8,7 @@ use App\Services\CheckWinService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class CheckWinnerController extends Controller
 {
@@ -20,7 +21,7 @@ class CheckWinnerController extends Controller
 
     public function checkWin(Request $request)
     {
-        $order = Order::where('invoice_no', $request->invoice_no)->where('user_id', Auth::id())->first();
+        $order = Order::where('invoice_no', $request->invoice_no)->where('status', 'Printed')->first();
         if (!$order) {
             return response()->json([
                 'success' => false,
@@ -33,14 +34,23 @@ class CheckWinnerController extends Controller
                 'message' => 'This invoice already claimed.'
             ], 409);
         }
+       
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
-        if ($summery) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Congratulations this invoice won. and you can claim.',
-                'data' => $summery['summery'],
-                'total_prize' => $summery['total_prize']
-            ], 200);
+        if ($summery && $summery['total_prize'] > 0) {
+            if($summery['total_prize'] >= company_setting()?->max_win_amount){
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'
+                ], 200);
+            }
+            else{
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Congratulations this invoice won. and you can claim.',
+                    'data' => $summery['summery'],
+                    'total_prize' => $summery['total_prize']
+                ], 200);
+            }
         } else {
             return response()->json([
                 'success' => false,
@@ -52,7 +62,13 @@ class CheckWinnerController extends Controller
     public function claimWin(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'invoice_no' => 'required|string|exists:orders,invoice_no'
+            'invoice_no' => [
+                'required',
+                'string',
+                Rule::exists('orders', 'invoice_no')->where(function ($q) {
+                    $q->where('status', 'Printed');
+                }),
+            ],
         ]);
         $order = Order::where('invoice_no', $request->invoice_no)->where('user_id', Auth::id())->first();
         if ($validator->fails()) {
@@ -68,6 +84,22 @@ class CheckWinnerController extends Controller
             ], 400);
         }
         $order = Order::where('invoice_no', $request->invoice_no)->first();
+
+        $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
+        if(!$summery || $summery['total_prize'] <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, this invoice did not win any prize.',
+            ], 200);
+        }
+
+        if($summery['total_prize'] >= company_setting()?->max_win_amount){
+            return response()->json([
+                'success' => true,
+                'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'
+            ], 200);
+        }
+
         if ($order->is_claimed === 0) {
             $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
             return response()->json([

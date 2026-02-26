@@ -248,7 +248,6 @@ class OrderController extends Controller
             $order->status = 'Cancel';
             $order->remarks = $request->remarks;
         } else {
-            // If no remarks, set status to Printed
             $order->status = 'Printed';
 
             $accountService = new AgentAccountService();
