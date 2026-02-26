@@ -86,7 +86,7 @@ const generateBill = async () => {
 
         window.URL.revokeObjectURL(url);
         toast.success('Bills downloaded successfully!');
-        // location.reload();
+        location.reload();
     } catch (error) {
         if(error.response.status === 422) {
             toast.error('Invalid Date selected. Please select a valid date.');
@@ -99,7 +99,7 @@ const generateBill = async () => {
 </script>
 <template>
 
-    <Head title="Agent Histories" />
+    <Head title="Accounts Summery" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="md:px-4">
             <div class="flex flex-col md:flex-row gap-5 justify-between items-center p-4">

@@ -25,7 +25,7 @@ const form = useForm({
     amount: '',
     agent: '',
     description: '',
-    payment_type: '',
+    payment_type: 1,
     from_date: '',
     to_date: '',
     date: '',
@@ -55,11 +55,7 @@ function formatDate(dateString: string | null) {
     return new Date(dateString).toLocaleString('en-US', {
         day: '2-digit',
         month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
+        year: 'numeric'
     });
 }
 
@@ -92,7 +88,7 @@ const submitForm = () => {
 </script>
 <template>
 
-    <Head title="Agent Histories" />
+    <Head title="Accounts Ledger" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="md:p-4 p-2 md:space-y-6">
             <div class="flex flex-col md:flex-row gap-5 justify-between items-center mb-4">
@@ -162,7 +158,7 @@ const submitForm = () => {
                                Description
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                                Created At
+                                Date
                             </th>
                         </tr>
                     </thead>
@@ -171,7 +167,7 @@ const submitForm = () => {
                             class="hover:bg-orange-50 transition-colors duration-200">
                             <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type || 'N/A' }}</td>
+                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received' : 'Agent Payment Received From Company' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) : "N/A" }}</td>
                         </tr>
@@ -263,7 +259,8 @@ const submitForm = () => {
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Type <span class="text-red-500">*</span></label>
                                     <select name="" v-model="form.payment_type" id="" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
                                         <option value="">Select Payment Type</option>
-                                        <option value="Agent Payment Receive">Agent Payment Receive</option>
+                                        <option value="1">Agent Payment Received</option>
+                                        <option value="2">Agent Payment Received From Company</option>
                                     </select>
                                     <p v-if="form.errors.payment_type" class="text-red-600 text-sm">
                                         {{ form.errors.payment_type }}

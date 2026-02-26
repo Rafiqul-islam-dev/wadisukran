@@ -29,7 +29,7 @@ class AccountsLedgerController extends Controller
 
                     $q->whereBetween('created_at', [$from, $to]);
                 })
-                ->where('amount', '>', 0)
+                ->where('amount', '!=', 0)
                 ->with('user')
                 ->latest()
                 ->paginate(10);
@@ -45,9 +45,8 @@ class AccountsLedgerController extends Controller
             'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string',
             'date' => 'required|date',
-            'payment_type' => 'required|string'
+            'payment_type' => 'required|numeric|in:1,2'
         ]);
-
 
         $bill_generation = AgentAccount::where('type', 'posting')->where('type', 'posting')->where('user_id', $request->agent)->where('amount', 0)->first();
         $last_posting = AgentAccount::where('type', 'posting')->latest()->first();
@@ -68,7 +67,7 @@ class AccountsLedgerController extends Controller
             'user_id' => $request->agent,
             'type'    => 'posting',
             'created_at' => Carbon::parse($request->date)->endOfDay(),
-            'amount'  => $request->amount,
+            'amount'  => $request->payment_type == 1 ? $request->amount : -$request->amount,
             'description' => $request->description,
             'payment_type' => $request->payment_type
         ];

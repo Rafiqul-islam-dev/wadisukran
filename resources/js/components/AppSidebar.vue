@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BarChart3, Book, CheckCheck, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
+import { BarChart3, Book, CheckCheck, Download, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -55,6 +55,12 @@ const mainNavItems: NavItem[] = [
                 href: '/accounts/ledger',
                 icon: Book,
                 permission: 'show accounts ledger'
+            },
+            {
+                title: 'Bills',
+                href: '/accounts/bills',
+                icon: Download,
+                permission: 'show accounts bills'
             },
         ],
         permission: 'show agent list'

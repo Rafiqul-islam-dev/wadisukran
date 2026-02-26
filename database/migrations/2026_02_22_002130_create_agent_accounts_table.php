@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
             $table->foreignId('order_id')->nullable()->constrained('orders')->cascadeOnUpdate()->cascadeOnDelete();
             $table->text('description')->nullable();
-            $table->string('payment_type')->nullable();
+            $table->integer('payment_type')->nullable()->comment('1 = Agent payment received, 2 = Agent payment received from company');
             $table->timestamps();
         });
     }

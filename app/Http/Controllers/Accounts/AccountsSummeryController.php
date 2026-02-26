@@ -133,7 +133,7 @@ class AccountsSummeryController extends Controller
 
             $pdf = Pdf::loadView('pdf.agent_bill', ['agent' => $data]);
 
-            $pdfFileName = 'bill_agent_'.$user->id.'.pdf';
+            $pdfFileName = 'bill_agent_'.$user->name.'_'.now()->format('Y-m-d-H-i-s').'.pdf';
             $pdfPath = storage_path("app/temp/$pdfFileName");
 
             $pdf->save($pdfPath);
@@ -161,6 +161,13 @@ class AccountsSummeryController extends Controller
 
         return response()->download($zipPath, $zipFileName, [
             'Content-Type' => 'application/zip'
+        ]);
+    }
+
+    public function bills(){
+        $bills = AgentBill::with('creator')->latest()->paginate(10);
+        return Inertia::render('Accounts/Bills', [
+            'bills' => $bills
         ]);
     }
 }
