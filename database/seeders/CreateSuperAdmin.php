@@ -70,7 +70,8 @@ class CreateSuperAdmin extends Seeder
             "user permanent delete",
             "user restore",
             "user status change",
-            "user update"
+            "user update",
+            "show cancel request"
             ];
 
         foreach ($required_permissions as $permission) {
