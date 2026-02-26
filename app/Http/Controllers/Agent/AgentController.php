@@ -15,6 +15,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Crypt;
 
 class AgentController extends Controller
 {
@@ -60,12 +62,14 @@ class AgentController extends Controller
 
         $name = $validated['name'];
         $firstWord = strtolower(strtok($name, ' '));
+
         do {
             $randomNumber = rand(100, 999);
             $username = $firstWord . '-' . $randomNumber;
         } while (Agent::where('username', $username)->exists());
 
         $validated['username'] = $username;
+        $validated['plain_password'] = $username;
         $validated['password'] = $username;
 
         $this->agentService->createAgent($validated);
@@ -175,5 +179,45 @@ class AgentController extends Controller
         request()->session()->regenerate();
 
         return redirect()->route('dashboard');
+    }
+
+    public function printPdf(Request $request)
+    {
+        $search = $request->get('search');
+
+        $users = User::with('agent')
+            ->where('user_type', 'agent')
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhereHas('agent', fn($qq) => $qq->where('username', 'like', "%{$search}%"));
+            })
+            ->get()
+            ->map(function ($user) {
+                $initial = mb_substr($user->name ?? '', 0, 1);
+
+                $plain = null;
+                if (!empty($user->agent?->temp_password)) {
+                    try {
+                        $plain = Crypt::decryptString($user->agent->temp_password);
+                    } catch (\Throwable $e) {
+                        $plain = null;
+                    }
+                }
+
+                return [
+                    'name' => $user->name,
+                    'initial' => $initial,
+                    'username' => $user->agent?->username,
+                    'temp_password' => $plain ?? 'N/A',
+                ];
+            });
+
+        $pdf = Pdf::loadView('pdf.agents-password-list', [
+            'users' => $users,
+            'generatedAt' => now()->format('d M Y, h:i A'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('agents-password-list.pdf');
     }
 }
