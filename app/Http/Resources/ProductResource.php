@@ -43,6 +43,31 @@ class ProductResource extends JsonResource
                 $draw_time = $endOfHour;
             }
         }
+       else if ($this->draw_type === 'once') {
+            $draw_times = json_decode($this->draw_time, true);
+            $now = Carbon::now();
+            $next_time = null;
+
+            foreach ($draw_times as $time) {
+                $timeCarbon = Carbon::createFromFormat('H:i', $time)
+                    ->setDate($now->year, $now->month, $now->day);
+
+                if ($timeCarbon->greaterThan($now)) {
+                    if (!$next_time || $timeCarbon->lessThan($next_time)) {
+                        $next_time = $timeCarbon;
+                    }
+                }
+            }
+
+            if (!$next_time) {
+                $next_time = Carbon::createFromFormat('H:i', $draw_times[0])
+                    ->setDate($now->year, $now->month, $now->day)
+                    ->addDay();
+            }
+            $next_time = $next_time->subSecond();
+
+            $draw_time = $next_time->format('H:i:s');
+        }
 
         return [
             'id' => $this->id,

@@ -29,7 +29,6 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'draw_date' => 'date',
-        'draw_time' => 'datetime:H:i',
         'is_active' => 'boolean'
     ];
 

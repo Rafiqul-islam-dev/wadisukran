@@ -19,6 +19,7 @@ const { products, categories } = defineProps<{
     categories: Array<any>;
 }>();
 const { company_setting } = usePage().props;
+console.log(products)
 
 const showModal = ref(false);
 const deleteModal = ref(false);
@@ -30,10 +31,9 @@ const form = useForm({
     title: '',
     category_id: '',
     price: '',
-    draw_date: '',
-    draw_time: '',
-    draw_type: 'once',
-    regular_type: '',
+    draw_time: [''],
+    draw_type: 'regular',
+    regular_type: 'daily',
     image: null,
     pick_number: '',
     prize_type: 'bet',
@@ -53,10 +53,7 @@ const editProduct = (product) => {
     form.category_id = product.category_id;
     form.price = product.price;
     form.draw_type = product.draw_type === 'once' ? 'once' : 'regular';
-    form.draw_date = product.draw_date
-        ? product.draw_date.substring(0, 10)
-        : '';
-    form.draw_time = product.draw_time;
+    form.draw_time = product.draw_time || [''];
     form.regular_type = product.draw_type === 'hourly' || product.draw_type === 'daily' ? product.draw_type : '';
     form.image = null;
     imagePreview.value = product.image_url;
@@ -277,6 +274,16 @@ const handleCategoryChange = (e: Event) => {
   }
 };
 
+
+function addDrawTime() {
+    form.draw_time.push('');
+}
+
+function removeDrawTime(index: number) {
+    if (form.draw_time.length > 1) {
+        form.draw_time.splice(index, 1);
+    }
+}
 </script>
 
 <template>
@@ -381,17 +388,8 @@ const handleCategoryChange = (e: Event) => {
                                         Draw Type : <span class="text-teal-500 font-bold"> {{ product.draw_type
                                         }}</span>
                                     </div>
-                                    <div class="flex items-center" v-if="product.draw_date">
-                                        Date :
-                                        <span class="text-teal-500">{{ new
-                                            Date(product.draw_date).toLocaleDateString('en-US', {
-                                                day: '2-digit', month:
-                                                    'short', year: '2-digit'
-                                            }) }}</span>
-                                    </div>
                                     <div class="text-sm text-gray-500" v-if="product.draw_time">Time: <span
-                                            class="text-teal-500">{{
-                                                formatDrawTime(product.draw_time) }}</span>
+                                            class="text-teal-500"></span>
                                     </div>
                                 </td>
 
@@ -606,29 +604,50 @@ const handleCategoryChange = (e: Event) => {
                                                 {{ form.errors.regular_type }}
                                             </p>
                                         </template>
-                                        <template v-if="form.draw_type === 'once' || form.regular_type === 'daily'">
-                                            <!-- Draw Date and Time -->
-                                            <div class="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
-                                                        Date</label>
-                                                    <input v-model="form.draw_date" type="date"
-                                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                                                        required />
-                                                    <p v-if="form.errors.draw_date" class="text-red-600 text-sm">
-                                                        {{ form.errors.draw_date }}
-                                                    </p>
+                                        <template v-if="form.draw_type === 'once'">
+                                            <div>
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <label class="block text-sm font-semibold text-gray-700">Draw Time</label>
+                                                    <button
+                                                        type="button"
+                                                        @click="addDrawTime"
+                                                        class="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                        </svg>
+                                                        Add Time
+                                                    </button>
                                                 </div>
-                                                <div>
-                                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Draw
-                                                        Time</label>
-                                                    <input v-model="form.draw_time" type="time"
-                                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
-                                                        required />
-                                                    <p v-if="form.errors.draw_time" class="text-red-600 text-sm">
-                                                        {{ form.errors.draw_time }}
-                                                    </p>
+
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div
+                                                        v-for="(time, index) in form.draw_time"
+                                                        :key="index"
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        <input
+                                                            v-model="form.draw_time[index]"
+                                                            type="time"
+                                                            class="flex-1 border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                            required
+                                                        />
+                                                        <button
+                                                            v-if="form.draw_time.length > 1"
+                                                            type="button"
+                                                            @click="removeDrawTime(index)"
+                                                            class="p-2.5 text-red-400 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 hover:text-red-600 transition-all duration-200"
+                                                        >
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
+
+                                                <p v-if="form.errors.draw_time" class="text-red-600 text-sm mt-1">
+                                                    {{ form.errors.draw_time }}
+                                                </p>
                                             </div>
                                         </template>
 

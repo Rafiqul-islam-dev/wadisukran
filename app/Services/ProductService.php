@@ -28,7 +28,7 @@ class ProductService
             'price'        => $data['price'],
             'draw_type'    => $data['draw_type'],
             'draw_date'    => $data['draw_date'] ?? null,
-            'draw_time'    => $data['draw_time'] ?? null,
+            'draw_time'    => $data['draw_time'] ? $data['draw_time'] : null,
             'pick_number'  => $data['pick_number'],
             'type_number'  => $data['type_number'],
             'prize_type'   => $data['prize_type'],

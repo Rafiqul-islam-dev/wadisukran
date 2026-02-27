@@ -28,7 +28,7 @@ class ProductController extends Controller
         $products = Product::latest()->with(['category', 'prizes:id,product_id,type,name,prize,chance_number'])->paginate(10);
 
         $products->getCollection()->transform(function ($item) {
-            $item->draw_time = Carbon::parse($item->draw_time)->format('H:i');
+            $item->draw_time = $item->draw_time ? json_decode($item->draw_time) : null;
             return $item;
         });
 
@@ -45,12 +45,12 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
+        return $request->all();
         $data = [
             'title' => $request->title,
             'category_id' => $request->category_id,
             'price' => $request->price,
             'draw_type' => ($request->draw_type === 'regular' ? $request->regular_type : $request->draw_type),
-            'draw_date' => $request->draw_date,
             'draw_time' => $request->draw_time,
             'pick_number' => $request->pick_number,
             'type_number' => $request->type_number,
@@ -79,7 +79,6 @@ class ProductController extends Controller
                 'id' => $product->id,
                 'title' => $product->title,
                 'price' => $product->price,
-                'draw_date' => $this->getEffectiveDrawDate($product)->format('Y-m-d'),
                 'draw_time' => $product->draw_time,
                 'image_url' => $product->image_url,
                 'pick_number' => $product->pick_number,
