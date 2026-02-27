@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BarChart3, Book, CheckCheck, Download, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
+import { BarChart, BarChart3, Book, CheckCheck, Download, Folder, History, Key, LayoutGrid, List, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -144,7 +144,13 @@ const mainNavItems: NavItem[] = [
                 icon: Users,
                 permission: 'show daily summery report'
             },
-             {
+            {
+                title: 'Product Wise Report',
+                href: '/sales-report/product-wise',
+                icon: BarChart,
+                permission: 'show product wise report'
+            },
+            {
                 title: 'Cancel Request',
                 href: '/reports/cancel-request',
                 icon: Users,

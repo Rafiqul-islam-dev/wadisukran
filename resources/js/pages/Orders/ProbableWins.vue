@@ -143,7 +143,7 @@ const handleSearch = () => {
         messages.time_to = 'Please select a "To" time.';
         valid = false;
     }
-    
+
     if (filter.value.pick_number.some(n => n === null || n === '')) {
         messages.pick_number = `Please select ${product.pick_number} numbers.`;
         valid = false;
@@ -195,7 +195,6 @@ const matchTypes = computed(() => {
 </script>
 
 <template>
-
     <Head title="Probable Wins" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6 bg-gradient-to-br from-gray-50 to-gray-100">

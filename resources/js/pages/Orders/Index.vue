@@ -82,16 +82,33 @@ function closeModal() {
 }
 
 const handleSearch = () => {
+    filter.value.btn = 'search';
     router.get(
         route('orders.index'),
         { ...filter.value },
         {
             preserveScroll: true,
             replace: true,
-            showProgress: false
+            showProgress: false,
+            preserveState: true,
         }
     );
 };
+
+const handleDependencyChance = () => {
+    filter.value.btn = 'dependency';
+    router.get(
+        route('orders.index'),
+        { ...filter.value },
+        {
+            preserveScroll: true,
+            replace: true,
+            showProgress: false,
+            preserveState: true,
+        }
+    );
+}
+
 
 function goTo(url) {
     if (!url) return
@@ -142,7 +159,7 @@ function updateStatus() {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-3">
             <div
-                class="bg-white rounded-3xl shadow-2xl p-5 mb-3 border-2 border-orange-100 hover:shadow-orange-200 transition-all duration-300">
+                class="bg-white rounded-3xl shadow-2xl p-5 mb-3 border-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-2">
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -154,7 +171,7 @@ function updateStatus() {
                             </svg>
                             Category
                         </label>
-                        <select v-model="filter.category_id" v-on:change="handleSearch"
+                        <select v-model="filter.category_id" v-on:change="handleDependencyChance"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             <option value="">All Category</option>
                             <option v-for="category in categories" :key="category.id" :value="category.id">
@@ -172,7 +189,7 @@ function updateStatus() {
                             </svg>
                             Product
                         </label>
-                        <select v-model="filter.product_id" v-on:change="handleSearch"
+                        <select v-model="filter.product_id" v-on:change="handleDependencyChance"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             <option value="">All Products</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">
@@ -191,7 +208,7 @@ function updateStatus() {
                             </svg>
                             Match Type
                         </label>
-                        <select v-model="filter.match_type" v-on:change="handleSearch"
+                        <select v-model="filter.match_type" v-on:change="handleDependencyChance"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             <option value="">All</option>
                             <option v-for="prize in product_prizes" :key="prize.id" :value="prize.id">
@@ -209,7 +226,7 @@ function updateStatus() {
                             </svg>
                             All Users
                         </label>
-                        <select v-model="filter.user_id" v-on:change="handleSearch"
+                        <select v-model="filter.user_id" v-on:change="handleDependencyChance"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             <option value="">All Users</option>
                             <option v-for="user in users" :key="user.id" :value="user.id">

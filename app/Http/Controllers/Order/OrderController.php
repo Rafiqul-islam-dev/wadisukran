@@ -28,38 +28,41 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $match_type = ProductPrize::find($request->match_type);
-        $orders = Order::when($request->user_id, function ($query, $userId) {
-            $query->where('user_id', $userId);
-        })
-            ->when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
-                $query->where('user_id', Auth::id());
-            })
-            ->when($request->invoice_no, function ($query, $invoice) {
-                $query->where('invoice_no', $invoice);
-            })
-            ->when($request->date_from, function ($query, $dateFrom) use ($request) {
-                $timeFrom = $request->time_from ?? '00:00:00';
-                $query->where('created_at', '>=', "$dateFrom $timeFrom");
-            })
-            ->when($request->date_to, function ($query, $dateTo) use ($request) {
-                $timeTo = $request->time_to ?? '23:59:59';
-                $query->where('created_at', '<=', "$dateTo $timeTo");
-            })
-            ->when($request->category_id && $request->product_id, function ($query) use ($request) {
-                $query->whereHas('product', function ($q) use ($request) {
-                    $q->where('category_id', $request->category_id)
-                        ->where('id', $request->product_id);
+        $orders = Order::when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
+                    $query->where('user_id', Auth::id());
                 });
+
+        if($request->btn === 'search') {
+            $orders = $orders->when($request->user_id, function ($query, $userId) {
+                $query->where('user_id', $userId);
             })
-            ->when($match_type, function ($query, $matchType) {
-                $query->whereHas('tickets', function ($q) use ($matchType) {
-                    $q->whereJsonContains(
-                        'selected_play_types',
-                        ucfirst(strtolower($matchType->name))
-                    );
+                ->when($request->invoice_no, function ($query, $invoice) {
+                    $query->where('invoice_no', $invoice);
+                })
+                ->when($request->date_from, function ($query, $dateFrom) use ($request) {
+                    $timeFrom = $request->time_from ?? '00:00:00';
+                    $query->where('created_at', '>=', "$dateFrom $timeFrom");
+                })
+                ->when($request->date_to, function ($query, $dateTo) use ($request) {
+                    $timeTo = $request->time_to ?? '23:59:59';
+                    $query->where('created_at', '<=', "$dateTo $timeTo");
+                })
+                ->when($request->category_id && $request->product_id, function ($query) use ($request) {
+                    $query->whereHas('product', function ($q) use ($request) {
+                        $q->where('category_id', $request->category_id)
+                            ->where('id', $request->product_id);
+                    });
+                })
+                ->when($match_type, function ($query, $matchType) {
+                    $query->whereHas('tickets', function ($q) use ($matchType) {
+                        $q->whereJsonContains(
+                            'selected_play_types',
+                            ucfirst(strtolower($matchType->name))
+                        );
+                    });
                 });
-            })
-            ->with(['user', 'product', 'user.agent', 'tickets'])->limit(10)->latest()->paginate(10);
+        }
+        $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->paginate(10);
         $users = User::where('user_type', 'agent')->select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();

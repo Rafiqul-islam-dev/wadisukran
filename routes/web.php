@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
+use App\Http\Controllers\Order\ProductWiseSalesController;
 use App\Http\Controllers\Product\CheckWinController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
@@ -112,6 +113,9 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::post('/update-status/{order}', [OrderController::class, 'updateStatus'])->name('update-status');
+    });
+    Route::prefix('sales-report')->name('sales-report.')->group(function () {
+        Route::get('/product-wise', [ProductWiseSalesController::class, 'index'])->name('index');
     });
 
     Route::prefix('probable-wins')->name('probable-wins.')->middleware('can:show probable wins')->group(function () {
