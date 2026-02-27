@@ -56,4 +56,9 @@ class Order extends Model
 
         return static_asset($this->qr_code);
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

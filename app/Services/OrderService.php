@@ -7,13 +7,16 @@ use App\Models\Order;
 use App\Models\OrderTicket;
 use App\Models\Win;
 use Illuminate\Support\Facades\Auth;
+use Pest\ArchPresets\Custom;
 
 class OrderService
 {
     protected $qrCodeService;
-    public function __construct(QrCodeService $qrCodeService)
+    protected $customerService;
+    public function __construct(QrCodeService $qrCodeService, CustomerService $customerService)
     {
         $this->qrCodeService = $qrCodeService;
+        $this->customerService = $customerService;
     }
     public function createOrder(array $data): Order
     {
@@ -24,9 +27,10 @@ class OrderService
         $draw_number = Win::where('product_id', $data['product_id'])
             ->max('draw_number') + 1;
 
+        $customer = $this->customerService->getCustomerByPhone($data['phone'] ?? null);
         $order = Order::create([
             'user_id' => $data['user_id'],
-            'customer_id' => $data['customer_id'] ?? null,
+            'customer_id' => $customer->id ?? null,
             'product_id' => $data['product_id'],
             'quantity' => $data['quantity'],
             'total_price' => $data['total_price'],

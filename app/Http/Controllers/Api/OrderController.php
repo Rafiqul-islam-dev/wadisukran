@@ -76,6 +76,7 @@ class OrderController extends Controller
             ],
             'quantity' => 'required|integer|min:1',
             'total_price' => 'required|numeric|min:0',
+            'phone' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -136,10 +137,11 @@ class OrderController extends Controller
                 }
             }
 
-
-
             $data = [
                 'id' => $order->id,
+                'customer_phone' => $order->customer ? $order->customer->phone : null,
+                'company_phone' => company_setting() ? company_setting()->phone : null,
+                'company_whatsapp' => company_setting() ? company_setting()->whatsapp : null,
                 'product_id' => $order->product_id,
                 'invoice_no' => $order->invoice_no,
                 'quantity' => $order->quantity,

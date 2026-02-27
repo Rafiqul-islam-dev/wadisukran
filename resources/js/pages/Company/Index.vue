@@ -31,6 +31,7 @@ const form = useForm({
     vat: company_setting?.vat ?? '',
     order_status: company_setting?.order_status ?? '1',
     max_win_amount: company_setting?.max_win_amount ?? '1',
+    customer_phone_require: company_setting?.customer_phone_require ?? 0,
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -199,6 +200,17 @@ const saveChanges = () => {
                                 </select>
                                 <p v-if="form.errors.order_status" class="text-red-600 text-sm">
                                     {{ form.errors.order_status }}
+                                </p>
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="customer_phone_require">Customer Phone Required</Label>
+
+                                <select name="customer_phone_require" id="customer_phone_require" v-model="form.customer_phone_require" class="w-full border rounded py-2 px-2">
+                                    <option value="1">Required</option>
+                                    <option value="0">Not Required</option>
+                                </select>
+                                <p v-if="form.errors.customer_phone_require" class="text-red-600 text-sm">
+                                    {{ form.errors.customer_phone_require }}
                                 </p>
                             </div>
                         </div>

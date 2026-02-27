@@ -36,7 +36,8 @@ class SettingsController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'vat' => 'required|numeric|max:99',
             'order_status' => 'required|in:0,1',
-            'max_win_amount' => 'required|numeric'
+            'max_win_amount' => 'required|numeric',
+            'customer_phone_require' => 'required|numeric|in:0,1'
         ]);
 
         $company = CompannySetting::first();
@@ -56,6 +57,7 @@ class SettingsController extends Controller
         $company->vat = $request->vat;
         $company->order_status = $request->order_status;
         $company->max_win_amount = $request->max_win_amount;
+        $company->customer_phone_require = $request->customer_phone_require;
 
         if ($request->hasFile('logo')) {
             if($company->logo && file_exists(public_path($company->logo))){

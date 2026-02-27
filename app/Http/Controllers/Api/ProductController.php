@@ -17,7 +17,9 @@ class ProductController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return ProductResource::collection($products);
+        return ProductResource::collection($products)->additional([
+            'phone_require' => company_setting()->customer_phone_require === 1 ? true : false
+        ]);;
     }
 
 

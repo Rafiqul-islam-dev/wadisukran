@@ -52,4 +52,14 @@ class CustomerService
             ->limit(10)
             ->get();
     }
+
+    public function getCustomerByPhone(string $phone): Customer | null
+    {
+        if(empty($phone)) {
+            return null;
+        }
+        return Customer::firstOrCreate([
+            'phone' => $phone
+        ]);
+    }
 }
