@@ -12,6 +12,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 const { company_setting } = usePage().props;
+const errors = ref<Record<string, string>>({});
 
 const { filters, products, product_prizes, product, summary, orders } = defineProps<{
     orders: Array<any>;
@@ -22,7 +23,7 @@ const { filters, products, product_prizes, product, summary, orders } = definePr
     product: Array<any>;
 }>();
 
-console.log(orders);
+console.log(product_prizes)
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -102,8 +103,57 @@ const generateRandomNumbers = () => {
     }
 };
 
+const handleProductSearch = () => {
+    router.get(
+        route('probable-wins.index'),
+        { ...filter.value },
+        {
+            preserveScroll: true,
+            replace: true,
+            showProgress: false,
+            preserveState: true
+        }
+    );
+};
 
 const handleSearch = () => {
+    const messages: Record<string, string> = {};
+    let valid = true;
+    if (!filter.value.product_id) {
+        messages.product = 'Please select a product.';
+        valid = false;
+    }
+
+    if (!filter.value.date_from) {
+        messages.date_from = 'Please select a "From" date.';
+        valid = false;
+    }
+
+    if (!filter.value.time_from) {
+        messages.time_from = 'Please select a "From" time.';
+        valid = false;
+    }
+
+    if (!filter.value.date_to) {
+        messages.date_to = 'Please select a "To" date.';
+        valid = false;
+    }
+
+    if (!filter.value.time_to) {
+        messages.time_to = 'Please select a "To" time.';
+        valid = false;
+    }
+    
+    if (filter.value.pick_number.some(n => n === null || n === '')) {
+        messages.pick_number = `Please select ${product.pick_number} numbers.`;
+        valid = false;
+    }
+
+    if (!valid) {
+        toast.error('Please fill in all required fields.');
+        errors.value = messages;
+        return;
+    }
     filter.value.btn = 'search';
     router.get(
         route('probable-wins.index'),
@@ -115,6 +165,32 @@ const handleSearch = () => {
         }
     );
 };
+
+const matchTypes = computed(() => {
+    const seenChance = false;
+    const options: { label: string; value: string | number }[] = [];
+
+    const hasChance = product_prizes.some(p => p.name === 'Chance' && p.chance_number > 1);
+
+    product_prizes.forEach(p => {
+        if (p.name === 'Chance' && hasChance) {
+            // only push once
+            if (!options.find(o => o.value === 'Chance')) {
+                options.push({
+                    label: 'Chance',
+                    value: 'Chance'
+                });
+            }
+        } else if (p.name !== 'Chance') {
+            options.push({
+                label: p.name,
+                value: p.id
+            });
+        }
+    });
+
+    return options;
+});
 
 </script>
 
@@ -128,43 +204,51 @@ const handleSearch = () => {
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Product</label>
-                        <select v-model="filter.product_id" v-on:change="handleSearch"
+                        <select v-model="filter.product_id" v-on:change="handleProductSearch" :class="errors.product ? 'border-red-400' : ''"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All Products</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">
                                 {{ product.title }}
                             </option>
                         </select>
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.product">{{ errors.product }}</p>
                     </div>
                     <div v-if="product_prizes?.length">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Match Type</label>
+
                         <select v-model="filter.match_type"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+
                             <option value="">All</option>
-                            <option v-for="prize in product_prizes" :key="prize.id" :value="prize.id">
-                                {{ prize.name }} {{ prize.chance_number }}
+
+                            <option v-for="type in matchTypes" :key="type.value" :value="type.value">
+                                {{ type.label }}
                             </option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Date</label>
-                        <input type="date" v-model="filter.date_from"
+                        <input type="date" v-model="filter.date_from" :class="errors.date_from ? 'border-red-400' : ''"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.date_from">{{ errors.date_from }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">From Time</label>
-                        <input type="time" v-model="filter.time_from"
+                        <input type="time" v-model="filter.time_from" :class="errors.time_from ? 'border-red-400' : ''"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.time_from">{{ errors.time_from }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Date</label>
-                        <input type="date" v-model="filter.date_to"
+                        <input type="date" v-model="filter.date_to" :class="errors.date_to ? 'border-red-400' : ''"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.date_to">{{ errors.date_to }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">To Time</label>
-                        <input type="time" v-model="filter.time_to"
+                        <input type="time" v-model="filter.time_to" :class="errors.time_to ? 'border-red-400' : ''"
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.time_to">{{ errors.time_to }}</p>
                     </div>
                 </div>
                 <div class="mt-3" v-if="product">
@@ -179,9 +263,11 @@ const handleSearch = () => {
                             v-model="filter.pick_number[index]"
                             @input="handleInput(index, $event)"
                             ref="inputs"
+                            :class="errors.pick_number ? 'border-red-500' : ''"
                             class="h-10 md:h-12 w-10 md:w-12 border-2 border-gray-400 rounded-lg text-center text-lg font-semibold"
                         />
                     </div>
+                    <p class="text-red-500 text-sm mt-1 text-center font-bold" v-if="errors.pick_number">{{ errors.pick_number }}</p>
                     <div class="text-center mt-3 flex gap-3 justify-center">
                         <button @click="generateRandomNumbers"
                             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer">
@@ -199,7 +285,7 @@ const handleSearch = () => {
                         Reset Filters
                     </button>
                     <button @click="handleSearch"
-                        class="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold ml-2">
+                        class="px-6 py-3 bg-blue-500 cursor-pointer text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold ml-2">
                         Search
                     </button>
                 </div>

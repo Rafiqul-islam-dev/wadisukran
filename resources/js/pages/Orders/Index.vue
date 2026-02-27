@@ -200,7 +200,7 @@ function updateStatus() {
                         </select>
                     </div>
 
-                    <div class="group">
+                    <div class="group" v-if="can('search with all agent')">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
                             <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">

@@ -146,9 +146,21 @@ class OrderController extends Controller
         if ($request->btn === 'search' && $request->pick_number && $request->product_id) {
             $match_type = ProductPrize::find($request->match_type);
 
-            $types = $match_type
+            $types = $product->prizes;
+
+            if($request->match_type === "Chance"){
+                $match_type = ProductPrize::where('product_id', $product->id)->where('name', 'Chance')->get();
+                $types = $match_type
+                ? $match_type
+                : $product->prizes;
+            }
+            else{
+                $match_type = ProductPrize::find($request->match_type);
+                 $types = $match_type
                 ? [$match_type]
                 : $product->prizes;
+            }
+
 
             $numbersStraight = collect($request->pick_number)->values();
             $numbersChance = collect($request->pick_number)->reverse()->values();
@@ -166,8 +178,13 @@ class OrderController extends Controller
                     }
                 })
                 ->with('order.user')
-                ->when($request->match_type, function ($q) use ($match_type) {
-                    $q->whereJsonContains('selected_play_types', $match_type->name);
+                ->when($request->match_type, function ($q) use ($match_type, $request) {
+                    if($request->match_type === 'Chance'){
+                        $q->whereJsonContains('selected_play_types', "Chance");
+                    }
+                    else{
+                        $q->whereJsonContains('selected_play_types', $match_type->name);
+                    }
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
