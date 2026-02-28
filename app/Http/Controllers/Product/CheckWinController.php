@@ -69,10 +69,28 @@ class CheckWinController extends Controller
                 'summery' => $summery
             ], 200);
         } else {
-            return response()->json([
-                'success' => true,
-                'message' => 'Your invoice has been successfully checked but you did not won any prize.',
-            ], 200);
+            if($order->product->draw_type === 'once'){
+                $summery = $this->checkWinService->CheckWinByInvoiceOnce($request->invoice_no);
+                if ($summery['summery']) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Your invoice has been successfully checked and you won the prize.',
+                        'summery' => $summery
+                    ], 200);
+                }
+                else{
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Your invoice has been successfully checked but you did not won any prize.',
+                    ], 200);
+                }
+            }
+            else{
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Your invoice has been successfully checked but you did not won any prize.',
+                ], 200);
+            }
         }
     }
 

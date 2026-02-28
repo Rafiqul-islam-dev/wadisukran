@@ -59,10 +59,37 @@ class CheckWinnerController extends Controller
                 ], 200);
             }
         } else {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, this invoice did not win any prize.',
-            ], 200);
+            if($order->product->draw_type === 'once'){
+                $summery = $this->checkWinService->CheckWinByInvoiceOnce($request->invoice_no);
+
+                if ($summery && $summery['total_prize'] > 0) {
+                    if ($summery['total_prize'] >= company_setting()?->max_win_amount) {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'
+                        ], 200);
+                    } else {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Congratulations this invoice won. and you can claim.',
+                            'data' => $summery['summery'],
+                            'total_prize' => $summery['total_prize']
+                        ], 200);
+                    }
+                }
+                else{
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sorry, this invoice did not win any prize.',
+                    ], 200);
+                }
+            }
+            else{
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, this invoice did not win any prize.',
+                ], 200);
+            }
         }
     }
 
@@ -101,10 +128,21 @@ class CheckWinnerController extends Controller
 
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
         if (!$summery || $summery['total_prize'] <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Sorry, this invoice did not win any prize.',
-            ], 200);
+            if($order->product->draw_type === 'once'){
+                $summery = $this->checkWinService->CheckWinByInvoiceOnce($request->invoice_no);
+                if (!$summery || $summery['total_prize'] <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sorry, this invoice did not win any prize.',
+                    ], 200);
+                }
+            }
+            else{
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sorry, this invoice did not win any prize.',
+                ], 200);
+            }
         }
 
         if ($summery['total_prize'] >= company_setting()?->max_win_amount) {

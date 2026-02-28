@@ -114,7 +114,7 @@ class DrawService
 
         $orders = OrderTicket::query()
             ->whereHas('order', function ($q) use ($product) {
-                $q->where('status', 'Printed')->where('product_id', $product->id);
+                $q->where('status', 'Printed')->where('is_claimed', 0)->where('is_winner', 0)->where('product_id', $product->id);
             })
             ->whereBetween('created_at', [$win->from_time, $win->to_time])
             ->get()
