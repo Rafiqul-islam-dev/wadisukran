@@ -6,16 +6,26 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Models\Win;
+use App\Services\ProductService;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class ProductController extends Controller
 {
+    protected $productService;
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
     public function apiIndex()
     {
         $products = Product::active()
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->filter(function ($product) {
+                return $this->productService->checkProductAvailability($product);
+            });
 
         return ProductResource::collection($products)->additional([
             'phone_require' => company_setting()->customer_phone_require === 1 ? true : false
@@ -94,6 +104,4 @@ class ProductController extends Controller
 
         return $drawDate;
     }
-
-
 }

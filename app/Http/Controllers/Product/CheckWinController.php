@@ -81,7 +81,13 @@ class CheckWinController extends Controller
         $request->validate([
             'invoice_no' => 'required|string|exists:orders,invoice_no'
         ]);
-        $order = Order::where('invoice_no', $request->invoice_no)->first();
+        $order = Order::where('invoice_no', $request->invoice_no)->where('status', 'Printed')->first();
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid invoice no.'
+             ], 400);
+        }
         if ($order->is_claimed === 0) {
             $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
             return response()->json([
@@ -89,7 +95,10 @@ class CheckWinController extends Controller
                 'message' => $claim_msg
             ]);
         } else {
-            return 'This invoice already claimed';
+            return response()->json([
+                'success' => false,
+                'message' => 'This invoice already claimed'
+            ], 409);
         }
     }
 

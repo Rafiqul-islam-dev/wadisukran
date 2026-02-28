@@ -34,16 +34,23 @@ class CheckWinnerController extends Controller
                 'message' => 'This invoice already claimed.'
             ], 409);
         }
-       
+
+        $checkTime = $this->checkWinService->checkAndClaimAvailability($order);
+        if (!$checkTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, you cannot check or claim this invoice now. Please try after draw.'
+            ], 403);
+        }
+
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
         if ($summery && $summery['total_prize'] > 0) {
-            if($summery['total_prize'] >= company_setting()?->max_win_amount){
+            if ($summery['total_prize'] >= company_setting()?->max_win_amount) {
                 return response()->json([
                     'success' => true,
                     'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'
                 ], 200);
-            }
-            else{
+            } else {
                 return response()->json([
                     'success' => true,
                     'message' => 'Congratulations this invoice won. and you can claim.',
@@ -70,7 +77,7 @@ class CheckWinnerController extends Controller
                 }),
             ],
         ]);
-        $order = Order::where('invoice_no', $request->invoice_no)->where('user_id', Auth::id())->first();
+        $order = Order::where('invoice_no', $request->invoice_no)->where('status', 'Printed')->first();
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -83,17 +90,24 @@ class CheckWinnerController extends Controller
                 'message' => 'Invalid invoice no.'
             ], 400);
         }
-        $order = Order::where('invoice_no', $request->invoice_no)->first();
+
+        $checkTime = $this->checkWinService->checkAndClaimAvailability($order);
+        if (!$checkTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, you cannot check or claim this invoice now. Please try after draw.'
+            ], 403);
+        }
 
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
-        if(!$summery || $summery['total_prize'] <= 0) {
+        if (!$summery || $summery['total_prize'] <= 0) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sorry, this invoice did not win any prize.',
             ], 200);
         }
 
-        if($summery['total_prize'] >= company_setting()?->max_win_amount){
+        if ($summery['total_prize'] >= company_setting()?->max_win_amount) {
             return response()->json([
                 'success' => true,
                 'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'

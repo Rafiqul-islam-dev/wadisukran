@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\Win;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class CheckWinService
@@ -345,6 +346,30 @@ class CheckWinService
                 'tickets' => $orders->pluck('selected_numbers')->toArray()
             ];
         }
+    }
 
+    public function checkAndClaimAvailability(Order $order): bool
+    {
+        $ticket_buy_time = $order->created_at;
+
+        $product = Product::find($order->product_id);
+        if ($product->draw_type === 'daily') {
+            $startOfToday = Carbon::today()->startOfDay();
+            $endOfToday   = Carbon::today()->endOfDay();
+
+            if ($ticket_buy_time->between($startOfToday, $endOfToday)) {
+                return false;
+            }
+        }
+        else if ($product->draw_type === 'hourly') {
+            $startOfHour = Carbon::now()->startOfHour();
+            $endOfHour   = Carbon::now()->endOfHour();
+
+            if ($ticket_buy_time->between($startOfHour, $endOfHour)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

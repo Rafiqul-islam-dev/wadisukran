@@ -19,17 +19,7 @@ class ProductResource extends JsonResource
         $draw_date = Carbon::today();
         $draw_time = Carbon::today()->endOfDay();
 
-        if ($this->draw_type === 'daily') {
-            $exists_win = Win::where('product_id', $this->id)
-                ->whereDate('to_time', Carbon::today())
-                ->first();
-
-            if ($exists_win) {
-                $draw_time = Carbon::parse($exists_win->to_time);
-            } else {
-                $draw_time = Carbon::today()->endOfDay();
-            }
-        } elseif ($this->draw_type === 'hourly') {
+        if ($this->draw_type === 'hourly') {
             $startOfHour = Carbon::now()->startOfHour();
             $endOfHour   = Carbon::now()->endOfHour();
 
@@ -42,8 +32,7 @@ class ProductResource extends JsonResource
             } else {
                 $draw_time = $endOfHour;
             }
-        }
-       else if ($this->draw_type === 'once') {
+        } else if ($this->draw_type === 'once') {
             $draw_times = json_decode($this->draw_time, true);
             $now = Carbon::now();
             $next_time = null;

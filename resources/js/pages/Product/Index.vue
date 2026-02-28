@@ -712,7 +712,7 @@ function removeDrawTime(index: number) {
                                             <p v-if="form.errors.image" class="text-red-600 text-sm">
                                                 {{ form.errors.image }}
                                             </p>
-                                            <div class="relative">
+                                            <div class="relative" v-if="!imagePreview">
                                                 <input type="file" accept="image/*" @change="handleImageUpload"
                                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                                                 <div

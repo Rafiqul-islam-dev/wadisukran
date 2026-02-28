@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductPrize;
+use App\Models\Win;
+use Carbon\Carbon;
 
 class ProductService
 {
@@ -98,7 +100,8 @@ class ProductService
 
         return 'Product updated successfully.';
     }
-    public function productPermanentDelete($id) : string {
+    public function productPermanentDelete($id): string
+    {
         $product = Product::withTrashed()->find($id);
         if ($product) {
             if ($product->image && file_exists(public_path($product->image))) {
@@ -110,5 +113,41 @@ class ProductService
             return 'Product permanently deleted successfully.';
         }
         return 'Product not found.';
+    }
+
+    public function checkProductAvailability(Product $product): bool
+    {
+        if ($product->draw_type === 'daily') {
+            $startOfToday = Carbon::today();
+            $fifteenMin   = Carbon::today()->addMinute(15);
+
+            $yesterdayStart = Carbon::yesterday()->startOfDay();
+            $yesterdayEnd   = Carbon::yesterday()->endOfDay();
+
+            $prev_win = Win::where('product_id', $product->id)
+                ->whereBetween('to_time', [$yesterdayStart, $yesterdayEnd])
+                ->exists();
+
+            if (!$prev_win && Carbon::now()->between($startOfToday, $fifteenMin)) {
+                return false;
+            }
+        }
+        if ($product->draw_type === 'hourly') {
+            $startOfHour = Carbon::now()->startOfHour();
+            $fifteenMin  = Carbon::now()->startOfHour()->addMinutes(15);
+
+            $prevHourStart = Carbon::now()->subHour()->startOfHour();
+            $prevHourEnd   = Carbon::now()->subHour()->endOfHour();
+
+            $prev_win = Win::where('product_id', $product->id)
+                ->whereBetween('to_time', [$prevHourStart, $prevHourEnd])
+                ->exists();
+
+            if (!$prev_win && Carbon::now()->between($startOfHour, $fifteenMin)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
