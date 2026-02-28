@@ -124,6 +124,7 @@ const saveDraw = () => {
         .filter(Boolean);
 
     form.post(route('draws.store'), {
+        preserveState: false,
         onSuccess: () => {
             toast.success('Draw stored successfully.');
         },
@@ -131,7 +132,6 @@ const saveDraw = () => {
             toast.error('Something went wrong storing draw.');
         }
     });
-    console.log(form)
 }
 </script>
 

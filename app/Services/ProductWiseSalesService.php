@@ -11,9 +11,11 @@ class ProductWiseSalesService
 {
     public function getUserDailySalesSummery($user_id = null, $from, $to)
     {
-        $user = $user_id ? User::find($user_id) : Auth::user();
+        $user = $user_id ? User::find($user_id) : null;
 
-        $orders = Order::where('orders.user_id', $user->id)
+        $orders = Order::when($user, function ($q, $user) {
+                $q->where('orders.user_id', $user->id);
+            })
             ->when($from && $to, function ($q) use ($from, $to) {
                 $q->whereBetween('orders.created_at', [$from, $to]);
             })
@@ -30,11 +32,11 @@ class ProductWiseSalesService
             ->groupBy('orders.product_id', 'products.title')
             ->get();
         return [
-            'name' => $user->name,
-            'address' => $user->address,
+            'name' => $user?->name,
+            'address' => $user?->address,
             'from_date' => $from,
             'to_date' => $to,
-            'trn' => $user->agent?->trn,
+            'trn' => $user?->agent?->trn,
             'products' => DailySummeryResource::collection($orders),
             'total_sell' => (float) $orders->sum('total_price'),
             'total_commission' => (float) $orders->sum('total_commission'),

@@ -17,6 +17,18 @@ class CheckWinService
     {
         $invoice = Order::where('invoice_no', $invoice)->first();
 
+        $product = Product::find($invoice->product_id);
+        if ($product->draw_type === 'once') {
+            $invoiceDate = Carbon::parse($invoice->created_at);
+
+            $startOfDay = $invoiceDate->copy()->startOfDay();
+            $endOfDay   = $invoiceDate->copy()->endOfDay();
+
+            $win = Win::where('product_id', $invoice->product_id)
+                ->whereBetween('from_time', [$startOfDay, $endOfDay])
+                ->whereBetween('to_time', [$startOfDay, $endOfDay])
+                ->first();
+        }
         $win = Win::where('product_id', $invoice->product_id)
             ->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])
             ->first();
@@ -25,7 +37,6 @@ class CheckWinService
         $total_prize = 0;
         if ($win) {
             $product = Product::find($invoice->product_id);
-
             $types = $product->prizes;
 
             $numbersStraight = collect($win->win_number)->values();

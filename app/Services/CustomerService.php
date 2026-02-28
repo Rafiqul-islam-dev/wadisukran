@@ -53,7 +53,7 @@ class CustomerService
             ->get();
     }
 
-    public function getCustomerByPhone(string $phone): Customer | null
+    public function getCustomerByPhone(string | null $phone): Customer | null
     {
         if(empty($phone)) {
             return null;

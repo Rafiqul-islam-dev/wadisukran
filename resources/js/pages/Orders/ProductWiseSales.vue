@@ -32,10 +32,6 @@ const handleSearch = () => {
         messages.from_date = 'From date is required';
         valid = false;
     }
-    if(!form.agent_id){
-        messages.agent_id = 'Agent is required';
-        valid = false;
-    }
     if(!form.to_date){
         messages.to_date = 'To date is required';
         valid = false;
@@ -52,34 +48,6 @@ const handleSearch = () => {
         preserveScroll: true,
     });
 }
-
-
-const reportData = ref([
-    {
-        name: 'Infinity 1',
-        total_sales: 1500,
-        total_commission: 150,
-        total_prize_paid: 0,
-    },
-    {
-        name: 'Infinity 2',
-        total_sales: 2300,
-        total_commission: 230,
-        total_prize_paid: 100,
-    },
-    {
-        name: 'Infinity 3',
-        total_sales: 870,
-        total_commission: 87,
-        total_prize_paid: 50,
-    },
-]);
-
-const storeInfo = {
-    name: 'Didarul Mobile',
-    location: 'Firozmora Dubai UAE',
-    trn: '5756852365',
-};
 
 </script>
 
@@ -133,8 +101,8 @@ const storeInfo = {
                             <div class="w-36 h-36 rounded-full flex items-center justify-center mb-3 shadow-md">
                                <img :src="company_setting.logo_url" alt="">
                             </div>
-                            <h2 class="text-md font-bold text-gray-800 tracking-wide">{{ data?.name }}</h2>
-                            <p class="text-md text-gray-500 mt-0.5">{{ data?.address }}</p>
+                            <h2 class="text-md font-bold text-gray-800 tracking-wide" v-if="data?.name">{{ data?.name }}</h2>
+                            <p class="text-md text-gray-500 mt-0.5" v-if="data?.address">{{ data?.address }}</p>
                         </div>
 
                         <!-- Dashed Divider -->
@@ -142,15 +110,15 @@ const storeInfo = {
 
                         <!-- Date & To Row -->
                         <div class="flex justify-between text-gray-700 py-1">
-                            <span>Date: <span class="font-medium">{{ data?.from_date || 'null' }}</span></span>
-                            <span>To: <span class="font-medium">{{ data?.to_date || 'null' }}</span></span>
+                            <span>Date: <span class="font-medium" v-if="data?.from_date">{{ data?.from_date || 'null' }}</span></span>
+                            <span>To: <span class="font-medium" v-if="data?.to_date">{{ data?.to_date || 'null' }}</span></span>
                         </div>
 
                         <!-- Dashed Divider -->
                         <div class="border-t border-dashed border-gray-300 my-3"></div>
 
                         <!-- TRN -->
-                        <div class="flex justify-between text-gray-700 py-1">
+                        <div class="flex justify-between text-gray-700 py-1" v-if="data?.trn">
                             <span class="font-semibold">TRN:</span>
                             <span class="font-mono tracking-widest font-semibold text-gray-800">{{ data?.trn }}</span>
                         </div>
