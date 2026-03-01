@@ -16,9 +16,9 @@ class AppBannerController extends Controller
     /**
      * Display a listing of the banners.
      */
-    public function index()
+    public function bannerGet()
     {
-        // dd('ok');
+         dd('ok');
 
         $banners = Banner::orderBy('created_at', 'desc')->get()->map(function ($banner) {
             return [
