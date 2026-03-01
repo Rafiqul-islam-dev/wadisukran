@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductPrize;
 use App\Models\Win;
@@ -149,5 +150,43 @@ class ProductService
         }
 
         return true;
+    }
+
+    public function getDrawTimeFromOrder(Order $order): array
+    {
+        $product = $order->product;
+        $draw_date = Carbon::parse($order->created_at)->startOfDay();
+        $draw_time = Carbon::parse($order->created_at)->endOfDay();
+
+        if ($product->draw_type === 'hourly') {
+            $draw_time   = Carbon::parse($order->created_at)->endOfHour();
+        } else if ($product->draw_type === 'once') {
+            $draw_times = json_decode($product->draw_time, true);
+            $now = Carbon::parse($order->created_at);
+            $next_time = null;
+
+            foreach ($draw_times as $time) {
+                $timeCarbon = Carbon::createFromFormat('H:i', $time)
+                    ->setDate($now->year, $now->month, $now->day);
+
+                if ($timeCarbon->greaterThan($now)) {
+                    if (!$next_time || $timeCarbon->lessThan($next_time)) {
+                        $next_time = $timeCarbon;
+                    }
+                }
+            }
+
+            if (!$next_time) {
+                $next_time = Carbon::createFromFormat('H:i', $draw_times[0])
+                    ->setDate($now->year, $now->month, $now->day)
+                    ->addDay();
+            }
+            $draw_time = $next_time->subSecond();
+        }
+
+        return [
+            'draw_date' => $draw_date,
+            'draw_time' => $draw_time
+        ];
     }
 }

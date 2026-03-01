@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Lucky Pencil Ticket</title>
+    <title inertia>{{ config('app.name', 'Laravel') }}</title>
+
+    <link rel="icon" href="{{ public_path(company_setting()->logo) }}" sizes="any">
+    <link rel="icon" href="{{ public_path(company_setting()->logo) }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <style>
         * {
             margin: 0;
@@ -19,10 +24,8 @@
         }
 
         .ticket-wrapper {
-            width: 300px;
             margin: 0 auto;
-            border: 1px solid #ccc;
-            padding: 15px 15px 20px 15px;
+            padding: 10px;
             background: #fff;
         }
 
@@ -115,7 +118,6 @@
         .ticket-image {
             text-align: center;
             margin-bottom: 8px;
-            background: #111;
             padding: 10px 0;
         }
 
@@ -128,7 +130,7 @@
             text-align: center;
             font-size: 11px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 15px;
         }
 
         /* ── Number Bubbles ── */
@@ -144,7 +146,7 @@
             border-radius: 50%;
             border: 1.5px solid #333;
             text-align: center;
-            line-height: 21px;
+            line-height: 18px;
             font-size: 10px;
             font-weight: bold;
             margin: 2px 1px;
@@ -221,148 +223,128 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="ticket-wrapper">
-
-    {{-- ══ HEADER ══ --}}
-    <div class="header">
-        <img src="{{ company_setting()->logo_link }}" alt="Company Logo">
-        <h2>Lucky Pencil</h2>
-    </div>
-
-    {{-- ══ DRAW INFO ══ --}}
-    <table class="draw-info">
-        <tr>
-            <td>Draw Time:</td>
-            <td>05.03.23</td>
-        </tr>
-        <tr>
-            <td>Sales Date:</td>
-            <td>2025-07-26</td>
-        </tr>
-        <tr>
-            <td>Draw Number:</td>
-            <td>101</td>
-        </tr>
-    </table>
-
-    {{-- ══ TAX INVOICE ══ --}}
-    <div class="section-title">Tax Invoice</div>
-
-    <table class="invoice-table">
-        <tr>
-            <td>TRN:</td>
-            <td>104400667900003</td>
-        </tr>
-        <tr>
-            <td>Invoice No:</td>
-            <td>260720251595</td>
-        </tr>
-        <tr>
-            <td>Sales Date:</td>
-            <td>28 Jul. 2025</td>
-        </tr>
-        <tr>
-            <td>Product Name:</td>
-            <td>Lucky Pencil</td>
-        </tr>
-        <tr>
-            <td>Price (incl. VAT):</td>
-            <td>5.00</td>
-        </tr>
-        <tr>
-            <td>Quantity:</td>
-            <td>3</td>
-        </tr>
-        <tr>
-            <td>Total Amount:</td>
-            <td>15.00</td>
-        </tr>
-    </table>
-
-    <hr class="divider">
-
-    {{-- ══ TICKET DETAILS ══ --}}
-    <div class="ticket-details-title">Ticket Details</div>
-
-    <div class="ticket-image">
-        <img src="{{ asset('images/lucky_pencil.png') }}" alt="Lucky Pencil">
-    </div>
-
-    <div class="numbers-title">Numbers</div>
-
-    <div class="numbers-grid">
-        <div>
-            <span class="number-bubble">29</span>
-            <span class="number-bubble">16</span>
-            <span class="number-bubble">35</span>
-            <span class="number-bubble">30</span>
-            <span class="number-bubble">22</span>
-            <span class="number-bubble">21</span>
-            <span class="number-bubble">25</span>
+    <div class="ticket-wrapper">
+        {{-- ══ HEADER ══ --}}
+        <div class="header">
+            <img src="{{ public_path(company_setting()->logo) }}" alt="Logo">
+            <h2>{{ $order->product->title }}</h2>
         </div>
-        <div>
-            <span class="number-bubble">32</span>
-            <span class="number-bubble">01</span>
-            <span class="number-bubble">11</span>
-            <span class="number-bubble">63</span>
-            <span class="number-bubble">18</span>
-            <span class="number-bubble">31</span>
-            <span class="number-bubble">26</span>
+
+        {{-- ══ DRAW INFO ══ --}}
+        <table class="draw-info">
+            <tr>
+                <td>Draw Time:</td>
+                <td>{{ $draw_time }}</td>
+            </tr>
+            <tr>
+                <td>Sales Date:</td>
+                <td>{{ $order->created_at }}</td>
+            </tr>
+            <tr>
+                <td>Draw Number:</td>
+                <td>{{ $draw_number + 1 }}</td>
+            </tr>
+        </table>
+
+        {{-- ══ TAX INVOICE ══ --}}
+        <div class="section-title">Tax Invoice</div>
+
+        <table class="invoice-table">
+            <tr>
+                <td>TRN:</td>
+                <td>{{ $order->user?->agent?->trn }}</td>
+            </tr>
+            <tr>
+                <td>Invoice No:</td>
+                <td>{{ $order->invoice_no }}</td>
+            </tr>
+            <tr>
+                <td>Sales Date:</td>
+                <td>{{ $order->created_at->format('d M. Y') }}</td>
+            </tr>
+            <tr>
+                <td>Product Name:</td>
+                <td>{{ $order->product->title }}</td>
+            </tr>
+            <tr>
+                <td>Price (incl. VAT):</td>
+                <td>{{ $order->product->price }}</td>
+            </tr>
+            <tr>
+                <td>Quantity:</td>
+                <td>{{ $order->quantity }}</td>
+            </tr>
+            <tr>
+                <td>Total Amount:</td>
+                <td>{{ $order->total_price }}</td>
+            </tr>
+        </table>
+
+        <hr class="divider">
+
+        {{-- ══ TICKET DETAILS ══ --}}
+        <div class="ticket-details-title">Ticket Details</div>
+
+        <div class="ticket-image">
+            <img src="{{ public_path($order->product->image) }}" alt="">
         </div>
-        <div>
-            <span class="number-bubble">24</span>
-            <span class="number-bubble">02</span>
-            <span class="number-bubble">25</span>
-            <span class="number-bubble">17</span>
-            <span class="number-bubble">26</span>
-            <span class="number-bubble">85</span>
-            <span class="number-bubble">04</span>
+
+        <div class="numbers-title">Numbers</div>
+
+        <div class="numbers-grid">
+            @foreach ($order->tickets as $ticket)
+                <div>
+                    @foreach ($ticket->selected_numbers as $number)
+                        <span class="number-bubble">{{ str_pad($number, 2, '0', STR_PAD_LEFT) }}</span>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
+
+        <hr class="divider">
+
+        {{-- ══ POINT OF SALE ══ --}}
+        <div class="section-title">Point Of Sales Details</div>
+
+        <table class="pos-table">
+            <tr>
+                <td>Vendor Name:</td>
+                <td>{{ $order->user->name }}</td>
+            </tr>
+            <tr>
+                <td>Address:</td>
+                <td>{{ $order->user->address }}</td>
+            </tr>
+        </table>
+
+        <div class="prize-note">
+            {{ $order->product->title }} Big prize on
+            {{ $order->sales_date }} Amount Of AED
+            {{ $order->product->prizes->max('prize') }}
+        </div>
+
+        {{-- ══ QR CODE ══ --}}
+        <div class="qr-section">
+            <img src="{{ public_path($order->prize) }}" alt="QR Code">
+        </div>
+
+        {{-- ══ FOOTER ══ --}}
+        <div class="footer">
+            <div class="company-name">{{ company_setting()->name }}</div>
+            <p>Address: {{ company_setting()->address }}</p>
+            <p>Email: {{ company_setting()->email }}</p>
+            <p>Website: {{ company_setting()->website }}</p>
+        </div>
+
+        <div class="printed-at">
+            Printed at: {{ now()->format('d M. Y, h:i A') }}
+        </div>
+
     </div>
-
-    <hr class="divider">
-
-    {{-- ══ POINT OF SALE ══ --}}
-    <div class="section-title">Point Of Sales Details</div>
-
-    <table class="pos-table">
-        <tr>
-            <td>Vendor Name:</td>
-            <td>zakir</td>
-        </tr>
-        <tr>
-            <td>Address:</td>
-            <td>satwa</td>
-        </tr>
-    </table>
-
-    <div class="prize-note">
-        Lucky Pencil Big prize on<br>
-        2025-07-26 Amount Of AED<br>
-        250000.0
-    </div>
-
-    {{-- ══ QR CODE ══ --}}
-    <div class="qr-section">
-        <img src="{{ asset('images/qr_code.png') }}" alt="QR Code">
-    </div>
-
-    {{-- ══ FOOTER ══ --}}
-    <div class="footer">
-        <div class="company-name">GLAMOUR IMPERIAL</div>
-        <div class="company-sub">L.L.C-FZC</div>
-        <p>Address: Meydan FZ, Dubai</p>
-        <p>Email: infoiwin529@gmail.com</p>
-        <p>Website: www.iwin.us.com</p>
-    </div>
-
-    <div class="printed-at">
-        Printed at: 2025-07-26 20:56
-    </div>
-
-</div>
 
 </body>
+
 </html>

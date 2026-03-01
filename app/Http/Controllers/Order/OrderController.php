@@ -10,8 +10,10 @@ use App\Models\CompannySetting;
 use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\ProductPrize;
+use App\Models\Win;
 use App\Services\AgentAccountService;
 use App\Services\CategoryService;
+use App\Services\ProductService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -22,9 +24,11 @@ use function PHPSTORM_META\type;
 class OrderController extends Controller
 {
     protected $categoryService;
-    public function __construct(CategoryService $categoryService)
+    protected $productService;
+    public function __construct(CategoryService $categoryService, ProductService $productService)
     {
         $this->categoryService = $categoryService;
+        $this->productService = $productService;
     }
     public function index(Request $request)
     {
@@ -382,7 +386,7 @@ class OrderController extends Controller
         return back();
     }
 
-      public function orderPdf($invoice){
+    public function orderPdf($invoice){
         $order = Order::where('invoice_no', $invoice)->first();
         if (!$order) {
             return response()->json([
@@ -390,8 +394,10 @@ class OrderController extends Controller
                 'message' => 'Order not found',
             ], 404);
         }
-         $pdf = Pdf::loadView('pdf.order_pdf', ['order' => $order]);
-         $pdf->setPaper('A4', 'portrait');
-         return $pdf->stream($order->invoice_no.'.pdf');
+        $draw_date_time = $this->productService->getDrawTimeFromOrder($order);
+        $draw_number = Win::where('product_id', $order->product_id)->max('draw_number');
+        $pdf = Pdf::loadView('pdf.order_pdf', ['order' => $order, 'draw_time' => $draw_date_time['draw_time'], 'draw_date' => $draw_date_time['draw_date'], 'draw_number' => $draw_number]);
+        $pdf->setPaper([0, 0, 226.77, 600], 'portrait');
+        return $pdf->stream($order->invoice_no.'.pdf');
     }
 }
