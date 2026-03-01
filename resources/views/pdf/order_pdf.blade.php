@@ -32,7 +32,7 @@
         /* ── Header / Logo ── */
         .header {
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         .header img {
@@ -50,7 +50,7 @@
         /* ── Draw Info ── */
         .draw-info {
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .draw-info tr td {
@@ -72,10 +72,6 @@
             text-align: center;
             font-size: 12px;
             font-weight: bold;
-            border-top: 1px solid #ccc;
-            border-bottom: 1px solid #ccc;
-            padding: 4px 0;
-            margin: 8px 0;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -83,7 +79,7 @@
         /* ── Tax Invoice Table ── */
         .invoice-table {
             width: 100%;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .invoice-table tr td {
@@ -104,49 +100,45 @@
         .divider {
             border: none;
             border-top: 1px dashed #aaa;
-            margin: 10px 0;
+            margin: 2px 0;
         }
 
         /* ── Ticket Details ── */
         .ticket-details-title {
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 6px;
         }
 
         .ticket-image {
             text-align: center;
-            margin-bottom: 8px;
-            padding: 10px 0;
         }
 
         .ticket-image img {
-            width: 120px;
-            height: auto;
+            width: auto;
+            height: 80px;
         }
 
         .numbers-title {
             text-align: center;
             font-size: 11px;
             font-weight: bold;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
         /* ── Number Bubbles ── */
         .numbers-grid {
             text-align: center;
-            margin-bottom: 5px;
         }
 
         .number-bubble {
             display: inline-block;
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             border: 1.5px solid #333;
             text-align: center;
-            line-height: 18px;
+            line-height: 16px;
             font-size: 10px;
             font-weight: bold;
             margin: 2px 1px;
@@ -287,6 +279,7 @@
 
         {{-- ══ TICKET DETAILS ══ --}}
         <div class="ticket-details-title">Ticket Details</div>
+        <hr class="divider">
 
         <div class="ticket-image">
             <img src="{{ public_path($order->product->image) }}" alt="">
@@ -302,12 +295,14 @@
                     @endforeach
                 </div>
             @endforeach
+
         </div>
 
         <hr class="divider">
 
         {{-- ══ POINT OF SALE ══ --}}
         <div class="section-title">Point Of Sales Details</div>
+        <hr class="divider">
 
         <table class="pos-table">
             <tr>
@@ -332,7 +327,7 @@
 
         {{-- ══ QR CODE ══ --}}
         <div class="qr-section">
-            <img src="{{ public_path($order->prize) }}" alt="QR Code">
+            <img src="{{ public_path($order->qr_code) }}" alt="QR Code">
         </div>
 
         {{-- ══ FOOTER ══ --}}
