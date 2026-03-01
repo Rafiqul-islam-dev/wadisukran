@@ -25,8 +25,6 @@ class ProductOrderResource extends JsonResource
             'product_title' => $this->product->title ?? 'N/A',
             'product_image' => $this->product->image ? asset('storage/' . $this->product->image) : null,
             'product_price' => $this->product->price ?? 'N/A',
-            'draw_date' => $this->product->draw_date ? \Carbon\Carbon::parse($this->product->draw_date)->format('Y-m-d') : 'N/A',
-            'draw_date' => $this->product->draw_time ? \Carbon\Carbon::parse($this->product->draw_time)->format('h:i A') : 'N/A',
             'quantity' => $this->quantity,
             'status' => $this->status,
             'total_price' => number_format($this->total_price, 2) . ' AED',

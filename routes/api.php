@@ -15,6 +15,9 @@ Route::prefix('v1/auth')->group(function () {
 });
 
 
+Route::prefix('v1')->group(function () {
+    Route::get('/order-pdf/{invoice}', [OrderController::class, 'orderPdf']);
+});
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/products', [ProductController::class, 'apiIndex']);
