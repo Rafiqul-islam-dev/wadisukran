@@ -84,7 +84,7 @@ class AppBannerController extends Controller
 
             $banner->save();
 
-            return redirect()->route('banners.index')->with('success', 'Banner created successfully!');
+            return redirect()->route('slides.index')->with('success', 'Banner created successfully!');
         } catch (\Exception $e) {
             // If there was an error and an image was uploaded, delete it
             if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
@@ -134,14 +134,14 @@ class AppBannerController extends Controller
     /**
      * Update the specified banner in storage.
      */
-    public function update(Request $request, Banner $banner)
+    public function update(Request $request, Banner $slide)
     {
         $validator = Validator::make($request->all(), [
             'title' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('banners', 'title')->ignore($banner->id),
+                Rule::unique('banners', 'title')->ignore($slide->id),
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
             'status' => 'nullable|in:active,inactive',
@@ -160,17 +160,17 @@ class AppBannerController extends Controller
         }
 
         try {
-            $oldImagePath = $banner->image_url;
+            $oldImagePath = $slide->image_url;
 
-            $banner->title = $request->title;
-            $banner->status = $request->status ?? $banner->status;
+            $slide->title = $request->title;
+            $slide->status = $request->status ?? $slide->status;
 
             // Handle image upload
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('banners', $imageName, 'public');
-                $banner->image_url = $imagePath;
+                $slide->image_url = $imagePath;
 
                 // Delete old image after successful upload
                 if ($oldImagePath && Storage::disk('public')->exists($oldImagePath)) {
@@ -178,9 +178,9 @@ class AppBannerController extends Controller
                 }
             }
 
-            $banner->save();
+            $slide->save();
 
-            return redirect()->route('banners.index')->with('success', 'Banner updated successfully!');
+            return redirect()->route('slides.index')->with('success', 'Banner updated successfully!');
         } catch (\Exception $e) {
             // If there was an error and a new image was uploaded, delete it
             if (isset($imagePath) && Storage::disk('public')->exists($imagePath)) {
@@ -196,17 +196,16 @@ class AppBannerController extends Controller
     /**
      * Remove the specified banner from storage.
      */
-    public function destroy(Banner $banner)
+    public function destroy(Banner $slide)
     {
         try {
-            // Delete the image file if it exists
-            if ($banner->image_url && Storage::disk('public')->exists($banner->image_url)) {
-                Storage::disk('public')->delete($banner->image_url);
+            if ($slide->image_url && Storage::disk('public')->exists($slide->image_url)) {
+                Storage::disk('public')->delete($slide->image_url);
             }
 
-            $banner->delete();
+            $slide->delete();
 
-            return redirect()->route('banners.index')->with('success', 'Banner deleted successfully!');
+            return redirect()->route('slides.index')->with('success', 'Banner deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete banner. Please try again.');
         }
@@ -277,7 +276,7 @@ class AppBannerController extends Controller
             }
 
             $count = count($request->banner_ids);
-            return redirect()->route('banners.index')
+            return redirect()->route('slides.index')
                 ->with('success', "Successfully deleted {$count} banner(s)!");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete selected banners. Please try again.');
@@ -308,7 +307,7 @@ class AppBannerController extends Controller
             $count = count($request->banner_ids);
             $status = ucfirst($request->status);
 
-            return redirect()->route('banners.index')
+            return redirect()->route('slides.index')
                 ->with('success', "Successfully updated {$count} banner(s) to {$status}!");
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to update banner status. Please try again.');
