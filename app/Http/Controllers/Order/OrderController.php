@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductPrize;
 use App\Services\AgentAccountService;
 use App\Services\CategoryService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -379,5 +380,18 @@ class OrderController extends Controller
         $order->save();
 
         return back();
+    }
+
+      public function orderPdf($invoice){
+        $order = Order::where('invoice_no', $invoice)->first();
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+         $pdf = Pdf::loadView('pdf.order_pdf', ['order' => $order]);
+         $pdf->setPaper('A4', 'portrait');
+         return $pdf->stream($order->invoice_no.'.pdf');
     }
 }

@@ -14,10 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use App\Http\Resources\ProductOrderResource;
-use App\Models\OrderTicket;
 use App\Services\AgentAccountService;
 use App\Services\OrderService;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
@@ -320,18 +318,5 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
-    }
-
-    public function orderPdf($invoice){
-        $order = Order::where('invoice_no', $invoice)->first();
-        if (!$order) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Order not found',
-            ], 404);
-        }
-         $pdf = Pdf::loadView('pdf.order_pdf', ['order' => $order]);
-         $pdf->setPaper('A4', 'portrait');
-         return $pdf->stream($order->invoice_no.'.pdf');
     }
 }

@@ -32,6 +32,8 @@ Route::get('/', function () {
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
 
+Route::get('/order-pdf/{invoice}', [OrderController::class, 'orderPdf']);
+
 Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->middleware('can:show dashboard')->name('dashboard');
     // Role Management Routes
