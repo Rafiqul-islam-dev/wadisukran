@@ -311,6 +311,10 @@
 
         <table class="pos-table">
             <tr>
+                <td>Customer Number:</td>
+                <td>{{ $order->customer?->phone }}</td>
+            </tr>
+            <tr>
                 <td>Vendor Name:</td>
                 <td>{{ $order->user->name }}</td>
             </tr>
