@@ -87,7 +87,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::middleware('can:show categories')->resource('categories', CategoryController::class);
     Route::get('categories/status-change/{category}', [CategoryController::class, 'status_change'])->name('categories.status-change');
-    Route::resource('banners', AppBannerController::class);
+    Route::resource('slides', AppBannerController::class);
     Route::resource('company-settings', SettingsController::class)->except(['show', 'create', 'edit']);
 
     // Product Routes
@@ -129,7 +129,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
 
     // Additional banner routes
-    Route::prefix('banners')->name('banners.')->group(function () {
+    Route::prefix('slides')->name('slides.')->group(function () {
         // Toggle banner status
         Route::patch('{banner}/toggle-status', [AppBannerController::class, 'toggleStatus'])
             ->name('toggle-status');

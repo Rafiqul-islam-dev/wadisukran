@@ -127,7 +127,7 @@ const mainNavItems: NavItem[] = [
         items: [
             {
                 title: 'Banner List',
-                href: '/banners',
+                href: '/slides',
                 icon: Users,
                 permission: 'show banner list'
             },

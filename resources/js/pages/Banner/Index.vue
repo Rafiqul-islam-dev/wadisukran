@@ -7,7 +7,7 @@ import { BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Banners',
-        href: '/banners',
+        href: '/slides',
     },
 ];
 
@@ -89,13 +89,13 @@ function submitForm() {
 
     if (isEditing.value) {
         formData.append('_method', 'PUT');
-        router.post(`/banners/${form.value.id}`, formData, {
+        router.post(`/slides/${form.value.id}`, formData, {
             onSuccess: () => {
                 closeModal();
             },
         });
     } else {
-        router.post('/banners', formData, {
+        router.post('/slides', formData, {
             onSuccess: () => {
                 closeModal();
             },
@@ -105,7 +105,7 @@ function submitForm() {
 
 function deleteBanner(id) {
     if (confirm('Are you sure you want to delete this banner?')) {
-        router.delete(`/banners/${id}`);
+        router.delete(`/slides/${id}`);
     }
 }
 </script>
