@@ -19,6 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 const { company_setting } = usePage().props;
 const formattedNow = dayjs().format('DD MMM, YY hh:mm A');
+const formatNow = dayjs().format('YYYY-MM-DD');
 const { users, from_date } = defineProps<{
     users: Array<any>;
     agents: Array<any>;
@@ -306,7 +307,7 @@ const generateBill = async () => {
                 <div class="text-center mb-4">
                     <h2 class="text-xl font-bold">Account Statement</h2>
                     <p class="text-sm text-gray-600">
-                        Statement Date: <strong>{{ formattedNow }}</strong>
+                        Statement Date: <strong>{{ from_date }}</strong> to <strong v-if="!form.to">{{ formatNow }}</strong> <strong v-else>{{ form.to }}</strong>
                     </p>
                 </div>
                 <div class="mb-4 text-sm">
