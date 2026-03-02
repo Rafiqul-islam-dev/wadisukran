@@ -24,6 +24,7 @@ class AgentService
             [
                 'username' => $data['username'],
                 'trn' => $data['trn'] ?? null,
+                'commission' => $data['commission'],
                 'temp_password' => isset($data['plain_password'])
                     ? Crypt::encryptString($data['plain_password'])
                     : null,
