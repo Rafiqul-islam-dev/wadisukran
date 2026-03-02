@@ -55,6 +55,13 @@ class ProductResource extends JsonResource
             }
             $next_time = $next_time->subSecond();
 
+            $format_next_time = $next_time->format('H:i:s');
+            $format_now_time = $now->format('H:i:s');
+
+            if($format_next_time < $format_now_time){
+                $draw_date = $now->copy()->addDay();
+            }
+
             $draw_time = $next_time->format('H:i:s');
         }
 
