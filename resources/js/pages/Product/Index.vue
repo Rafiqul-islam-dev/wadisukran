@@ -388,8 +388,10 @@ function removeDrawTime(index: number) {
                                         Draw Type : <span class="text-teal-500 font-bold"> {{ product.draw_type
                                         }}</span>
                                     </div>
-                                    <div class="text-sm text-gray-500" v-if="product.draw_time">Time: <span
-                                            class="text-teal-500"></span>
+                                    <div class="text-sm text-gray-500 flex gap-5" v-if="product.draw_type == 'once' && product.draw_time">Time: <div class="flex gap-3">
+                                        <span
+                                                class="text-teal-500" v-for="time in product.draw_time" :key="time">{{ time }}</span>
+                                    </div>
                                     </div>
                                 </td>
 
