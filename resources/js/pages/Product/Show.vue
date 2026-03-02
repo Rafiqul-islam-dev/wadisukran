@@ -7,7 +7,7 @@ const { product } = defineProps<{
     product: Array<any>;
 }>();
 
-
+console.log(product);
 </script>
 
 
@@ -92,10 +92,10 @@ const { product } = defineProps<{
                                     <span class="font-semibold text-gray-900">{{ new
                                         Date(product.draw_date).toLocaleDateString() }}</span>
                                 </div>
-                                <div class="flex justify-between" v-if="product.draw_time">
-                                    <span class="text-gray-600">Draw Time:</span>
-                                    <span class="font-semibold text-gray-900">{{ product.draw_time.substring(0, 8)
-                                        }}</span>
+                                <div class="text-sm text-gray-500 flex gap-5" v-if="product.draw_type == 'once' && product.draw_time">Time: <div class="flex gap-3">
+                                    <span
+                                            class="text-teal-500" v-for="time in product.draw_time" :key="time">{{ time }}</span>
+                                </div>
                                 </div>
                             </div>
                         </div>

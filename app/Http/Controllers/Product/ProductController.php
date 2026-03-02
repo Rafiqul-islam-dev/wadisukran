@@ -67,6 +67,9 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         $product = $product->load(['prizes', 'category']);
+
+        $product->draw_time = $product->draw_time ? json_decode($product->draw_time, true) : null;
+
         return Inertia::render('Product/Show', [
             'product' => $product
         ]);
