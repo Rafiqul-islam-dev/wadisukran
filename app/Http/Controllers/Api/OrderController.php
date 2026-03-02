@@ -138,7 +138,7 @@ class OrderController extends Controller
 
             $data = [
                 'id' => $order->id,
-                'customer_phone' => $order->customer ? $order->customer->phone : null,
+                'customer_phone' => $order->customer ? $order->customer->country_code.''. $order->customer->phone : null,
                 'company_phone' => company_setting() ? company_setting()->phone : null,
                 'company_whatsapp' => company_setting() ? company_setting()->whatsapp : null,
                 'product_id' => $order->product_id,
@@ -199,6 +199,7 @@ class OrderController extends Controller
 
         try {
             $query = Order::with(['user', 'product'])
+                ->latest()
                 ->where('user_id', auth()->id());
 
             // Optional date filtering

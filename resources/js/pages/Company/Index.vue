@@ -32,6 +32,7 @@ const form = useForm({
     order_status: company_setting?.order_status ?? '1',
     max_win_amount: company_setting?.max_win_amount ?? '1',
     customer_phone_require: company_setting?.customer_phone_require ?? 0,
+    country_code: company_setting?.country_code ?? '',
 });
 const handleLogoUpload = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -213,17 +214,25 @@ const saveChanges = () => {
                                     {{ form.errors.customer_phone_require }}
                                 </p>
                             </div>
+                            <!-- Max Win amount -->
+                            <div class="space-y-2">
+                                <Label for="max_win_amount">Max win amount</Label>
+                                <Input id="max_win_amount" v-model="form.max_win_amount" type="number" placeholder="https://example.com"
+                                        class="max-w-4xl" />
+                                <p v-if="form.errors.max_win_amount" class="text-red-600 text-sm">
+                                    {{ form.errors.max_win_amount }}
+                                </p>
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="country_code">Country Code</Label>
+                                <Input id="country_code" v-model="form.country_code" type="text" placeholder="Country Code"
+                                        class="max-w-4xl" />
+                                <p v-if="form.errors.country_code" class="text-red-600 text-sm">
+                                    {{ form.errors.country_code }}
+                                </p>
+                            </div>
                         </div>
 
-                        <!-- Max Win amount -->
-                        <div class="space-y-2">
-                            <Label for="max_win_amount">Max win amount</Label>
-                            <Input id="max_win_amount" v-model="form.max_win_amount" type="number" placeholder="https://example.com"
-                                    class="max-w-4xl" />
-                            <p v-if="form.errors.max_win_amount" class="text-red-600 text-sm">
-                                {{ form.errors.max_win_amount }}
-                            </p>
-                        </div>
                         <!-- Address -->
                         <div class="space-y-2">
                             <Label for="address">Address</Label>

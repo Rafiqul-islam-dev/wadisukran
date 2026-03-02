@@ -58,8 +58,11 @@ class CustomerService
         if(empty($phone)) {
             return null;
         }
-        return Customer::firstOrCreate([
+        $customer = Customer::firstOrCreate([
             'phone' => $phone
         ]);
+        $customer->country_code = company_setting()->country_code;
+        $customer->save();
+        return $customer;
     }
 }
