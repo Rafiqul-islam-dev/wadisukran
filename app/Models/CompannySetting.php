@@ -23,6 +23,7 @@ class CompannySetting extends Model
         'bank_account',
         'details',
         'logo',
+        'country_code'
     ];
 
     protected $appends = ['logo_url'];
