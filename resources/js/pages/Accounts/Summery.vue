@@ -308,8 +308,6 @@ const generateBill = async () => {
                     <h2 class="text-xl font-bold">Account Statement</h2>
                     <p class="text-sm text-gray-600">
                         Statement Date: <strong>{{ from_date }}</strong> to <strong v-if="!form.to">{{ formatNow }}</strong> <strong v-else>{{ form.to }}</strong>
-
-                        
                     </p>
                 </div>
                 <div class="mb-4 text-sm">
