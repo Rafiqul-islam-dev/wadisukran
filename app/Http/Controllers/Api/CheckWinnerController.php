@@ -26,13 +26,13 @@ class CheckWinnerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid invoice no.'
-            ], 400);
+            ], 200);
         }
         if ($order->is_claimed == 1) {
             return response()->json([
                 'success' => false,
                 'message' => 'This invoice already claimed.'
-            ], 409);
+            ], 200);
         }
 
         $checkTime = $this->checkWinService->checkAndClaimAvailability($order);
@@ -40,7 +40,7 @@ class CheckWinnerController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Sorry, you cannot check or claim this invoice now. Please try after draw.'
-            ], 403);
+            ], 200);
         }
 
         $summery = $this->checkWinService->CheckWinByInvoice($request->invoice_no);
