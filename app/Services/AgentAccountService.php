@@ -3,55 +3,64 @@
 namespace App\Services;
 
 use App\Models\AgentAccount;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AgentAccountService
 {
 
     public function store(array $data)
     {
-        $old_due = 0;
-        $current_due = 0;
-
         if ($data['type'] === 'posting') {
-            $last_posting = AgentAccount::where('user_id', $data['user_id'])->where('type', 'posting')->where('amount', '>', 0)->latest()->first();
-            if ($last_posting) {
-                $old_due = $last_posting->old_due;
+            $previous_posting = AgentAccount::where('user_id', $data['user_id'])
+                ->where('type', 'posting')
+                ->where('created_at', '<', Carbon::parse($data['created_at'])->startOfDay())
+                ->latest()
+                ->first();
+
+            $old_balance = 0;
+
+            if (!$previous_posting) {
+                $old_account = AgentAccount::where('user_id', $data['user_id'])
+                    ->where('created_at', '<', Carbon::parse($data['created_at'])->startOfDay())
+                    ->select('type', DB::raw('SUM(amount) as total_amount'))
+                    ->groupBy('type')
+                    ->get()
+                    ->pluck('total_amount', 'type');
+
+                $old_balance =
+                    ($old_account['sell'] ?? 0)
+                    - (
+                        ($old_account['commission'] ?? 0)
+                        + ($old_account['claim'] ?? 0)
+                    );
+
+            } else {
+                $old_account = AgentAccount::where('user_id', $data['user_id'])
+                    ->whereBetween('created_at', [
+                        Carbon::parse($previous_posting->created_at)->endOfDay(),
+                        Carbon::parse($data['created_at'])->startOfDay(),
+                    ])
+                    ->select('type', DB::raw('SUM(amount) as total_amount'))
+                    ->groupBy('type')
+                    ->get()
+                    ->pluck('total_amount', 'type');
+
+                $old_balance =
+                    (($old_account['sell'] ?? 0) + $previous_posting->old_due)
+                    - (
+                        ($old_account['commission'] ?? 0)
+                        + ($old_account['claim'] ?? 0)
+                        + ($old_account['posting'] ?? 0)
+                    );
             }
-            $fromDate = $last_posting?->created_at;
-
-            $total_commission = AgentAccount::where('user_id', $data['user_id'])
-                ->whereIn('type', ['commission', 'claim'])
-                ->when($fromDate, function ($q) use ($fromDate) {
-                    $q->where('created_at', '>', $fromDate);
-                })
-                ->when($data['created_at'] ?? null, function ($q) use ($data) {
-                    $q->where('created_at', '<=', $data['created_at']);
-                })
-                ->sum('amount');
-
-            $total_sell = AgentAccount::where('user_id', $data['user_id'])
-                ->where('type', 'sell')
-                ->when($fromDate, function ($q) use ($fromDate) {
-                    $q->where('created_at', '>', $fromDate);
-                })
-                ->when($data['created_at'] ?? null, function ($q) use ($data) {
-                    $q->where('created_at', '<=', $data['created_at']);
-                })
-                ->sum('amount');
-
-            $agent_payable = $total_sell + $old_due;
-
-            $company_payable = $total_commission;
-
-            $remaining_payable = $agent_payable - $company_payable;
-            $current_due = $remaining_payable - $data['amount'];
         }
         AgentAccount::create([
             'user_id' => $data['user_id'],
             'type' => $data['type'],
             'amount' => $data['amount'],
-            'old_due' => $current_due,
+            'old_due' => $old_balance,
             'description' => $data['description'] ?? null,
             'payment_type' => $data['payment_type'] ?? null,
             'order_id' => $data['order_id'] ?? null,

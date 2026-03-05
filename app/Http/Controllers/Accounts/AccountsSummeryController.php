@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounts;
 use App\Http\Controllers\Controller;
 use App\Models\AgentAccount;
 use App\Models\AgentBill;
+use App\Models\Order;
 use App\Models\User;
 use App\Services\AgentAccountService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -28,146 +29,107 @@ class AccountsSummeryController extends Controller
         $agents_list = User::where('user_type', 'agent')
                     ->where('status', 'active')
                     ->get();
+        $agent = null;
 
-        $users = User::where('user_type', 'agent')
-                    ->where('status', 'active')
-                    ->when($request->agent_id, function ($q) use ($request) {
-                        $q->where('id', $request->agent_id);
-                    })
-                    ->get();
-
-        $last_bill = AgentAccount::where('type', 'posting')->latest()->first();
-        $agents = [];
-        foreach($users as $user){
-            $last_posting = AgentAccount::where('user_id', $user->id)->where('type', 'posting')->latest('updated_at')->first();
-            $account = AgentAccount::where('user_id', $user->id)
-                ->when($last_posting?->created_at, function ($q) use ($last_posting) {
-                    $q->where('created_at', '>', $last_posting->created_at);
-                })
-                ->when($request->to, function ($q) use ($request) {
-                    $q->where('created_at', '<=', Carbon::parse($request->to)->endOfDay());
+        if($request->from && $request->to && $request->agent_id){
+           $account = AgentAccount::where('user_id', $request->agent_id)
+                ->when($request->from && $request->to, function ($q) use ($request) {
+                    $q->whereBetween('created_at', [
+                        Carbon::parse($request->from)->startOfDay(),
+                        Carbon::parse($request->to)->endOfDay(),
+                    ]);
                 })
                 ->select('type', DB::raw('SUM(amount) as total_amount'))
                 ->groupBy('type')
                 ->get()
                 ->pluck('total_amount', 'type');
 
-            $agents[] = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'address' => $user->address,
-                'total_sell' => !empty($account['sell']) ? $account['sell'] : 0,
-                'total_commission' => !empty($account['commission']) ? $account['commission'] : 0,
-                'total_win' => !empty($account['win']) ? $account['win'] : 0,
-                'total_claim' => !empty($account['claim']) ? $account['claim'] : 0,
-                'old_due' => !empty($last_posting->old_due) ? $last_posting->old_due : 0,
-            ];
-        }
-
-        return Inertia::render('Accounts/Summery', [
-            'users' => $agents,
-            'agents' => $agents_list,
-            'from_date' => $last_bill?->created_at ? Carbon::parse($last_bill->created_at)->format('Y-m-d') : null,
-        ]);
-    }
-
-    public function generateBill(Request $request)
-    {
-        $request->validate([
-            'from' => 'nullable|date',
-            'to'   => 'required|date|after_or_equal:from',
-        ]);
-
-        $latest_bill = AgentBill::latest()->first();
-        if($latest_bill && Carbon::parse($request->to)->lt(Carbon::parse($latest_bill->to_date))) {
-            return response()->json(['success' => false, 'message' => 'A bill has already been generated for a later date. Please check the date range.'], 422);
-        }
-
-        $bill_exists = AgentBill::whereDate('to_date', Carbon::parse($request->to))->first();
-        if($bill_exists) {
-            return response()->json(['success' => false, 'message' => 'A bill has already been generated for the selected date. Please check the date.'], 422);
-        }
-        $users = User::where('user_type', 'agent')
-                    ->where('status', 'active')
-                    ->get();
-
-        $zip = new ZipArchive;
-        $zipFileName = 'agent-bills-'.now()->format('Y-m-d-H-i-s').'.zip';
-        $zipDir = public_path('uploads/agent_bill');
-        $zipPath = $zipDir.'/'.$zipFileName;
-
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            return response()->json(['success' => false, 'message' => 'Cannot create zip']);
-        }
-
-        foreach ($users as $user) {
-            $last_posting = AgentAccount::where('user_id', $user->id)
+            $previous_posting = AgentAccount::where('user_id', $request->agent_id)
                 ->where('type', 'posting')
+                ->where('created_at', '<', Carbon::parse($request->from)->startOfDay())
                 ->latest()
                 ->first();
 
-            $account = AgentAccount::where('user_id', $user->id)
-                ->when($last_posting?->created_at, function ($q) use ($last_posting) {
-                    $q->where('created_at', '>', $last_posting->created_at);
-                })
-                ->when($request->to, function ($q) use ($request) {
-                    $q->where('created_at', '<=', Carbon::parse($request->to)->endOfDay());
-                })
-                ->select('type', DB::raw('SUM(amount) as total_amount'))
-                ->groupBy('type')
-                ->get()
-                ->pluck('total_amount', 'type');
+            $old_balance = 0;
 
-            $data = [
-                'id' => $user->id,
-                'from' => $request->from ? Carbon::parse($request->from)->format('Y-m-d H:i:s') : Carbon::parse(AgentAccount::first()->created_at)->startOfDay()->format('Y-m-d H:i:s'),
-                'to' =>  Carbon::parse($request->to)->endOfDay()->format('Y-m-d H:i:s'),
-                'name' => $user->name,
-                'address' => $user->address,
-                'total_sell' => $account['sell'] ?? 0,
-                'total_commission' => $account['commission'] ?? 0,
-                'total_win' => $account['win'] ?? 0,
-                'total_claim' => $account['claim'] ?? 0,
-                'old_due' => $last_posting?->old_due ?? 0,
-            ];
+            if (!$previous_posting) {
+                $old_account = AgentAccount::where('user_id', $request->agent_id)
+                    ->where('created_at', '<', Carbon::parse($request->from)->startOfDay())
+                    ->select('type', DB::raw('SUM(amount) as total_amount'))
+                    ->groupBy('type')
+                    ->get()
+                    ->pluck('total_amount', 'type');
 
-            $pdf = Pdf::loadView('pdf.agent_bill', ['agent' => $data]);
+                $old_balance =
+                    ($old_account['sell'] ?? 0)
+                    - (
+                        ($old_account['commission'] ?? 0)
+                        + ($old_account['claim'] ?? 0)
+                        + ($old_account['posting'] ?? 0)
+                    );
 
-            $pdfFileName = 'bill_agent_'.$user->name.'_'.now()->format('Y-m-d-H-i-s').'.pdf';
-            $pdfPath = storage_path("app/temp/$pdfFileName");
+            } else {
+                $old_account = AgentAccount::where('user_id', $request->agent_id)
+                    ->whereBetween('created_at', [
+                        Carbon::parse($previous_posting->created_at),
+                        Carbon::parse($request->from)->startOfDay(),
+                    ])
+                    ->select('type', DB::raw('SUM(amount) as total_amount'))
+                    ->groupBy('type')
+                    ->get()
+                    ->pluck('total_amount', 'type');
 
-            $pdf->save($pdfPath);
-            $zip->addFile($pdfPath, $pdfFileName);
+                $old_balance =
+                    (($old_account['sell'] ?? 0) + $previous_posting->old_due)
+                    - (
+                        ($old_account['commission'] ?? 0)
+                        + ($old_account['claim'] ?? 0)
+                        + ($old_account['posting'] ?? 0)
+                    );
+            }
 
-            $data = [
-                'user_id' => $user->id,
-                'type'    => 'posting',
-                'created_at' => Carbon::parse($request->to)->endOfDay(),
-                'amount'  => 0,
-                'description' => 'Bill Generated',
-            ];
+            $total_cancel = Order::where('user_id', $request->agent_id)
+                            ->whereIn('status', ['Cancel', 'Cancel-Request'])
+                            ->whereBetween('created_at', [
+                                Carbon::parse($request->from)->startOfDay(),
+                                Carbon::parse($request->to)->endOfDay(),
+                            ])
+                            ->sum('total_price');
 
-            $this->agentAccountService->store($data);
+            if($account){
+                $userDetails = User::find($request->agent_id);
+                $agent = [
+                    'agent_name'       => $userDetails->name,
+                    'agent_address'    => $userDetails->address,
+                    'total_sell'       => !empty($account['sell']) ? $account['sell'] : 0,
+                    'total_commission' => !empty($account['commission']) ? $account['commission'] : 0,
+                    'total_win'        => !empty($account['win']) ? $account['win'] : 0,
+                    'total_claim'      => !empty($account['claim']) ? $account['claim'] : 0,
+                    'total_posting'    => !empty($account['posting']) ? $account['posting'] : 0,
+                    'total_cancel'     => $total_cancel,
+                    'net_amount'       =>
+                        ($account['sell'] ?? 0)
+                        - (
+                            ($account['commission'] ?? 0)
+                            + ($account['claim'] ?? 0)
+                            + ($account['posting'] ?? 0)
+                        ),
+                    'old_balance'      => $old_balance,
+                    'total_due'        => (($account['sell'] ?? 0) + $old_balance)
+                                            - (
+                                                ($account['commission'] ?? 0)
+                                                + ($account['claim'] ?? 0)
+                                                + ($account['posting'] ?? 0)
+                                            )
+                ];
+            }
         }
 
-        $zip->close();
-
-        AgentBill::create([
-            'from_date' => $request->from ?? AgentAccount::first()?->created_at,
-            'to_date' => $request->to,
-            'zip' => 'uploads/agent_bill/'.$zipFileName,
-            'created_by' => Auth::id()
-        ]);
-
-        return response()->download($zipPath, $zipFileName, [
-            'Content-Type' => 'application/zip'
-        ]);
-    }
-
-    public function bills(){
-        $bills = AgentBill::with('creator')->latest()->paginate(10);
-        return Inertia::render('Accounts/Bills', [
-            'bills' => $bills
+        return Inertia::render('Accounts/Summery', [
+            'agents' => $agents_list,
+            'agent' => $agent,
+            'from_date' => $request->from ? Carbon::parse($request->from)->format('Y-m-d') : null,
+            'to_date' => $request->to ? Carbon::parse($request->to)->format('Y-m-d') : null,
         ]);
     }
 }

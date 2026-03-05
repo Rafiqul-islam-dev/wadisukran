@@ -23,8 +23,6 @@ const { filters, products, product_prizes, product, summary, orders } = definePr
     product: Array<any>;
 }>();
 
-console.log(product_prizes)
-
 const filter = ref({
     user_id: filters?.user_id ?? '',
     date_from: filters?.date_from ?? '',

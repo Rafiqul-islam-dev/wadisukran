@@ -48,21 +48,6 @@ class AccountsLedgerController extends Controller
             'payment_type' => 'required|numeric|in:1,2'
         ]);
 
-        $bill_generation = AgentAccount::where('type', 'posting')->where('type', 'posting')->where('user_id', $request->agent)->where('amount', 0)->first();
-        $last_posting = AgentAccount::where('type', 'posting')->latest()->first();
-        if ($last_posting &&
-            Carbon::parse($request->date)->gt(
-                Carbon::parse($last_posting->created_at)->format('Y-m-d')
-            )
-        ) {
-            return back()->withErrors([
-                'error' => 'Invalid date selected. Please check the date.'
-            ]);
-        }
-        if(!$bill_generation){
-            return back()->withErrors(['error' => 'No bill generated on this day. Please generate bill first. or check the day.']);
-        }
-
         $data = [
             'user_id' => $request->agent,
             'type'    => 'posting',

@@ -55,13 +55,7 @@ const mainNavItems: NavItem[] = [
                 href: '/accounts/ledger',
                 icon: Book,
                 permission: 'show accounts ledger'
-            },
-            {
-                title: 'Bills',
-                href: '/accounts/bills',
-                icon: Download,
-                permission: 'show accounts bills'
-            },
+            }
         ],
         permission: 'show agent list'
     },
