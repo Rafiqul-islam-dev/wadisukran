@@ -50,7 +50,7 @@ class ProductController extends Controller
             'category_id' => $request->category_id,
             'price' => $request->price,
             'draw_type' => ($request->draw_type === 'regular' ? $request->regular_type : $request->draw_type),
-            'draw_time' => $request->draw_time,
+            'draw_time' => $request->draw_time ? json_encode($request->draw_time) : null,
             'pick_number' => $request->pick_number,
             'type_number' => $request->type_number,
             'image' => $request->image,
