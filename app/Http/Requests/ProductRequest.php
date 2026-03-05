@@ -20,7 +20,7 @@ class ProductRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'draw_type' => 'required|in:once,regular',
             'regular_type' => 'nullable|in:hourly,daily|required_if:draw_type,regular',
-            'draw_time' => request()->draw_type !== 'once' ? 'nullable' :'required|array',
+            'draw_time' => request()->draw_type == 'once' ? 'nullable' :'required|array',
             'draw_time.*' => 'date_format:H:i',
             'pick_number' => 'required|integer|min:1|max:10',
             'type_number' => 'required|integer|min:1|max:100',
