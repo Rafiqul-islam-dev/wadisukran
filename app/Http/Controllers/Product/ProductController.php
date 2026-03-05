@@ -45,7 +45,6 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        return $request->all();
         $data = [
             'title' => $request->title,
             'category_id' => $request->category_id,

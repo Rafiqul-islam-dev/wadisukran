@@ -31,7 +31,7 @@ const form = useForm({
     title: '',
     category_id: '',
     price: '',
-    draw_time: [''],
+    draw_time: [],
     draw_type: 'regular',
     regular_type: 'daily',
     image: null,
@@ -53,7 +53,7 @@ const editProduct = (product) => {
     form.category_id = product.category_id;
     form.price = product.price;
     form.draw_type = product.draw_type === 'once' ? 'once' : 'regular';
-    form.draw_time = product.draw_time || [''];
+    form.draw_time = product.draw_time || [];
     form.regular_type = product.draw_type === 'hourly' || product.draw_type === 'daily' ? product.draw_type : '';
     form.image = null;
     imagePreview.value = product.image_url;
