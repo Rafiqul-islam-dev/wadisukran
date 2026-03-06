@@ -354,7 +354,7 @@ class CheckWinService
         $totalWonAmount = $check_summery['total_prize'];
 
         Claim::create([
-            'user_id' => $invoice->user_id,
+            'user_id' => Auth::id(),
             'win_id' => $win->id,
             'invoice_no' => $invoice->invoice_no,
             'amount' => $totalWonAmount,
@@ -364,7 +364,7 @@ class CheckWinService
         $invoice->is_claimed = 1;
         $accountService = new AgentAccountService();
         $accountService->store([
-            'user_id' => $invoice->user_id,
+            'user_id' => Auth::id(),
             'type' => 'claim',
             'amount' => $totalWonAmount
         ]);

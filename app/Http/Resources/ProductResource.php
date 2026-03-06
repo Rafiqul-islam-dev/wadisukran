@@ -38,8 +38,12 @@ class ProductResource extends JsonResource
             $next_time = null;
 
             foreach ($draw_times as $time) {
-                $timeCarbon = Carbon::createFromFormat('H:i', $time)
-                    ->setDate($now->year, $now->month, $now->day);
+                if ($time === '00:00') {
+                    $timeCarbon = Carbon::today()->endOfDay();
+                } else {
+                    $timeCarbon = Carbon::createFromFormat('H:i', $time)
+                        ->setDate($now->year, $now->month, $now->day);
+                }
 
                 if ($timeCarbon->greaterThan($now)) {
                     if (!$next_time || $timeCarbon->lessThan($next_time)) {

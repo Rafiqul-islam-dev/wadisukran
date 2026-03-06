@@ -75,7 +75,7 @@ function goTo(url) {
 }
 
 const submitForm = () => {
-    form.post(route('accounts.ledger-store'),{
+    form.post(route('accounts.ledger-store'), {
         onSuccess: () => {
             toast.success('Payment added successfully');
             closeModal();
@@ -97,15 +97,8 @@ const submitForm = () => {
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Agent <span class="text-red-500">*</span>
                         </label>
-                        <Multiselect
-                            v-model="form.agent"
-                            :options="agents"
-                            valueProp="id"
-                            label="name"
-                            placeholder="Agent..."
-                            :searchable="true"
-                            class="w-full"
-                        />
+                        <Multiselect v-model="form.agent" :options="agents" valueProp="id" label="name"
+                            placeholder="Agent..." :searchable="true" class="w-full" />
 
                         <p v-if="form.errors.agent" class="text-red-600 text-sm">
                             {{ form.errors.agent }}
@@ -133,7 +126,7 @@ const submitForm = () => {
                 <div class="flex items-center flex-col">
                     <button v-if="can('create payment')" @click="openModal()"
                         class="cursor-pointer px-6 py-2 bg-gradient-to-r whitespace-nowrap from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-1">
-                         <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -142,20 +135,24 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="border rounded-lg overflow-y-auto">
-                <table class="w-full">
+                <button v-print="'#printDiv'"
+                    class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                    Print
+                </button>
+                <table class="w-full" id="printDiv">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-left">
                                 Vendor
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                               Amount
+                                Amount
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                               Payment Type
+                                Payment Type
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                               Description
+                                Description
                             </th>
                             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
                                 Date
@@ -167,16 +164,18 @@ const submitForm = () => {
                             class="hover:bg-orange-50 transition-colors duration-200">
                             <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received' : 'Agent Payment Received From Company' }}</td>
+                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received'
+                                : 'Agent Payment Received From Company' }}</td>
                             <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) : "N/A" }}</td>
+                            <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) :
+                                "N/A" }}</td>
                         </tr>
                     </tbody>
                 </table>
-                 <div class="flex justify-end py-2 px-6">
+                <div class="flex justify-end py-2 px-6">
                     <nav class="flex items-center space-x-1">
-                        <button v-for="(link, i) in ledgers.links" :key="i" @click="goTo(link.url)"
-                            v-html="link.label" :disabled="!link.url" :class="[
+                        <button v-for="(link, i) in ledgers.links" :key="i" @click="goTo(link.url)" v-html="link.label"
+                            :disabled="!link.url" :class="[
                                 'px-3 py-1 rounded border transition-all duration-200',
                                 link.active ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-700 hover:bg-orange-100 border-gray-300',
                                 !link.url ? 'opacity-50 cursor-not-allowed' : ''
@@ -217,19 +216,12 @@ const submitForm = () => {
                         <!-- Modal Body -->
                         <form @submit.prevent="submitForm" class="p-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                               <div>
+                                <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">
                                         Agent <span class="text-red-500">*</span>
                                     </label>
-                                    <Multiselect
-                                        v-model="form.agent"
-                                        :options="agents"
-                                        valueProp="id"
-                                        label="name"
-                                        placeholder="Search Agent..."
-                                        :searchable="true"
-                                        class="w-full"
-                                    />
+                                    <Multiselect v-model="form.agent" :options="agents" valueProp="id" label="name"
+                                        placeholder="Search Agent..." :searchable="true" class="w-full" />
 
                                     <p v-if="form.errors.agent" class="text-red-600 text-sm">
                                         {{ form.errors.agent }}
@@ -239,25 +231,25 @@ const submitForm = () => {
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Date
                                         <span class="text-red-500">*</span></label>
                                     <input v-model="form.date" type="date" placeholder="Write date here"
-                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
-                                         />
+                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300" />
                                     <p v-if="form.errors.date" class="text-red-600 text-sm">
                                         {{ form.errors.date }}
                                     </p>
                                 </div>
-                                 <div>
+                                <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Amount
                                         <span class="text-red-500">*</span></label>
                                     <input v-model="form.amount" type="text" placeholder="Write amount here"
-                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
-                                         />
+                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300" />
                                     <p v-if="form.errors.amount" class="text-red-600 text-sm">
                                         {{ form.errors.amount }}
                                     </p>
                                 </div>
-                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Type <span class="text-red-500">*</span></label>
-                                    <select name="" v-model="form.payment_type" id="" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Payment Type <span
+                                            class="text-red-500">*</span></label>
+                                    <select name="" v-model="form.payment_type" id=""
+                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300">
                                         <option value="">Select Payment Type</option>
                                         <option value="1">Agent Payment Received</option>
                                         <option value="2">Agent Payment Received From Company</option>
@@ -268,9 +260,10 @@ const submitForm = () => {
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-1 gap-3 mt-2">
-                                 <div>
+                                <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-                                        <textarea placeholder="Write description here" name="" v-model="form.description" class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"></textarea>
+                                    <textarea placeholder="Write description here" name="" v-model="form.description"
+                                        class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"></textarea>
                                     <p v-if="form.errors.description" class="text-red-600 text-sm">
                                         {{ form.errors.description }}
                                     </p>
