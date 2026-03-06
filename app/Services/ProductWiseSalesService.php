@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Http\Resources\DailySummeryResource;
 use App\Models\Order;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class ProductWiseSalesService
@@ -17,7 +18,7 @@ class ProductWiseSalesService
                 $q->where('orders.user_id', $user->id);
             })
             ->when($from && $to, function ($q) use ($from, $to) {
-                $q->whereBetween('orders.created_at', [$from, $to]);
+                $q->whereBetween('orders.created_at', [Carbon::parse($from)->startOfDay(), Carbon::parse($to)->endOfDay()]);
             })
             ->where('orders.status', 'Printed')
             ->leftJoin('products', 'products.id', '=', 'orders.product_id')
