@@ -74,7 +74,7 @@ const handleSearch = () => {
         preserveScroll: true,
         replace: true,
         preserveState: true,
-        only: ['agent']
+        only: ['agent', 'from_date', 'to_date']
     });
 }
 
@@ -144,7 +144,7 @@ const handleSearch = () => {
                             <tr>
                                 <td class="border px-3 py-2">Total Sale</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ Number(agent.total_sell) - Number(agent.total_cancel) }}
+                                    {{ Number(agent.total_sell) + Number(agent.total_cancel) }}
                                 </td>
                             </tr>
                             <tr>

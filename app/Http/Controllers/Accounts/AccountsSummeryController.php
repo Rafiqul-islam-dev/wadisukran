@@ -65,13 +65,12 @@ class AccountsSummeryController extends Controller
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
-                        + ($old_account['posting'] ?? 0)
                     );
 
             } else {
                 $old_account = AgentAccount::where('user_id', $request->agent_id)
                     ->whereBetween('created_at', [
-                        Carbon::parse($previous_posting->created_at),
+                        $previous_posting->created_at,
                         Carbon::parse($request->from)->startOfDay(),
                     ])
                     ->select('type', DB::raw('SUM(amount) as total_amount'))
@@ -84,7 +83,6 @@ class AccountsSummeryController extends Controller
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
-                        + ($old_account['posting'] ?? 0)
                     );
             }
 

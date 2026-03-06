@@ -12,18 +12,19 @@ class AgentAccountService
 
     public function store(array $data)
     {
+        $old_balance = 0;
+
         if ($data['type'] === 'posting') {
             $previous_posting = AgentAccount::where('user_id', $data['user_id'])
                 ->where('type', 'posting')
-                ->where('created_at', '<', Carbon::parse($data['created_at'])->startOfDay())
+                ->where('created_at', '<=', Carbon::parse($data['created_at'])->endOfDay())
                 ->latest()
                 ->first();
 
-            $old_balance = 0;
 
             if (!$previous_posting) {
                 $old_account = AgentAccount::where('user_id', $data['user_id'])
-                    ->where('created_at', '<', Carbon::parse($data['created_at'])->startOfDay())
+                    ->where('created_at', '<=', Carbon::parse($data['created_at'])->endOfDay())
                     ->select('type', DB::raw('SUM(amount) as total_amount'))
                     ->groupBy('type')
                     ->get()
@@ -39,8 +40,8 @@ class AgentAccountService
             } else {
                 $old_account = AgentAccount::where('user_id', $data['user_id'])
                     ->whereBetween('created_at', [
-                        Carbon::parse($previous_posting->created_at)->endOfDay(),
-                        Carbon::parse($data['created_at'])->startOfDay(),
+                        $previous_posting->created_at,
+                        Carbon::parse($data['created_at'])->endOfDay(),
                     ])
                     ->select('type', DB::raw('SUM(amount) as total_amount'))
                     ->groupBy('type')
@@ -52,7 +53,6 @@ class AgentAccountService
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
-                        + ($old_account['posting'] ?? 0)
                     );
             }
         }
@@ -60,7 +60,7 @@ class AgentAccountService
             'user_id' => $data['user_id'],
             'type' => $data['type'],
             'amount' => $data['amount'],
-            'old_due' => $old_balance,
+            'old_due' => $old_balance - $data['amount'],
             'description' => $data['description'] ?? null,
             'payment_type' => $data['payment_type'] ?? null,
             'order_id' => $data['order_id'] ?? null,
