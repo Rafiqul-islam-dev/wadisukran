@@ -36,8 +36,7 @@ const showModal = ref(false);
 const selectedUser = ref<any>(null);
 const errors = ref<Record<string, string>>({});
 
-const openModal = (user: any) => {
-    selectedUser.value = user;
+const openModal = () => {
     showModal.value = true;
 };
 
@@ -120,6 +119,10 @@ const handleSearch = () => {
             </div>
             <div  class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-5 m-auto">
                 <div v-if="agent" class="overflow-x-auto text-center p-5">
+                    <button @click="openModal"
+                    class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                        Print
+                    </button>
                     <!-- Header -->
                     <div class="text-center mb-4">
                         <h2 class="text-xl font-bold">Account Statement</h2>
@@ -133,7 +136,7 @@ const handleSearch = () => {
                     </div>
 
                     <!-- Statement Table -->
-                    <table class="w-full border">
+                    <table class="w-full border text-left">
                         <thead class="bg-gray-100">
                             <tr>
                                 <th class="border px-3 py-2 text-left">Description</th>
@@ -142,15 +145,21 @@ const handleSearch = () => {
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="border px-3 py-2">Total Sale</td>
+                                <td class="border px-3 py-2 text-left">Total Sale</td>
                                 <td class="border px-3 py-2 text-left">
                                     {{ Number(agent.total_sell) + Number(agent.total_cancel) }}
                                 </td>
                             </tr>
                             <tr>
-                                <td class="border px-3 py-2">Total Cancel</td>
+                                <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Total Cancel</td>
                                 <td class="border px-3 py-2 text-left">
-                                    - {{ agent.total_cancel }}
+                                    {{ agent.total_cancel }}
+                                </td>
+                            </tr>
+                             <tr>
+                                <td class="border px-3 py-2">Net Sell</td>
+                                <td class="border px-3 py-2 text-left">
+                                     {{ agent.total_sell }}
                                 </td>
                             </tr>
                             <tr>
@@ -244,87 +253,94 @@ const handleSearch = () => {
                     </div>
                 </div>
 
-                <!-- Header -->
                 <div class="text-center mb-4">
                     <h2 class="text-xl font-bold">Account Statement</h2>
                     <p class="text-sm text-gray-600">
-                        Statement Date: <strong>{{ from_date }}</strong> to <strong v-if="!form.to">{{ formatNow }}</strong> <strong v-else>{{ form.to }}</strong>
+                        Statement Date: <strong>{{ from_date }}</strong> to <strong > {{ to_date }} </strong>
                     </p>
                 </div>
-                <div class="mb-4 text-sm">
-                    <p><strong>Vendor Name:</strong> {{ selectedUser?.name }}</p>
-                    <p><strong>Vendor Address:</strong> {{ selectedUser?.address }}</p>
+                <div class="mb-4">
+                    <p><strong>Vendor Name:</strong> {{ agent.agent_name }}</p>
+                    <p><strong>Vendor Address:</strong> {{ agent.agent_address }}</p>
                 </div>
 
                 <!-- Statement Table -->
-                <table class="w-full border text-sm">
+                <table class="w-full border text-left">
                     <thead class="bg-gray-100">
                         <tr>
                             <th class="border px-3 py-2 text-left">Description</th>
-                            <th class="border px-3 py-2 text-right">Amount</th>
+                            <th class="border px-3 py-2 text-left">Amount</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="border px-3 py-2">Total Sale</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{ selectedUser?.total_sell }}
+                            <td class="border px-3 py-2 text-left">Total Sale</td>
+                            <td class="border px-3 py-2 text-left">
+                                {{ Number(agent.total_sell) + Number(agent.total_cancel) }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Total Cancel</td>
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.total_cancel }}
+                            </td>
+                        </tr>
+                            <tr>
+                            <td class="border px-3 py-2">Net Sell</td>
+                            <td class="border px-3 py-2 text-left">
+                                    {{ agent.total_sell }}
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Commission</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{ selectedUser?.total_commission }}
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.total_commission }}
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Ammount paid for
                                 raffle redeem directly by agent</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{ selectedUser?.total_claim }}
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.total_claim }}
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Agent payment received
                             </td>
-                            <td class="border px-3 py-2 text-right">
-                                0
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.total_posting }}
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Add:</strong> Prize reimbursement
                                 paid to agent </td>
-                            <td class="border px-3 py-2 text-right">
+                            <td class="border px-3 py-2 text-left">
                                 0
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Other incentives </td>
-                            <td class="border px-3 py-2 text-right">
+                            <td class="border px-3 py-2 text-left">
                                 0
                             </td>
                         </tr>
                         <!-- Net Calculation -->
                         <tr class="bg-gray-100 font-bold">
                             <td class="border px-3 py-2">Net Amount</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{
-                                    Number(selectedUser?.total_sell) - (Number(selectedUser?.total_commission) +
-                                        Number(selectedUser?.total_claim))
-
-                                }}
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.net_amount }}
                             </td>
                         </tr>
 
                         <tr>
                             <td class="border px-3 py-2">Old Balance Pending</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{ selectedUser?.old_due }}
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.old_balance }}
                             </td>
                         </tr>
                         <tr>
                             <td class="border px-3 py-2">Other charges (If Any)</td>
-                            <td class="border px-3 py-2 text-right">
+                            <td class="border px-3 py-2 text-left">
                                 0
                             </td>
                         </tr>
@@ -332,41 +348,32 @@ const handleSearch = () => {
                         <!-- Net Calculation -->
                         <tr class="bg-gray-100 font-bold">
                             <td class="border px-3 py-2">Total Due As per Statement</td>
-                            <td class="border px-3 py-2 text-right">
-                                {{
-                                    (Number(selectedUser?.total_sell) + Number(selectedUser?.old_due)) -
-                                    (Number(selectedUser?.total_commission) +
-                                        Number(selectedUser?.total_claim))
-                                }}
+                            <td class="border px-3 py-2 text-left">
+                                {{ agent.total_due }}
                             </td>
                         </tr>
                     </tbody>
                 </table>
-
-                <!-- Footer Section -->
-                <div class="mt-6 text-sm">
-                    <h3 class="font-semibold mb-2">To be filled by Representative</h3>
-
-                    <table class="w-full border text-sm">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="border px-3 py-2">Date of Collection</th>
-                                <th class="border px-3 py-2">Cash Received</th>
-                                <th class="border px-3 py-2">No Of Tickets Redeemed</th>
-                                <th class="border px-3 py-2">Total Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="border px-3 py-4"></td>
-                                <td class="border px-3 py-4"></td>
-                                <td class="border px-3 py-4"></td>
-                                <td class="border px-3 py-4"></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- <div class="hidden-print m-auto w-full text-center mt-3">
+                <p class="px-1 py-1 mt-4">To be filled by {{ company_setting.name }} Representative</p>
+                <table class="w-full border text-left">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border px-3 py-2 text-left">Date Of Collection</th>
+                            <th class="border px-3 py-2 text-left">Cash Received</th>
+                            <th class="border px-3 py-2 text-left">No Of Tickets Redeemed</th>
+                            <th class="border px-3 py-2 text-left">Total Value of Redeemed Tickets</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border px-3 py-2 text-left">Balance Due: <strong>{{ agent.total_due > 0 ? "Due" : "Payable" }}</strong></td>
+                            <td class="border px-3 py-2 text-left"></td>
+                            <td class="border px-3 py-2 text-left"></td>
+                            <td class="border px-3 py-2 text-left"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="hidden-print m-auto w-full text-center mt-3">
                     <button v-print="'#printDiv'"
                         class="px-4 py-2 bg-blue-600 text-white rounded-lg text-center m-auto hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,7 +383,7 @@ const handleSearch = () => {
                         </svg>
                         <span>Print</span>
                     </button>
-                </div> -->
+                </div>
             </div>
         </div>
 

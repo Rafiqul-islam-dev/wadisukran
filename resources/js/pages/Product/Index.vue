@@ -76,6 +76,8 @@ function openModal() {
 function closeModal() {
     showModal.value = false;
     imagePreview.value = null;
+    isEditing.value = false;
+    editingProduct.value = null;
     form.reset();
 }
 

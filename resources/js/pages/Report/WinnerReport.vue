@@ -104,8 +104,14 @@ const claimWin = async () => {
         });
 
         if (response.data) {
-            isClaiming.value = true;
+            isClaiming.value = false;
             isClaimed.value = true;
+            form.get(route('reports.winner-report'),{
+                preserveState: true,
+                preserveScroll: false,
+                showProgress: false,
+                only: ['wins']
+            })
             toast.success(response.data.message);
         }
     } catch (error) {
