@@ -16,16 +16,18 @@ use Illuminate\Validation\Rule;
 use App\Http\Resources\ProductOrderResource;
 use App\Services\AgentAccountService;
 use App\Services\OrderService;
+use App\Services\CheckWinService;
 
 class OrderController extends Controller
 {
     protected $orderService;
+    protected $checkWinService;
 
-    public function __construct(OrderService $orderService)
+    public function __construct(OrderService $orderService, CheckWinService $checkWinService)
     {
         $this->orderService = $orderService;
+        $this->checkWinService = $checkWinService;
     }
-
 
     public function orderStore(Request $request)
     {
@@ -238,6 +240,14 @@ class OrderController extends Controller
     public function orderUpdate(Request $request, $id)
     {
         $order = Order::find($id);
+
+        $checkTime = $this->checkWinService->checkAndClaimAvailability($order);
+        if ($checkTime) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sorry, you cannot change status now draw time is over.'
+            ], 200);
+        }
 
         if (!$order) {
             return response()->json([
