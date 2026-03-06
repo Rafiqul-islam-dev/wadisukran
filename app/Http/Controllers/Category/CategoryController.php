@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Category;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use App\Services\CategoryService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,6 +80,12 @@ class CategoryController extends Controller
             'description' => $request->description,
             'draw_type' => $request->draw_type
         ]);
+
+        $products = Product::where('category_id', $id)->get();
+        foreach($products as $product){
+            $product->draw_type = $request->draw_type;
+            $product->save();
+        }
 
         return back();
     }
