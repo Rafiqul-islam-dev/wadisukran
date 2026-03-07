@@ -3,10 +3,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import dayjs from 'dayjs';
 import Multiselect from '@vueform/multiselect';
 import { toast } from 'vue-sonner';
-import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -16,7 +14,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const { company_setting } = usePage().props;
-const formatNow = dayjs().format('YYYY-MM-DD');
 const { agent, agents } = defineProps<{
     agent: Array<any>;
     agents: Array<any>;

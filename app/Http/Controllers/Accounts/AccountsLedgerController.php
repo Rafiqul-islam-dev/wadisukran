@@ -33,9 +33,15 @@ class AccountsLedgerController extends Controller
                 ->with('user')
                 ->latest()
                 ->paginate(10);
+
+        $agent = null;
+        if($request->agent){
+            $agent = User::find($request->agent);
+        }
         return Inertia::render('Accounts/Ledger', [
             'agents' => $agents,
-            'ledgers' => $ledgers
+            'ledgers' => $ledgers,
+            'agent' => $agent
         ]);
     }
 

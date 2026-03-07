@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { can } from '@/helpers/permissions';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import Multiselect from '@vueform/multiselect'
 import { toast } from 'vue-sonner';
@@ -15,9 +15,11 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/accounts/ledger',
     },
 ];
+const { company_setting } = usePage().props;
 
-const { agents, ledgers } = defineProps<{
+const { agents, ledgers, agent } = defineProps<{
     agents: Array<any>;
+    agent: Object;
     ledgers: Array<any>;
 }>();
 const showModal = ref(false);
@@ -139,39 +141,62 @@ const submitForm = () => {
                     class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
                     Print
                 </button>
-                <table class="w-full" id="printDiv">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-left">
-                                Vendor
-                            </th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                                Amount
-                            </th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                                Payment Type
-                            </th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                                Description
-                            </th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
-                                Date
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y">
-                        <tr v-for="(ledger, index) in ledgers.data" :key="ledger.id"
-                            class="hover:bg-orange-50 transition-colors duration-200">
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received'
-                                : 'Agent Payment Received From Company' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
-                            <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) :
-                                "N/A" }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="printDiv">
+                    <div class="hidden print:block">
+                        <div class="mb-4 text-sm flex gap-5">
+                            <div class="image-fit ">
+                                <img :src="company_setting?.logo_url" class="h-26 w-26 object-contain" alt="">
+                            </div>
+                            <div>
+                                <p><strong>{{ company_setting?.name }}</strong></p>
+                                <p><strong>Address:</strong> {{ company_setting?.address }}</p>
+                                <p><strong>Email:</strong> {{ company_setting?.email }}</p>
+                                <p><strong>TRN:</strong> {{ company_setting?.trn_no }}</p>
+                                <p v-if="agent?.name"><strong>Agent:</strong> {{ agent?.name }}</p>
+                            </div>
+                        </div>
+        
+                        <div class="text-center mb-4">
+                            <h2 class="text-xl font-bold">Account Statement</h2>
+                            <p class="text-sm text-gray-600">
+                                Statement Date: <strong>{{ form.from_date }}</strong> to <strong > {{ form.to_date }} </strong>
+                            </p>
+                        </div>
+                    </div>
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-left">
+                                    Vendor
+                                </th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                                    Amount
+                                </th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                                    Payment Type
+                                </th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                                    Description
+                                </th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
+                                    Date
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <tr v-for="(ledger, index) in ledgers.data" :key="ledger.id"
+                                class="hover:bg-orange-50 transition-colors duration-200">
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received'
+                                    : 'Agent Payment Received From Company' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) :
+                                    "N/A" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>  
                 <div class="flex justify-end py-2 px-6">
                     <nav class="flex items-center space-x-1">
                         <button v-for="(link, i) in ledgers.links" :key="i" @click="goTo(link.url)" v-html="link.label"
