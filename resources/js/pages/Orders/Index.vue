@@ -385,8 +385,10 @@ function updateStatus() {
 
                                     <span v-else-if="order.status === 'Cancel'"
                                         class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
+                                    <span v-else-if="order.status === 'Cancel-Request'"
+                                        class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel Request</span>
 
-                                    <div v-if="can('order status change') && order.status !== 'Printed'"  class="cursor-pointer" @click="openStatusModal(order)">
+                                    <div v-if="can('order status change') && order.status !== 'Cancel-Request'"  class="cursor-pointer" @click="openStatusModal(order)">
                                         <Edit class="text-teal-500" />
                                     </div>
                                 </td>

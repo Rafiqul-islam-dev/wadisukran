@@ -14,7 +14,7 @@ export default defineConfigWithVueTs(
             '@typescript-eslint/no-explicit-any': 'off', // Disabling rule for explicit 'any' type
             '@typescript-eslint/no-unused-vars': 'off', // Disabling unused vars rule for TypeScript
             'vue/no-unused-vars': 'off', // Disabling unused vars rule for Vue files
-            'vue/require-v-for-key': 'off', // Disabling missing `v-bind:key` directive rule
+            'vue/require-v-for-key': 'off', // Disabling missing v-bind:key directive rule
             'vue/valid-attribute-name': 'off', // Disabling invalid attribute name rule
         },
     },
