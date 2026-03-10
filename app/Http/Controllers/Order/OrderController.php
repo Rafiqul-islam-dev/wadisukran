@@ -196,7 +196,7 @@ class OrderController extends Controller
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
-                    $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers, 'vendor_name' => $order->order->user->name];
+                    $data = ['id' => $order->id,'created_at' => $order->created_at?->format('d M, Y H:i A'), 'product_name' => $order->order?->product?->title, 'invoice_no'=> $order->order?->invoice_no, 'selected_numbers' => $order->selected_numbers, 'types' => $order->selected_play_types, 'vendor_name' => $order->order?->user?->name, 'vendor_address' => $order->order?->user?->address];
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
@@ -360,8 +360,8 @@ class OrderController extends Controller
             ]),
             'product_prizes' => $product_prizes,
             'product' => $product,
-            'summary' => $summery,
-            'orders' => $orders
+            'summary' => collect($summery)->sortByDesc('total_amount')->all(),
+            'orders' => $orders?->sortByDesc('win_amount')->values()
         ]);
     }
 
