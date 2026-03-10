@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\CompannySetting;
 use App\Services\CheckWinService;
 use Inertia\Inertia;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class WinnerReportAgentController extends Controller
 {
@@ -19,19 +22,72 @@ class WinnerReportAgentController extends Controller
     {
         $this->checkWinService = $checkWinService;
     }
-public function winnerReportAgent(Request $request)
-{
-    $agents = User::where('user_type', 'agent')
-        ->where('status', 'active')
-        ->select('id', 'name')
-        ->get();
+    public function winnerReportAgent(Request $request)
+    {
+        $agents = User::where('user_type', 'agent')
+            ->where('status', 'active')
+            ->select('id', 'name')
+            ->get();
 
-    $products = Product::active()->get();
+        $products = Product::active()->get();
 
-    $hasSearch = $request->filled('agent') || $request->filled('from_date') || $request->filled('to_date');
+        $hasSearch = $request->filled('agent') || $request->filled('from_date') || $request->filled('to_date');
 
-    if (!$hasSearch) {
-        $wins = new LengthAwarePaginator([], 0, 8, 1, [
+        if (!$hasSearch) {
+            $wins = new LengthAwarePaginator([], 0, 8, 1, [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]);
+
+            return Inertia::render('Report/WinnerReportAgent', [
+                'wins' => $wins,
+                'agents' => $agents,
+                'products' => $products,
+                'filters' => ['agent' => '', 'from_date' => '', 'to_date' => ''],
+            ]);
+        }
+
+        $request->validate([
+            'agent'     => ['required', 'integer', 'exists:users,id'],
+            'from_date' => ['nullable', 'date'],
+            'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
+        ]);
+
+        $q = Order::query()
+            ->where('is_winner', 1)
+            ->where('user_id', $request->agent)
+            ->with(['user', 'product', 'user.agent', 'tickets'])
+            ->latest();
+
+        if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
+        if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
+
+        $orders = $q->get();
+        $totalPrize = 0.0;
+        $claimedPrize = 0.0;
+
+        foreach ($orders as $o) {
+            $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($o->invoice_no);
+            $prize = (float)($checkWin['total_prize'] ?? ($checkWin->total_prize ?? 0));
+
+            $totalPrize += $prize;
+
+            if ((int)$o->is_claimed === 1) {
+                $claimedPrize += $prize;
+            }
+        }
+
+        $user = $orders->first()?->user ?? User::select('id', 'name', 'address')->find($request->agent);
+
+        $row = (object)[
+            'user_id' => (int)$request->agent,
+            'user' => $user,
+            'total_prize' => $totalPrize,
+            'claimed_prize' => $claimedPrize,
+            'unclaimed_prize' => $totalPrize - $claimedPrize,
+        ];
+
+        $wins = new LengthAwarePaginator([$row], 1, 8, 1, [
             'path' => $request->url(),
             'query' => $request->query(),
         ]);
@@ -40,98 +96,100 @@ public function winnerReportAgent(Request $request)
             'wins' => $wins,
             'agents' => $agents,
             'products' => $products,
-            'filters' => ['agent' => '', 'from_date' => '', 'to_date' => ''],
+            'filters' => [
+                'agent' => $request->agent,
+                'from_date' => $request->from_date,
+                'to_date' => $request->to_date,
+            ]
         ]);
     }
 
-    $request->validate([
-        'agent'     => ['required', 'integer', 'exists:users,id'],
-        'from_date' => ['nullable', 'date'],
-        'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
-    ]);
+    public function agentReportAgent(Request $request)
+    {
+        $request->validate([
+            'agent'     => ['required', 'integer', 'exists:users,id'],
+            'from_date' => ['nullable', 'date'],
+            'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
+        ]);
 
-    $q = Order::query()
-        ->where('is_winner', 1)
-        ->where('user_id', $request->agent)
-        ->with(['user', 'product', 'user.agent', 'tickets'])
-        ->latest();
+        $q = Order::query()
+            ->where('is_winner', 1)
+            ->where('user_id', $request->agent)
+            ->with(['user', 'product', 'user.agent', 'tickets'])
+            ->latest();
 
-    if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
-    if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
+        if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
+        if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
 
-    $orders = $q->get();
-    $totalPrize = 0.0;
-    $claimedPrize = 0.0;
+        $orders = $q->get();
+        $totalPrize = 0.0;
+        $claimedPrize = 0.0;
 
-    foreach ($orders as $o) {
-        $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($o->invoice_no);
-        $prize = (float)($checkWin['total_prize'] ?? ($checkWin->total_prize ?? 0));
+        foreach ($orders as $o) {
+            $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($o->invoice_no);
+            $prize = (float)($checkWin['total_prize'] ?? ($checkWin->total_prize ?? 0));
 
-        $totalPrize += $prize;
+            $totalPrize += $prize;
 
-        if ((int)$o->is_claimed === 1) {
-            $claimedPrize += $prize;
+            if ((int)$o->is_claimed === 1) {
+                $claimedPrize += $prize;
+            }
         }
+
+        $user = $orders->first()?->user ?? User::select('id', 'name', 'address')->find($request->agent);
+
+        $row = (object)[
+            'user_id' => (int)$request->agent,
+            'user' => $user,
+            'total_prize' => $totalPrize,
+            'claimed_prize' => $claimedPrize,
+            'unclaimed_prize' => $totalPrize - $claimedPrize,
+        ];
+
+        $wins = new LengthAwarePaginator([$row], 1, 8, 1, [
+            'path' => $request->url(),
+            'query' => $request->query(),
+        ]);
+
+
+
+        $pdf = Pdf::loadView('pdf.agent_report', [
+            'wins' => $wins
+        ]);
+
+        return $pdf->download('agent_report_' . ($agent->name ?? 'report') . '_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 
-    $user = $orders->first()?->user ?? User::select('id','name','address')->find($request->agent);
+    public function winnerReportAgentDetails(Request $request)
+    {
+        $request->validate([
+            'agent'     => ['required', 'integer', 'exists:users,id'],
+            'from_date' => ['nullable', 'date'],
+            'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
+            'claimed'   => ['nullable', 'in:0,1'],
+        ]);
 
-    $row = (object)[
-        'user_id' => (int)$request->agent,
-        'user' => $user,
-        'total_prize' => $totalPrize,
-        'claimed_prize' => $claimedPrize,
-        'unclaimed_prize' => $totalPrize - $claimedPrize,
-    ];
+        $q = Order::query()
+            ->where('is_winner', 1)
+            ->where('user_id', $request->agent)
+            ->with(['user', 'product', 'user.agent', 'tickets'])
+            ->latest();
 
-    $wins = new LengthAwarePaginator([$row], 1, 8, 1, [
-        'path' => $request->url(),
-        'query' => $request->query(),
-    ]);
+        if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
+        if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
 
-    return Inertia::render('Report/WinnerReportAgent', [
-        'wins' => $wins,
-        'agents' => $agents,
-        'products' => $products,
-        'filters' => [
-            'agent' => $request->agent,
-            'from_date' => $request->from_date,
-            'to_date' => $request->to_date,
-        ],
-    ]);
-}
+        if ($request->filled('claimed')) {
+            $q->where('is_claimed', (int)$request->claimed);
+        }
 
-public function winnerReportAgentDetails(Request $request)
-{
-    $request->validate([
-        'agent'     => ['required', 'integer', 'exists:users,id'],
-        'from_date' => ['nullable', 'date'],
-        'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
-        'claimed'   => ['nullable', 'in:0,1'],
-    ]);
+        $list = $q->paginate(10)->withQueryString();
 
-    $q = Order::query()
-        ->where('is_winner', 1)
-        ->where('user_id', $request->agent)
-        ->with(['user', 'product', 'user.agent', 'tickets']) 
-        ->latest();
+        $list->getCollection()->transform(function ($item) {
+            $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
+            $item->check_win = $checkWin;
+            return $item;
+        });
 
-    if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
-    if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
-
-    if ($request->filled('claimed')) {
-        $q->where('is_claimed', (int)$request->claimed);
+        return response()->json($list);
     }
-
-    $list = $q->paginate(10)->withQueryString();
-
-    $list->getCollection()->transform(function ($item) {
-        $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
-        $item->check_win = $checkWin; 
-        return $item;
-    });
-
-    return response()->json($list);
-}
-
 }

@@ -35,6 +35,15 @@ const handleSearch = () => {
   })
 }
 
+function downloadPdf() {
+    const queryParams = new URLSearchParams({
+        agent: form.agent,
+        from_date: form.from_date,
+        to_date: form.to_date
+    });
+    window.location.href = route('reports.winner-report-agent-pdf') + '?' + queryParams.toString();
+}
+
 // pagination preserve filters
 function goTo(url: string | null) {
   if (!url) return
@@ -199,6 +208,10 @@ const extractNumbers = (order: any): string[] => {
 
                 <!-- Summary Table (User wise one row) -->
                 <div v-else class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mt-4">
+                    <button @click="downloadPdf"
+                        class="px-4 py-2 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                        Print
+                    </button>
                   <div class="overflow-x-auto">
                     <table class="w-full">
                       <thead class="bg-gray-50 border-b border-gray-200">

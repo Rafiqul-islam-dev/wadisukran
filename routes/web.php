@@ -150,6 +150,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('winner-report', [WinnerReportController::class, 'winnerReport'])->name('winner-report');
         Route::get('winner-report-agent', [WinnerReportAgentController::class, 'winnerReportAgent'])->name('winner-report-agent');
+        Route::get('winner-report-agent-pdf', [WinnerReportAgentController::class, 'agentReportAgent'])->name('winner-report-agent-pdf');
         Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
         Route::get('winner-report-agent/details', [WinnerReportAgentController::class, 'winnerReportAgentDetails'])->name('winner-report-agent.details');
         Route::get('cancel-request', [CancelRequestController::class, 'cancelRequest'])->name('cancel-request');
@@ -162,5 +163,4 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     });
 
     Route::get('login-as-agent', [AgentController::class, 'loginAs'])->middleware('can:login as agent')->name('login-as-agent');
-
 });
