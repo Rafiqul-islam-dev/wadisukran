@@ -11,19 +11,19 @@
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 10px;
+            font-size: 16px;
             color: #333;
             margin: 0;
             line-height: 1.1;
         }
 
         h2 {
-            font-size: 11px;
+            font-size: 14px;
             margin: 2px 0;
         }
 
         h3 {
-            font-size: 10px;
+            font-size: 16px;
             margin: 3px 0;
         }
 
@@ -35,13 +35,13 @@
             width: 100%;
             border-collapse: collapse;
             margin: 2px 0;
-            font-size: 8px;
+            font-size: 12px;
         }
 
         th {
             background-color: #ff9900;
             color: white;
-            padding: 2px 3px;
+            padding: 4px 5px;
             border: 1px solid #ff9900;
             text-align: left;
             font-weight: bold;
@@ -49,7 +49,7 @@
         }
 
         td {
-            padding: 2px 3px;
+            padding: 4px 5px;
             border: 1px solid #ccc;
             text-align: left;
             line-height: 1.1;
@@ -169,7 +169,6 @@
                     <p><strong>Email:</strong> {{ $company->email ?? 'N/A' }}</p>
 
                     <p><strong>TRN:</strong> {{ $company->trn_no ?? 'N/A' }}</p>
-                    <p><strong>Agent:</strong> {{ $agent->name }}</p>
                 </td>
             </tr>
         </table>
@@ -178,43 +177,44 @@
     <div class="report-title">
         <h2>Agent Winner Report</h2>
 
-        @if (!empty($filters['from_date']) && !empty($filters['to_date']))
-            <p>
-                Period:
-                {{ $filters['from_date'] }}
-                to
-                {{ $filters['to_date'] }}
-            </p>
-        @endif
+        <p>
+            Period:
+            {{ $from_date }}
+            to
+            {{ $to_date }}
+        </p>
     </div>
 
-    @if (count($orders) > 0)
-        @foreach ($productTotals as $productId => $productData)
-            <div class="product-section">
-                <table>
-                    <thead>
+    @if ($wins)
+        <div class="product-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Vendor Name</th>
+                        <th>Address</th>
+                        <th>Total Prize</th>
+                        <th>Claimed</th>
+                        <th>Unclaimed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($wins as $key => $win)
                         <tr>
-                            <th>#</th>
-                            <th>Invoice</th>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Raffle Ticket</th>
-                            <th class="text-right">Prize</th>
-                            <th>Status</th>
+                            <td>{{ $key + 1 }}</td>
+                            <td>{{ $win['user']['name'] }}</td>
+                            <td>{{ $win['user']['address'] }}</td>
+                            <td>{{ $win['total_prize'] }}</td>
+                            <td>{{ $win['claimed_prize'] }}</td>
+                            <td>{{ $win['unclaimed_prize'] }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        @endforeach
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     @else
         <p style="text-align:center; margin-top: 20px;">No winning records found for the selected criteria.</p>
     @endif
-
-    <div class="footer">
-        <p>This report was generated on {{ now()->format('d M, Y H:i A') }}</p>
-    </div>
 </body>
 
 </html>

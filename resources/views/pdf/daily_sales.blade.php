@@ -13,7 +13,7 @@
             font-family: Arial, sans-serif;
             font-size: 11px;
             color: #333;
-            margin: 20px 0;
+            margin-bottom: 30px;
         }
 
         h2 {
@@ -217,8 +217,8 @@
                                         {{ isset($company->currency) ? $company->currency : 'AED' }}</td>
                                 @endif
                             </tr>
-                            @php $rowIndex++; @endphp
                         @endforeach
+                        @php $rowIndex++; @endphp
                     @else
                         <tr>
                             <td class="text-center">{{ $rowIndex }}</td>
@@ -241,6 +241,12 @@
                 @endforeach
             </tbody>
         </table>
+
+        @if (count($orders) > 0)
+            <p style="margin-top: 10px; font-weight: bold; font-size: 25px; text-align: right;">
+                <strong>Total:</strong> {{ number_format($totalPriceSum, 2) }} {{ $company->currency ?? 'AED' }}
+            </p>
+        @endif
     @endif
 </body>
 

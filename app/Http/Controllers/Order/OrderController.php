@@ -70,6 +70,7 @@ class OrderController extends Controller
                     });
                 });
         }
+        $totalPriceSum = (clone $orders)->sum('total_price');
         $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->paginate(10);
         $users = User::where('user_type', 'agent')->select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
@@ -97,6 +98,7 @@ class OrderController extends Controller
             'categories' => $categories,
             'products' => $products,
             'product_prizes' => $product_prizes,
+            'totalPriceSum' => $totalPriceSum,
             'filters' => request()->only([
                 'user_id',
                 'date_from',
@@ -151,12 +153,14 @@ class OrderController extends Controller
                     });
                 });
         }
+        $totalPriceSum = (clone $orders)->sum('total_price');
         $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->get();
         $company = CompannySetting::firstOrFail();
 
         $pdf = Pdf::loadView('pdf.daily_sales', [
             'orders' => $orders,
             'company' => $company,
+            'totalPriceSum' => $totalPriceSum,
             'filters' => $request->only(['date_from', 'date_to', 'time_from', 'time_to'])
         ]);
 

@@ -14,7 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const { company_setting } = usePage().props;
-const { orders, users, company, filters, categories, products, product_prizes } = defineProps<{
+const { orders, users, company, filters, categories, products, product_prizes, totalPriceSum } = defineProps<{
     orders: Array<any>;
     users: Array<any>;
     company: Record<string, any>;
@@ -22,6 +22,7 @@ const { orders, users, company, filters, categories, products, product_prizes } 
     products: Array<any>;
     filters: Record<string, any>;
     product_prizes: Array<any>;
+    totalPriceSum: number;
 }>();
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -482,6 +483,17 @@ function downloadPdf() {
                             </tr>
                         </tbody>
                     </table>
+
+                    <!-- Total Price Summary -->
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-t-2 border-gray-200">
+                        <div class="flex justify-end items-center gap-4">
+                            <span class="text-lg font-bold text-gray-700">Total Price:</span>
+                            <span
+                                class="text-xl font-bold text-green-600 bg-white px-6 py-2 rounded-lg border-2 border-green-300">
+                                {{ totalPriceSum }} {{ company_setting?.currency }}
+                            </span>
+                        </div>
+                    </div>
 
                     <div class="flex justify-end py-2 px-6">
                         <nav class="flex items-center space-x-1">

@@ -74,6 +74,10 @@ const handleSearch = () => {
     });
 }
 
+function truncateTwo(num) {
+    return (Math.floor(num * 100) / 100).toFixed(2);
+}
+
 </script>
 <template>
 
@@ -144,39 +148,39 @@ const handleSearch = () => {
                             <tr>
                                 <td class="border px-3 py-2 text-left">Total Sale</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ Number(agent.total_sell) + Number(agent.total_cancel) }}
+                                    {{ truncateTwo(Number(agent.total_sell) + Number(agent.total_cancel)) }}
                                 </td>
                             </tr>
                             <tr>
                                 <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Total Cancel</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.total_cancel }}
+                                    {{ truncateTwo(Number(agent.total_cancel)) }}
                                 </td>
                             </tr>
                              <tr>
                                 <td class="border px-3 py-2">Net Sell</td>
                                 <td class="border px-3 py-2 text-left">
-                                     {{ agent.total_sell }}
+                                     {{ truncateTwo(Number(agent.total_sell)) }}
                                 </td>
                             </tr>
                             <tr>
                                 <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Commission</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.total_commission }}
+                                    {{ truncateTwo(Number(agent.total_commission)) }}
                                 </td>
                             </tr>
                             <tr>
                                 <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Ammount paid for
                                     raffle redeem directly by agent</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.total_claim }}
+                                    {{ truncateTwo(Number(agent.total_claim)) }}
                                 </td>
                             </tr>
                             <tr>
                                 <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Agent payment received
                                 </td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.total_posting }}
+                                    {{ truncateTwo(Number(agent.total_posting)) }}
                                 </td>
                             </tr>
                             <tr>
@@ -196,14 +200,14 @@ const handleSearch = () => {
                             <tr class="bg-gray-100 font-bold">
                                 <td class="border px-3 py-2">Net Amount</td>
                                 <td class="border px-3 py-2 text-left">
-                                  {{ agent.net_amount }}
+                                  {{ truncateTwo(Number(agent.net_amount)) }}
                                 </td>
                             </tr>
 
                             <tr>
                                 <td class="border px-3 py-2">Old Balance Pending</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.old_balance }}
+                                    {{ truncateTwo(Number(agent.old_balance)) }}
                                 </td>
                             </tr>
                             <tr>
@@ -217,7 +221,7 @@ const handleSearch = () => {
                             <tr class="bg-gray-100 font-bold">
                                 <td class="border px-3 py-2">Total Due As per Statement</td>
                                 <td class="border px-3 py-2 text-left">
-                                    {{ agent.total_due }}
+                                    {{ truncateTwo(Number(agent.total_due)) }}
                                 </td>
                             </tr>
                         </tbody>
@@ -325,7 +329,7 @@ const handleSearch = () => {
                         <tr class="bg-gray-100 font-bold">
                             <td class="border px-3 py-2">Net Amount</td>
                             <td class="border px-3 py-2 text-left">
-                                {{ agent.net_amount }}
+                                {{ Number(agent.net_amount).toFixed(2) }}
                             </td>
                         </tr>
 
