@@ -37,6 +37,9 @@ class OrderController extends Controller
                     $query->where('user_id', Auth::id());
                 });
 
+        if (!$request->date_from && !$request->date_to) {
+            $orders = $orders->whereDate('created_at', today());
+        }
         if($request->btn === 'search') {
             $orders = $orders->when($request->user_id, function ($query, $userId) {
                 $query->where('user_id', $userId);
@@ -106,6 +109,57 @@ class OrderController extends Controller
                 'invoice_no',
             ]),
         ]);
+    }
+
+    public function print(Request $request){
+        $match_type = ProductPrize::find($request->match_type);
+        $orders = Order::when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
+                    $query->where('user_id', Auth::id());
+                });
+
+        if (!$request->date_from && !$request->date_to) {
+            $orders = $orders->whereDate('created_at', today());
+        }
+        if($request->btn === 'search') {
+            $orders = $orders->when($request->user_id, function ($query, $userId) {
+                $query->where('user_id', $userId);
+            })
+                ->when($request->invoice_no, function ($query, $invoice) {
+                    $query->where('invoice_no', $invoice);
+                })
+                ->when($request->date_from, function ($query, $dateFrom) use ($request) {
+                    $timeFrom = $request->time_from ?? '00:00:00';
+                    $query->where('created_at', '>=', "$dateFrom $timeFrom");
+                })
+                ->when($request->date_to, function ($query, $dateTo) use ($request) {
+                    $timeTo = $request->time_to ?? '23:59:59';
+                    $query->where('created_at', '<=', "$dateTo $timeTo");
+                })
+                ->when($request->category_id && $request->product_id, function ($query) use ($request) {
+                    $query->whereHas('product', function ($q) use ($request) {
+                        $q->where('category_id', $request->category_id)
+                            ->where('id', $request->product_id);
+                    });
+                })
+                ->when($match_type, function ($query, $matchType) {
+                    $query->whereHas('tickets', function ($q) use ($matchType) {
+                        $q->whereJsonContains(
+                            'selected_play_types',
+                            ucfirst(strtolower($matchType->name))
+                        );
+                    });
+                });
+        }
+        $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->get();
+        $company = CompannySetting::firstOrFail();
+
+        $pdf = Pdf::loadView('pdf.daily_sales', [
+            'orders' => $orders,
+            'company' => $company,
+            'filters' => $request->only(['date_from', 'date_to', 'time_from', 'time_to'])
+        ]);
+
+        return $pdf->download('daily_sales_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 
     protected function product_prizes($product_id)

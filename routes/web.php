@@ -113,6 +113,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::post('/update-status/{order}', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::get('print', [OrderController::class, 'print'])->name('print');
     });
     Route::prefix('sales-report')->name('sales-report.')->group(function () {
         Route::get('/product-wise', [ProductWiseSalesController::class, 'index'])->name('index');

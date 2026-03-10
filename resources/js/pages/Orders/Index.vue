@@ -151,6 +151,22 @@ function updateStatus() {
     });
 }
 
+function downloadPdf() {
+    const queryParams = new URLSearchParams({
+        btn: 'search',
+        user_id: filter.value.user_id || '',
+        date_from: filter.value.date_from || '',
+        time_from: filter.value.time_from || '',
+        date_to: filter.value.date_to || '',
+        time_to: filter.value.time_to || '',
+        match_type: filter.value.match_type || '',
+        category_id: filter.value.category_id || '',
+        product_id: filter.value.product_id || '',
+        invoice_no: filter.value.invoice_no || '',
+    });
+    window.location.href = route('orders.print') + '?' + queryParams.toString();
+}
+
 </script>
 
 <template>
@@ -158,8 +174,7 @@ function updateStatus() {
     <Head title="Daily Sales Report" />
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-3">
-            <div
-                class="bg-white rounded-3xl shadow-2xl p-5 mb-3 border-2">
+            <div class="bg-white rounded-3xl shadow-2xl p-5 mb-3 border-2">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-4 mb-2">
                     <div class="group">
                         <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
@@ -293,7 +308,7 @@ function updateStatus() {
                             <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 14h6m-6-4h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h8l4 4v9a2 2 0 01-2 2z"/>
+                                    d="M9 14h6m-6-4h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h8l4 4v9a2 2 0 01-2 2z" />
                             </svg>
                             Invoice No
                         </label>
@@ -303,6 +318,10 @@ function updateStatus() {
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-2 border-t-2 border-gray-100">
+                    <button @click="downloadPdf"
+                        class="px-4 py-2 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                        Print
+                    </button>
                     <button @click="resetFilters"
                         class="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,9 +405,11 @@ function updateStatus() {
                                     <span v-else-if="order.status === 'Cancel'"
                                         class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel</span>
                                     <span v-else-if="order.status === 'Cancel-Request'"
-                                        class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel Request</span>
+                                        class="px-2 py-1 bg-red-500 text-xs text-white bg-opacity-50 rounded-lg font-semibold">Cancel
+                                        Request</span>
 
-                                    <div v-if="can('order status change') && order.status !== 'Cancel-Request'"  class="cursor-pointer" @click="openStatusModal(order)">
+                                    <div v-if="can('order status change') && order.status !== 'Cancel-Request'"
+                                        class="cursor-pointer" @click="openStatusModal(order)">
                                         <Edit class="text-teal-500" />
                                     </div>
                                 </td>
@@ -420,7 +441,8 @@ function updateStatus() {
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
-                                    <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0 w-full whitespace-nowrap">
+                                    <div v-for="ticket in order.tickets" :key="ticket.id"
+                                        class="mb-2 last:mb-0 w-full whitespace-nowrap">
                                         <div class="flex gap-1">
                                             <span v-for="number in ticket.selected_numbers" :key="number"
                                                 class="bg-orange-100 text-orange-800 rounded px-2 py-1 text-xs font-bold">
@@ -862,13 +884,11 @@ function updateStatus() {
                         <div class="p-6">
                             <div class="mb-4">
                                 <p class="text-sm text-gray-500 mb-1">Current Status</p>
-                                <span
-                                    :class="{
-                                        'bg-green-100 text-green-800': statusOrder?.status === 'Printed',
-                                        'bg-gray-100 text-gray-800': statusOrder?.status === 'Pending',
-                                        'bg-red-100 text-red-800': statusOrder?.status === 'Cancel',
-                                    }"
-                                    class="px-3 py-1 rounded-full text-xs font-semibold">
+                                <span :class="{
+                                    'bg-green-100 text-green-800': statusOrder?.status === 'Printed',
+                                    'bg-gray-100 text-gray-800': statusOrder?.status === 'Pending',
+                                    'bg-red-100 text-red-800': statusOrder?.status === 'Cancel',
+                                }" class="px-3 py-1 rounded-full text-xs font-semibold">
                                     {{ statusOrder?.status }}
                                 </span>
                             </div>

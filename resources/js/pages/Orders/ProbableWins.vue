@@ -299,7 +299,7 @@ const formattedDate = computed(() => {
                 </div>
             </div>
 
-            <button v-if="orders.length > 0" v-print="'#printDiv'"
+            <button v-if="orders?.length > 0" v-print="'#printDiv'"
                 class="px-4 mb-2 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
                 Print
             </button>
