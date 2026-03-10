@@ -63,6 +63,8 @@ class ProductService
 
     public function updateProduct(Product $product, array $data): string
     {
+        // dd($data);
+
         if (!empty($data['image'])) {
             if ($product->image && file_exists(public_path($product->image))) {
                 unlink(public_path($product->image));
@@ -86,14 +88,13 @@ class ProductService
         $product->save();
 
         $product->prizes()->delete();
-
         foreach ($data['prizes'] as $prize) {
             if ($prize['prize'] > 0) {
                 ProductPrize::create([
                     'product_id' => $product->id,
                     'type'       => $prize['type'],
                     'name'       => $prize['name'],
-                    'chance_number'       => $prize['chance_number'],
+                    'chance_number' => $prize['chance_number'] ?? null,
                     'prize'      => $prize['prize']
                 ]);
             }

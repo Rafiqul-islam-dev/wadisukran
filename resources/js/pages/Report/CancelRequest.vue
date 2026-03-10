@@ -88,6 +88,18 @@ const formatDate = (dateString: string) => {
     });
 };
 
+const formatTime = (dateString: string) => {
+    if (!dateString) return 'N/A';
+
+    const date = new Date(dateString.replace(' ', 'T'));
+
+    return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
 function openModal(order: any) {
     selectedOrder.value = order;
     showModal.value = true;
@@ -254,6 +266,9 @@ function closeModal() {
                         <thead class="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                    Cancel Time
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Invoice No
                                 </th>
                                 <th class="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
@@ -286,6 +301,11 @@ function closeModal() {
                             <tr v-for="(order, index) in orders" :key="order.id"
                                 class="hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all duration-200"
                                 :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
+                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    <!-- Display only the time part of cancel_at -->
+                                    <span class="font-semibold text-orange-600">{{ order.cancel_at ? formatTime(order.cancel_at) : 'N/A' }}</span>
+                                </td>
+
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="font-semibold text-orange-600">#{{ order.invoice_no }}</span>
                                 </td>

@@ -27,7 +27,10 @@ class Order extends Model
         'is_winner',
         'is_claimed',
         'status',
-        'qr_code'
+        'qr_code',
+        'cancel_at',
+        'cancel_approve_at',
+        'cancel_approve_by',
     ];
 
     protected $casts = [
@@ -44,6 +47,10 @@ class Order extends Model
         return $this->belongsTo(Product::class)->withTrashed();
     }
 
+    public function cancelApprove()
+    {
+        return $this->belongsTo(User::class, 'cancel_approve_by', 'id');
+    }
 
     public  function tickets()
     {

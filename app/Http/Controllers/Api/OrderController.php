@@ -137,6 +137,8 @@ class OrderController extends Controller
                     $draw_time = $endDay->format('h:i A');
                 }
             }
+            $salesDateTime = Carbon::parse($order->created_at)->format('Y-m-d, H:i');
+            // dd($salesTime);
 
             $data = [
                 'id' => $order->id,
@@ -149,7 +151,7 @@ class OrderController extends Controller
                 'total_price' => $order->total_price,
                 'vat' => $order->vat,
                 'vat_percentage' => $order->vat_percentage,
-                'sales_date' => $order->sales_date,
+                'sales_date' =>  $salesDateTime,
                 'draw_number' => $order->draw_number,
                 'product_title' => $order->product ? $order->product->title : null,
                 'product_price' => $order->product ? $order->product->price : null,
@@ -157,7 +159,7 @@ class OrderController extends Controller
                 'draw_date' => $order->created_at ? Carbon::parse($order->created_at)->format('d M, Y') : null,
                 'draw_time' => $draw_time,
                 'vendor_name' => $order->user ? $order->user->name : null,
-                'trn' => $order->user ? $order->user->trn : null,
+                'trn' => $order->user ? $order->user->agent->trn: null,
                 'qr_url' => $order->qr_url,
                 'company_name' => company_setting() ? company_setting()->name : null,
                 'company_address' => company_setting() ? company_setting()->address : null,
@@ -259,6 +261,7 @@ class OrderController extends Controller
         if (isset($request->remarks) && !empty($request->remarks)) {
             $order->status = 'Cancel-Request';
             $order->remarks = $request->remarks;
+            $order->cancel_at = Carbon::now()->format('Y-m-d H:i:s');
         } else {
             $order->status = 'Printed';
 
