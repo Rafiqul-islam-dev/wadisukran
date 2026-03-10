@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\Order;
+use Carbon\Carbon;
 
 class CancelRequestController extends Controller
 {
@@ -54,9 +55,12 @@ public function cancelRequest(Request $request)
 
 public function acceptCancel(Order $order)
 {
+    // dd($order);
 
     $order->update([
         'status' => 'Cancel',
+        'cancel_approve_at' => Carbon::now()->format('Y-m-d H:i:s'),
+        'cancel_approve_by' => auth()->id()
     ]);
 
     return back()->with('success', 'Order cancelled successfully.');

@@ -95,6 +95,7 @@ class ProductController extends Controller
 
     public function update(ProductUpdateRequest $request, Product $product)
     {
+        // dd($request->all());
         $data = [
             'title' => $request->title,
             'category_id' => $request->category_id,

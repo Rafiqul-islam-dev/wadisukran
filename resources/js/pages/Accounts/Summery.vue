@@ -124,7 +124,7 @@ const handleSearch = () => {
                     <div class="text-center mb-4">
                         <h2 class="text-xl font-bold">Account Statement</h2>
                         <p class="text-sm text-gray-600">
-                            Statement Date: <strong>{{ from_date }}</strong> to <strong > {{ to_date }} </strong>
+                            Statement Date: <strong>{{ from_date }}, 12:00:00 AM</strong> to <strong > {{ to_date }}, 11:59:59 PM </strong>
                         </p>
                     </div>
                     <div class="mb-4">
@@ -253,11 +253,11 @@ const handleSearch = () => {
                 <div class="text-center mb-4">
                     <h2 class="text-xl font-bold">Account Statement</h2>
                     <p class="text-sm text-gray-600">
-                        Statement Date: <strong>{{ from_date }}</strong> to <strong > {{ to_date }} </strong>
+                        Statement Date: <strong>{{ from_date }} 12:00 AM</strong> to <strong > {{ to_date }} 11:59:59 PM</strong>
                     </p>
                 </div>
                 <div class="mb-4">
-                    <p><strong>Vendor Name:</strong> {{ agent.agent_name }}</p>
+                    <p><strong>Vendor Name2:</strong> {{ agent.agent_name }}</p>
                     <p><strong>Vendor Address:</strong> {{ agent.agent_address }}</p>
                 </div>
 
