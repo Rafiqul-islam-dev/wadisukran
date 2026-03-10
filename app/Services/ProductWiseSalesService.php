@@ -6,19 +6,21 @@ use App\Http\Resources\DailySummeryResource;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-
+use Carbon\Carbon;
 class ProductWiseSalesService
 {
     public function getUserDailySalesSummery($user_id = null, $from, $to)
     {
         $user = $user_id ? User::find($user_id) : null;
 
+        $fromDate = Carbon::parse($from)->startOfDay();
+        $toDate = Carbon::parse($to)->endOfDay();
+
         $orders = Order::when($user, function ($q, $user) {
                 $q->where('orders.user_id', $user->id);
             })
-            ->when($from && $to, function ($q) use ($from, $to) {
-                $q->whereBetween('orders.created_at', [$from, $to]);
-            })
+            ->where('orders.created_at', '>=', $fromDate)
+            ->where('orders.created_at', '<=', $toDate)
             ->where('orders.status', 'Printed')
             ->leftJoin('products', 'products.id', '=', 'orders.product_id')
             ->selectRaw('
