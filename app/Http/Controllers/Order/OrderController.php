@@ -34,13 +34,13 @@ class OrderController extends Controller
     {
         $match_type = ProductPrize::find($request->match_type);
         $orders = Order::when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
-                    $query->where('user_id', Auth::id());
-                });
+            $query->where('user_id', Auth::id());
+        });
 
         if (!$request->date_from && !$request->date_to) {
             $orders = $orders->whereDate('created_at', today());
         }
-        if($request->btn === 'search') {
+        if ($request->btn === 'search') {
             $orders = $orders->when($request->user_id, function ($query, $userId) {
                 $query->where('user_id', $userId);
             })
@@ -111,16 +111,17 @@ class OrderController extends Controller
         ]);
     }
 
-    public function print(Request $request){
+    public function print(Request $request)
+    {
         $match_type = ProductPrize::find($request->match_type);
         $orders = Order::when(!Auth::user()->hasAnyRole(['Super Admin', 'Moderator']), function ($query) {
-                    $query->where('user_id', Auth::id());
-                });
+            $query->where('user_id', Auth::id());
+        });
 
         if (!$request->date_from && !$request->date_to) {
             $orders = $orders->whereDate('created_at', today());
         }
-        if($request->btn === 'search') {
+        if ($request->btn === 'search') {
             $orders = $orders->when($request->user_id, function ($query, $userId) {
                 $query->where('user_id', $userId);
             })
@@ -210,17 +211,16 @@ class OrderController extends Controller
 
             $types = $product->prizes;
 
-            if($request->match_type === "Chance"){
+            if ($request->match_type === "Chance") {
                 $match_type = ProductPrize::where('product_id', $product->id)->where('name', 'Chance')->get();
                 $types = $match_type
-                ? $match_type
-                : $product->prizes;
-            }
-            else{
+                    ? $match_type
+                    : $product->prizes;
+            } else {
                 $match_type = ProductPrize::find($request->match_type);
-                 $types = $match_type
-                ? [$match_type]
-                : $product->prizes;
+                $types = $match_type
+                    ? [$match_type]
+                    : $product->prizes;
             }
 
 
@@ -241,16 +241,15 @@ class OrderController extends Controller
                 })
                 ->with('order.user')
                 ->when($request->match_type, function ($q) use ($match_type, $request) {
-                    if($request->match_type === 'Chance'){
+                    if ($request->match_type === 'Chance') {
                         $q->whereJsonContains('selected_play_types', "Chance");
-                    }
-                    else{
+                    } else {
                         $q->whereJsonContains('selected_play_types', $match_type->name);
                     }
                 })
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $types, $product, $numbersChance) {
-                    $data = ['id' => $order->id,'created_at' => $order->created_at?->format('d M, Y H:i A'), 'product_name' => $order->order?->product?->title, 'invoice_no'=> $order->order?->invoice_no, 'selected_numbers' => $order->selected_numbers, 'types' => $order->selected_play_types, 'vendor_name' => $order->order?->user?->name, 'vendor_address' => $order->order?->user?->address];
+                    $data = ['id' => $order->id, 'created_at' => $order->created_at?->format('d M, Y H:i A'), 'product_name' => $order->order?->product?->title, 'invoice_no' => $order->order?->invoice_no, 'selected_numbers' => $order->selected_numbers, 'types' => $order->selected_play_types, 'vendor_name' => $order->order?->user?->name, 'vendor_address' => $order->order?->user?->address];
                     $isStraightWinner = false;
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
@@ -316,7 +315,7 @@ class OrderController extends Controller
 
                             if ($isNumberWinner) continue;
 
-                            if ($matchCount === (int) $prize->name) {
+                            if ($matchCount == (int) $prize->name) {
                                 $data[$key] = true;
                                 $isNumberWinner = true;
                             }
@@ -440,7 +439,8 @@ class OrderController extends Controller
         return back();
     }
 
-    public function orderPdf($invoice){
+    public function orderPdf($invoice)
+    {
         $order = Order::where('invoice_no', $invoice)->first();
         if (!$order) {
             return response()->json([
@@ -452,6 +452,6 @@ class OrderController extends Controller
         $draw_number = Win::where('product_id', $order->product_id)->max('draw_number');
         $pdf = Pdf::loadView('pdf.order_pdf', ['order' => $order, 'draw_time' => $draw_date_time['draw_time'], 'draw_date' => $draw_date_time['draw_date'], 'draw_number' => $draw_number]);
         $pdf->setPaper([0, 0, 226.77, 600], 'portrait');
-        return $pdf->stream($order->invoice_no.'.pdf');
+        return $pdf->stream($order->invoice_no . '.pdf');
     }
 }
