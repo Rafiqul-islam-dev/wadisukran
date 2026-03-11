@@ -20,6 +20,8 @@ const { agents, wins, all_agents, filters } = defineProps<{
     filters: { agent: string | number; from_date: string; to_date: string }
 }>()
 
+console.log(wins)
+
 const form = useForm({
     agent: filters?.agent ?? '',
     from_date: filters?.from_date ?? '',
@@ -79,9 +81,10 @@ const modalLinks = ref<any[]>([])
 const modalPageInfo = ref<any>({})
 const modalClaimedFilter = ref<0 | 1 | null>(null)
 
-const openModal = async (claimed: 0 | 1 | null) => {
+const openModal = async (claimed: 0 | 1, agent: number) => {
     showModal.value = true
     modalClaimedFilter.value = claimed
+    form.agent = agent;
     modalTitle.value = claimed === 1 ? 'Claimed Only' : 'All Winner'
     await fetchModalData()
 }
@@ -94,7 +97,6 @@ const closeModal = () => {
 }
 
 const fetchModalData = async (pageUrl?: string) => {
-    if (!form.agent) return
     isLoadingModal.value = true
     try {
         const url = pageUrl ?? route('reports.winner-report-agent.details')
@@ -258,12 +260,12 @@ const extractNumbers = (order: any): string[] => {
 
                                                     <td class="px-6 py-4 whitespace-nowrap">
                                                         <div class="flex gap-2">
-                                                            <button @click="openModal(null)"
+                                                            <button @click="openModal(0, row.user_id)"
                                                                 class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow">
                                                                 All Winner
                                                             </button>
 
-                                                            <button @click="openModal(1)"
+                                                            <button @click="openModal(1, row.user_id)"
                                                                 class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
                                                                 Claimed Only
                                                             </button>
