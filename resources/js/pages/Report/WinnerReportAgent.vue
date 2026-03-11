@@ -47,6 +47,16 @@ function downloadPdf() {
     window.location.href = route('reports.winner-report-agent-pdf') + '?' + queryParams.toString();
 }
 
+function downloadModalPdf(){
+     const queryParams = new URLSearchParams({
+        agent: form.agent,
+        from_date: form.from_date || null,
+        to_date: form.to_date || null,
+        claimed: modalClaimedFilter.value === null ? null : modalClaimedFilter.value,
+    });
+    window.location.href = route('reports.winner-report-agent-details-pdf') + '?' + queryParams.toString();
+}
+
 // pagination preserve filters
 function goTo(url: string | null) {
     if (!url) return
@@ -329,6 +339,10 @@ const extractNumbers = (order: any): string[] => {
                         </div>
 
                         <div v-else class="overflow-x-auto">
+                            <button @click="downloadModalPdf"
+                                class="px-4 py-2 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                                Print
+                            </button>
                             <table class="w-full text-sm">
                                 <thead class="bg-gray-50 border">
                                     <tr class="text-gray-600">
@@ -339,8 +353,8 @@ const extractNumbers = (order: any): string[] => {
                                         <th class="p-3 text-left">Description</th>
                                         <th class="p-3 text-left">Number</th>
                                         <th class="p-3 text-left">Prize (AED)</th>
-                                        <th class="p-3 text-left">Claim To</th>
-                                        <th class="p-3 text-left">Claimed Date</th>
+                                        <th class="p-3 text-left" v-if="modalClaimedFilter == 1">Claim To</th>
+                                        <th class="p-3 text-left" v-if="modalClaimedFilter == 1">Claimed Date</th>
                                     </tr>
                                 </thead>
 
@@ -365,9 +379,9 @@ const extractNumbers = (order: any): string[] => {
                                             {{ (order?.check_win?.total_prize ?? order?.check_win?.['total_prize'] ?? 0)
                                             }}
                                         </td>
-                                        <td class="p-3 uppercase text-gray-700">{{ order?.user?.name ?? '-' }}</td>
-                                        <td class="p-3">
-                                            {{ order.is_claimed ? formatDateTime(order.claimed_at ?? order.updated_at) :
+                                        <td class="p-3 uppercase text-gray-700" v-if="modalClaimedFilter == 1">{{ order?.claim_user }}</td>
+                                        <td class="p-3" v-if="modalClaimedFilter == 1">
+                                            {{ order.is_claimed ? formatDateTime(order.claimed_at) :
                                             '-' }}
                                         </td>
                                     </tr>
