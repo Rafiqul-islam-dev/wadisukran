@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
         Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
         Route::get('/print-pdf', [AgentController::class, 'printPdf'])->name('printPdf');
+        Route::get('/history/pdf', [AgentHistoryController::class, 'pdf'])->name('history.pdf');
     });
 
     Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {

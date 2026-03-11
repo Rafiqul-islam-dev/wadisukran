@@ -133,6 +133,52 @@ const saveDraw = () => {
         }
     });
 }
+
+const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text') || '';
+    if (!pastedText) return;
+
+    let values: string[] = [];
+
+    if (pastedText.includes(',') || pastedText.includes(' ')) {
+        values = pastedText
+            .split(/[,\s]+/)
+            .map(v => v.trim())
+            .filter(v => v !== '');
+    } else {
+        values = pastedText.split('').filter(v => /\d/.test(v));
+    }
+
+    const max = product.type_number;
+    const maxLength = max <= 9 ? 1 : 2;
+
+    const currentNumbers = [...drawNumbers[product.id]];
+
+    for (let i = 0; i < values.length; i++) {
+        const targetIndex = index + i;
+        if (targetIndex >= product.pick_number) break;
+
+        let value = values[i].replace(/\D/g, '').slice(0, maxLength);
+        if (!value) continue;
+
+        if (Number(value) > max) {
+            value = max.toString();
+        }
+
+        currentNumbers[targetIndex] = value;
+    }
+
+    drawNumbers[product.id] = currentNumbers;
+
+    nextTick(() => {
+        const nextIndex = Math.min(index + values.length, product.pick_number - 1);
+        const nextInput = inputs.value[product.id]?.[nextIndex];
+        if (nextInput) nextInput.focus();
+    });
+};
+
 </script>
 
 <template>
@@ -216,6 +262,7 @@ const saveDraw = () => {
                                                 }"
 
                                                 @input="handleNumberChange(product, idx, $event)"
+                                                @paste="handlePaste(product, idx, $event)"
                                                 v-model="drawNumbers[product.id][idx]"
                                                 class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold"
                                             />
