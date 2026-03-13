@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Product;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CompannySetting;
 use App\Models\Product;
 use App\Models\Win;
 use App\Services\DrawService;
@@ -80,12 +81,18 @@ class DrawController extends Controller
             })
             ->with('product')
             ->paginate(10);
+        
+        
 
         $products = Product::orderBy('title')->get();
+        $company = CompannySetting::first();
+
+
 
         return Inertia::render('Product/Draws/History', [
             'wins' => $wins,
-            'products' => $products
+            'products' => $products,
+            'logoUrl' => $company->getLogoUrlAttribute()
         ]);
     }
 
