@@ -60,6 +60,13 @@ const handleInput = (index: number, event: Event) => {
     }
 };
 
+const handleBlur = (index) => {
+    if (!product || !filter.value.pick_number[index]) return;
+    if (product.type_number > 9 && filter.value.pick_number[index].toString().length === 1) {
+        filter.value.pick_number[index] = filter.value.pick_number[index].toString().padStart(2, '0');
+    }
+};
+
 const copyNumbers = async () => {
     if (!filter.value.pick_number.length) return;
 
@@ -98,9 +105,9 @@ const generateRandomNumbers = () => {
     filter.value.pick_number = [];
 
     for (let i = 0; i < product.pick_number; i++) {
-        filter.value.pick_number.push(
-            Math.floor(Math.random() * product.type_number) + 1
-        );
+        let num = Math.floor(Math.random() * product.type_number) + 1;
+        let val = product.type_number > 9 ? num.toString().padStart(2, '0') : num.toString();
+        filter.value.pick_number.push(val);
     }
 };
 
@@ -145,9 +152,11 @@ const handleSearch = () => {
         valid = false;
     }
 
-    if (filter.value.pick_number.some(n => n === null || n === '')) {
-        messages.pick_number = `Please select ${product.pick_number} numbers.`;
-        valid = false;
+    if (product && product.pick_number) {
+        if (!filter.value.pick_number || filter.value.pick_number.length < product.pick_number || filter.value.pick_number.some(n => n === null || n === '')) {
+            messages.pick_number = 'Pick number is required.';
+            valid = false;
+        }
     }
 
     if (!valid) {
@@ -271,6 +280,7 @@ const formattedDate = computed(() => {
                     <div class="flex justify-center gap-2 md:gap-5 overflow-x-auto w-full">
                         <input v-for="(_, index) in product.pick_number" :key="index" type="text" inputmode="numeric"
                             pattern="[0-9]*" v-model="filter.pick_number[index]" @input="handleInput(index, $event)"
+                            @blur="handleBlur(index)"
                             ref="inputs" :class="errors.pick_number ? 'border-red-500' : ''"
                             class="h-10 md:h-12 w-10 md:w-12 border-2 border-gray-400 rounded-lg text-center text-lg font-semibold" />
                     </div>
