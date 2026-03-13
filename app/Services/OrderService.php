@@ -48,7 +48,7 @@ class OrderService
             $selected_numbers = array_map('intval', $card['selected_numbers']);
             OrderTicket::create([
                 'order_id' => $order->id,
-                'selected_numbers' => $selected_numbers,
+                'selected_numbers' => $card['selected_numbers'],
                 'selected_play_types' => $card['selected_play_types'] ?? null
             ]);
         }

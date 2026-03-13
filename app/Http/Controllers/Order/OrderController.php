@@ -19,8 +19,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-use function PHPSTORM_META\type;
-
 class OrderController extends Controller
 {
     protected $categoryService;

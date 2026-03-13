@@ -63,8 +63,9 @@ class OrderController extends Controller
             'game_cards.*.selected_numbers.*' => [
                 'required',
                 'numeric',
-                'min:0',
+                'min:1',
                 'max:' . $product->type_number,
+                $product->type_number <= 9 ? 'digits:1' : 'digits:2'
             ],
             'game_cards.*.selected_play_types' => [
                 Rule::requiredIf($product->prize_type === 'bet'),
