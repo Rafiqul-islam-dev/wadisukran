@@ -208,9 +208,57 @@ class WinnerReportAgentController extends Controller
         $list->getCollection()->transform(function ($item) {
             $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
             $item->check_win = $checkWin;
+            $item->claim_user = $item->claim?->claim_user?->name;
+            $item->claimed_at = $item->claim?->created_at;
             return $item;
         });
 
         return response()->json($list);
+    }
+
+    public function agentReportAgentDetailsPDF(Request $request){
+        $request->validate([
+            'agent'     => ['required', 'integer', 'exists:users,id'],
+            'from_date' => ['nullable', 'date'],
+            'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
+            'claimed'   => ['nullable', 'in:0,1'],
+        ]);
+
+        $q = Order::query()
+            ->where('is_winner', 1)
+            ->where('user_id', $request->agent)
+            ->with(['user', 'product', 'user.agent', 'tickets'])
+            ->latest();
+
+        if ($request->filled('from_date')) $q->whereDate('created_at', '>=', $request->from_date);
+        if ($request->filled('to_date'))   $q->whereDate('created_at', '<=', $request->to_date);
+
+        if ($request->filled('claimed')) {
+            $q->where('is_claimed', (int)$request->claimed);
+        }
+
+        $lists = $q->get()->map(function($list){
+            $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($list->invoice_no);
+            $list->check_win = $checkWin;
+            $list->claim_user = $list->claim?->claim_user?->name;
+            $list->claimed_at = $list->claim?->created_at;
+            return $list;
+        });
+
+        // return $lists;
+        $company = CompannySetting::firstOrFail();
+        $agent = User::find($request->agent);
+
+        $pdf = Pdf::loadView('pdf.agent_report_details', [
+            'lists' => $lists,
+            'company' => $company,
+            'agent' => $agent,
+            'from_date' => Carbon::parse($request->from_date)->startOfDay(),
+            'to_date' => Carbon::parse($request->to_date)->endOfDay(),
+            'claimed' => $request->claimed,
+        ]);
+
+        return $pdf->download('agent_report_details_' . ($request->agent) . '_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
+
     }
 }

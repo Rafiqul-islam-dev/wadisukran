@@ -68,4 +68,8 @@ class Order extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+
+    public function claim(){
+        return $this->hasOne(Claim::class, 'invoice_no', 'invoice_no');
+    }
 }

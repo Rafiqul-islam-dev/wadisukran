@@ -76,6 +76,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
         Route::get('/history', [AgentHistoryController::class, 'index'])->name('history');
         Route::get('/print-pdf', [AgentController::class, 'printPdf'])->name('printPdf');
+        Route::get('/history/pdf', [AgentHistoryController::class, 'pdf'])->name('history.pdf');
     });
 
     Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {
@@ -153,6 +154,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('winner-report-agent-pdf', [WinnerReportAgentController::class, 'agentReportAgent'])->name('winner-report-agent-pdf');
         Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
         Route::get('winner-report-agent/details', [WinnerReportAgentController::class, 'winnerReportAgentDetails'])->name('winner-report-agent.details');
+        Route::get('winner-report-agent-details-pdf', [WinnerReportAgentController::class, 'agentReportAgentDetailsPDF'])->name('winner-report-agent-details-pdf');
         Route::get('cancel-request', [CancelRequestController::class, 'cancelRequest'])->name('cancel-request');
         Route::put('cancel-accept/{order}', [CancelRequestController::class, 'acceptCancel'])->name('cancel-accept');
     });
