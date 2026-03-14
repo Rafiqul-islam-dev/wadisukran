@@ -29,7 +29,7 @@ const { wins, products, logoUrl } = defineProps<{
     logoUrl: string;
 }>();
 
-const WHATSAPP_TO = '8801911115398';
+const WHATSAPP_TO = '88001714963096';
 
 const form = useForm({
     product_id: '',
