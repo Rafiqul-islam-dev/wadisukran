@@ -6,7 +6,14 @@ import { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'vue-sonner';
 import { can } from '@/helpers/permissions';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
 import { ref } from 'vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -14,13 +21,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const deleteModal = ref(false);
-const deletingHistory = ref(null);
+const deletingHistory = ref<any>(null);
 
 const { wins, products, logoUrl } = defineProps<{
     wins: any;
     products: Array<any>;
     logoUrl: string;
 }>();
+
+const WHATSAPP_TO = '8801911115398';
 
 const form = useForm({
     product_id: '',
@@ -54,21 +63,23 @@ const formatTimeImage = (time: string) => {
     return new Intl.DateTimeFormat('en-US', {
         hour: '2-digit',
         minute: '2-digit',
-        // second: '2-digit',
         hour12: true,
     }).format(date);
 };
 
-
 const parseNumbers = (winNumber: any): string[] => {
     if (!winNumber) return [];
     if (Array.isArray(winNumber)) return winNumber.map(String);
+
     if (typeof winNumber === 'string') {
         try {
             const parsed = JSON.parse(winNumber);
             return Array.isArray(parsed) ? parsed.map(String) : [];
-        } catch { return []; }
+        } catch {
+            return [];
+        }
     }
+
     return [];
 };
 
@@ -150,9 +161,11 @@ function drawProductBadge(ctx: CanvasRenderingContext2D, title: string, x: numbe
     ctx.fillStyle = badgeGrad;
     drawRoundRect(ctx, x, y, badgeW, badgeH, badgeH / 2);
     ctx.fill();
+
     ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${Math.min(badgeH * 0.38, 22)}px Arial, sans-serif`;
     ctx.textAlign = 'center';
@@ -198,9 +211,11 @@ function drawHeader(ctx: CanvasRenderingContext2D, W: number, logoImg: HTMLImage
     const dateBoxH = 36;
     const dateBoxX = W - dateBoxW - 16;
     const dateBoxY = 16;
+
     ctx.fillStyle = '#ffffff';
     drawRoundRect(ctx, dateBoxX, dateBoxY, dateBoxW, dateBoxH, 6);
     ctx.fill();
+
     ctx.fillStyle = '#1a1a1a';
     ctx.font = 'bold 15px Arial';
     ctx.textAlign = 'center';
@@ -216,8 +231,11 @@ function drawBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
     bgGrad.addColorStop(1, '#0f0520');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
+
     ctx.fillStyle = 'rgba(255,255,255,0.015)';
-    for (let i = 0; i < W; i += 40) ctx.fillRect(i, 0, 1, H);
+    for (let i = 0; i < W; i += 40) {
+        ctx.fillRect(i, 0, 1, H);
+    }
 }
 
 function drawProductRow(
@@ -258,11 +276,11 @@ function drawProductRow(
     const badgeH = 60;
     drawProductBadge(ctx, productTitle, badgeX, centerY - badgeH / 2, badgeW, badgeH);
 
-    // Only draw balls if numbers exist
     if (numbers.length > 0) {
         const ballRadius = 36;
         const ballSpacing = 84;
         const ballStartX = badgeX + badgeW + 40 + ballRadius;
+
         numbers.forEach((num, i) => {
             drawBall(ctx, ballStartX + i * ballSpacing, centerY, ballRadius, num);
         });
@@ -281,6 +299,7 @@ function drawProductRow(
 function loadLogo(url: string): Promise<HTMLImageElement | null> {
     return new Promise((resolve) => {
         if (!url) return resolve(null);
+
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
@@ -289,26 +308,48 @@ function loadLogo(url: string): Promise<HTMLImageElement | null> {
     });
 }
 
-function createCanvas(rowCount: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; W: number; H: number; HEADER_H: number; ROW_H: number; ROW_GAP: number } {
+function createCanvas(rowCount: number): {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    W: number;
+    H: number;
+    HEADER_H: number;
+    ROW_H: number;
+    ROW_GAP: number;
+} {
     const W = 1200;
     const HEADER_H = 120;
     const ROW_H = 90;
     const ROW_GAP = 10;
     const FOOTER_H = 30;
     const H = HEADER_H + rowCount * (ROW_H + ROW_GAP) + FOOTER_H;
+
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
-    return { canvas, ctx: canvas.getContext('2d')!, W, H, HEADER_H, ROW_H, ROW_GAP };
+
+    return {
+        canvas,
+        ctx: canvas.getContext('2d')!,
+        W,
+        H,
+        HEADER_H,
+        ROW_H,
+        ROW_GAP
+    };
 }
 
+const openWhatsAppChat = (message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${WHATSAPP_TO}?text=${encodedMessage}`;
+    window.open(url, '_blank');
+};
+
 // ─── Download Single Win ──────────────────────────────────────────────────────
-// Shows ALL products — only clicked win's product has numbers, others are blank
 
 const handleDownload = async (win: any) => {
     const logoImg = await loadLogo(logoUrl);
 
-    // Build rows: loop ALL products, match only this win
     const rows = products.map((product) => {
         const isMatch = product.id === win.product_id;
         return {
@@ -332,15 +373,30 @@ const handleDownload = async (win: any) => {
         currentY += ROW_H + ROW_GAP;
     });
 
+    const fileName = `draw-result-${(win.product?.title ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
+
+    // image download
     const link = document.createElement('a');
-    link.download = `draw-result-${(win.product?.title ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
+    link.download = fileName;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    toast.success('Image downloaded!');
+
+    // whatsapp text open
+    const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
+    const message = `Draw result ready.
+Product: ${win.product?.title ?? 'N/A'}
+Date: ${formatDate(win.draw_time)}
+Time: ${ win.to_time ? `${formatTime(win.to_time)}` : 'N/A'}
+Win Number: ${numbers}`;
+
+    setTimeout(() => {
+        openWhatsAppChat(message);
+    }, 800);
+
+    toast.success('Image downloaded. WhatsApp chat opened.');
 };
 
 // ─── Download All Wins ────────────────────────────────────────────────────────
-// Shows ONLY $wins data rows — no blank product rows
 
 const handleDownloadAll = async () => {
     const allWins = wins?.data ?? [];
@@ -351,7 +407,6 @@ const handleDownloadAll = async () => {
 
     const logoImg = await loadLogo(logoUrl);
 
-    // Build rows: only from $wins — each win is one row with its numbers
     const rows = allWins.map((win: any) => ({
         productTitle: win.product?.title ?? 'Unknown',
         numbers: parseNumbers(win.win_number),
@@ -373,11 +428,14 @@ const handleDownloadAll = async () => {
         currentY += ROW_H + ROW_GAP;
     });
 
+    const fileName = `draw-results-all-${Date.now()}.png`;
+
     const link = document.createElement('a');
-    link.download = `draw-results-all-${Date.now()}.png`;
+    link.download = fileName;
     link.href = canvas.toDataURL('image/png');
     link.click();
-    toast.success(`Downloaded ${allWins.length} results!`);
+
+    toast.success(`Downloaded ${allWins.length} results and opened WhatsApp.`);
 };
 </script>
 
@@ -393,33 +451,48 @@ const handleDownloadAll = async () => {
                         <div class="flex flex-col md:flex-row gap-4">
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">Product</label>
-                                <select v-model="form.product_id"
-                                    class="w-full border-2 border-gray-200 px-2 py-1.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                <select
+                                    v-model="form.product_id"
+                                    class="w-full border-2 border-gray-200 px-2 py-1.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                >
                                     <option value="">Select Product</option>
-                                    <option v-for="product in products" :key="product.id" :value="product.id">
+                                    <option
+                                        v-for="product in products"
+                                        :key="product.id"
+                                        :value="product.id"
+                                    >
                                         {{ product.title }}
                                     </option>
                                 </select>
                             </div>
+
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">Start Date</label>
                                 <Input v-model="form.start_date" type="date" class="w-full" placeholder="mm/dd/yyyy" />
                             </div>
+
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">Start Time</label>
                                 <Input v-model="form.start_time" type="time" class="w-full" />
                             </div>
+
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">End Date</label>
                                 <Input v-model="form.end_date" type="date" class="w-full" placeholder="mm/dd/yyyy" />
                             </div>
+
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3">End Time</label>
                                 <Input v-model="form.end_time" type="time" class="w-full" />
                             </div>
+
                             <div class="relative flex items-center flex-col justify-center gap-2">
-                                <Button @click="handleSearch" variant="destructive" size="lg"
-                                    class="cursor-pointer px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <Button
+                                    @click="handleSearch"
+                                    variant="destructive"
+                                    size="lg"
+                                    class="cursor-pointer px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                >
                                     Search
                                 </Button>
                             </div>
@@ -428,8 +501,12 @@ const handleDownloadAll = async () => {
 
                     <!-- Download All Button -->
                     <div class="flex justify-end mb-4">
-                        <Button @click="handleDownloadAll" variant="default" size="lg"
-                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <Button
+                            @click="handleDownloadAll"
+                            variant="default"
+                            size="lg"
+                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                        >
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -451,32 +528,44 @@ const handleDownloadAll = async () => {
                                     <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
                                 </tr>
                             </thead>
+
                             <tbody class="divide-y">
                                 <tr v-for="(win, index) in wins?.data" :key="index">
                                     <td class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
                                         {{ (wins?.current_page - 1) * wins?.per_page + index + 1 }}
                                     </td>
+
                                     <td class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r text-center">
                                         {{ win?.product?.title }}
                                     </td>
+
                                     <td class="px-6 py-4 border-r text-center">
                                         <p class="text-lg">{{ formatDate(win.draw_time) }}</p>
                                         <p class="font-bold text-md" v-if="win.from_time && win.to_time">
                                             {{ formatTime(win.from_time) }} - {{ formatTime(win.to_time) }}
                                         </p>
                                     </td>
+
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
-                                            <div v-for="(number, idx) in parseNumbers(win.win_number)" :key="idx"
-                                                class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2">
+                                            <div
+                                                v-for="(number, idx) in parseNumbers(win.win_number)"
+                                                :key="idx"
+                                                class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2"
+                                            >
                                                 {{ number }}
                                             </div>
                                         </div>
                                     </td>
+
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
-                                            <Button @click="handleDownload(win)" variant="default" size="lg"
-                                                class="cursor-pointer px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                                            <Button
+                                                @click="handleDownload(win)"
+                                                variant="default"
+                                                size="lg"
+                                                class="cursor-pointer px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
+                                            >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -484,8 +573,13 @@ const handleDownloadAll = async () => {
                                                 </svg>
                                                 Download
                                             </Button>
-                                            <Button v-if="can('draw history delete')" @click="deleteHistory(win.id)"
-                                                size="sm" class="bg-red-500 hover:bg-red-700 cursor-pointer">
+
+                                            <Button
+                                                v-if="can('draw history delete')"
+                                                @click="deleteHistory(win.id)"
+                                                size="sm"
+                                                class="bg-red-500 hover:bg-red-700 cursor-pointer"
+                                            >
                                                 Delete
                                             </Button>
                                         </div>
@@ -504,7 +598,9 @@ const handleDownloadAll = async () => {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Are you sure?</DialogTitle>
-                    <DialogDescription>This History will be deleted permanently.</DialogDescription>
+                    <DialogDescription>
+                        This History will be deleted permanently.
+                    </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                     <Button variant="outline" @click="deleteModal = false">Cancel</Button>

@@ -82,12 +82,8 @@ class DrawController extends Controller
             ->with('product')
             ->paginate(10);
         
-        
-
         $products = Product::orderBy('title')->get();
         $company = CompannySetting::first();
-
-
 
         return Inertia::render('Product/Draws/History', [
             'wins' => $wins,

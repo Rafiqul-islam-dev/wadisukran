@@ -159,9 +159,17 @@ class AgentController extends Controller
         }
     }
 
-    public function top_ten_agents(){
+    public function top_ten_agents(Request $request)
+    {
         return Inertia::render('User/TopTen', [
-            'agents' => $this->agentService->topTen()
+            'agents' => $this->agentService->topTen(
+                $request->from_date,
+                $request->to_date
+            ),
+            'filters' => [
+                'from_date' => $request->from_date,
+                'to_date'   => $request->to_date,
+            ],
         ]);
     }
 

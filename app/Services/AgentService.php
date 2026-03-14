@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Agent;
 use App\Models\User;
 use Illuminate\Support\Facades\Crypt;
+use Carbon\Carbon;
 
 class AgentService
 {
@@ -52,16 +53,30 @@ class AgentService
         return 'Agent deleted successfully';
     }
 
-    public function topTen(){
-        $start = now()->startOfMonth();
-        $end   = now()->endOfMonth();
+    public function topTen($fromDate = null, $toDate = null)
+    {
+        if ($fromDate && $toDate) {
+            $start = Carbon::parse($fromDate)->startOfDay(); // 00:00:00
+            $end   = Carbon::parse($toDate)->endOfDay();     // 23:59:59
+        } elseif ($fromDate) {
+            $start = Carbon::parse($fromDate)->startOfDay();
+            $end   = Carbon::parse($fromDate)->endOfDay();
+        } elseif ($toDate) {
+            $start = Carbon::parse($toDate)->startOfDay();
+            $end   = Carbon::parse($toDate)->endOfDay();
+        } else {
+            // default current month
+            $start = now()->startOfMonth();
+            $end   = now()->endOfMonth();
+        }
 
         return User::query()
             ->select(
                 'users.id',
                 'users.name',
                 'users.photo',
-                'users.status'
+                'users.status',
+                'users.address'
             )
             ->leftJoin('orders', function ($join) use ($start, $end) {
                 $join->on('orders.user_id', '=', 'users.id')
@@ -75,10 +90,11 @@ class AgentService
                 'users.id',
                 'users.name',
                 'users.photo',
-                'users.status'
+                'users.status',
+                'users.address'
             )
             ->orderByDesc('total_sale')
             ->limit(10)
             ->get();
-    }
+}
 }
