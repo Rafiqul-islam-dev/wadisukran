@@ -489,6 +489,10 @@ const formattedDate = computed(() => {
                                         class="px-2 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                         Win Amount
                                     </th>
+                                    <th
+                                        class="px-2 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        Total
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -556,10 +560,19 @@ const formattedDate = computed(() => {
                                         </div>
                                     </td>
 
-                                    <!-- Win Amount -->
+                                    <!-- Win Amount (per item) -->
+                                    <td class="py-4 align-top">
+                                        <div v-for="(item, i) in group.items" :key="'win-' + i" class="mb-2 last:mb-0 min-h-[32px] flex items-center">
+                                            <span class="text-sm font-bold text-green-600">
+                                                {{ item.win_amount }} {{ company_setting?.currency }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Total (sum) -->
                                     <td class="py-4 align-top">
                                         <div class="flex items-center gap-2 mt-2">
-                                            <span class="text-sm font-bold text-green-600">
+                                            <span class="text-sm font-bold text-green-700">
                                                 {{ group.total_win_amount }} {{ company_setting?.currency }}
                                             </span>
                                         </div>
@@ -570,7 +583,7 @@ const formattedDate = computed(() => {
                             <!-- Footer Total -->
                             <tfoot v-if="orders?.length > 0">
                                 <tr class="bg-gradient-to-r from-orange-50 to-amber-50 border-t-2 border-orange-200">
-                                    <td colspan="8" class="px-6 py-4 text-sm font-bold text-gray-700 text-right">
+                                    <td colspan="9" class="px-6 py-4 text-sm font-bold text-gray-700 text-right">
                                         Total Win Amount:
                                     </td>
                                     <td class="px-6 py-4">
