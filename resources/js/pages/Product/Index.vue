@@ -19,7 +19,6 @@ const { products, categories } = defineProps<{
     categories: Array<any>;
 }>();
 const { company_setting } = usePage().props;
-console.log(products)
 
 const showModal = ref(false);
 const deleteModal = ref(false);

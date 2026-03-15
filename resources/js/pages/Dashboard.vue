@@ -20,8 +20,6 @@ const { agent_count, today_sales, today_commissions, top_ten_customers, top_ten_
     top_ten_agents: Array<any>;
 }>();
 
-console.log(top_ten_agents)
-
 </script>
 
 <template>

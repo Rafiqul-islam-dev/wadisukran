@@ -141,7 +141,38 @@
             line-height: 16px;
             font-size: 10px;
             font-weight: bold;
-            margin: 2px 1px;
+            margin: 1px 1px;
+        }
+
+        /* ── Play Types ── */
+        .play-types {
+            width: 100%;
+            max-width: 150px;
+            margin: 2px auto 4px auto;
+            text-align: center;
+            font-size: 9px;
+            border-collapse: collapse;
+        }
+
+        .play-types th {
+            font-weight: bold;
+            padding: 0 3px 0 3px;
+            color: #333;
+            line-height: 1.2;
+        }
+
+        .play-types td {
+            text-align: center;
+            color: #555;
+            padding-top: 0;
+            line-height: 1.2;
+        }
+
+        .ticket-divider {
+            border: none;
+            border-top: 1px dashed #ccc;
+            margin: 3px auto;
+            width: 80%;
         }
 
         /* ── Point of Sale ── */
@@ -288,12 +319,34 @@
         <div class="numbers-title">Numbers</div>
 
         <div class="numbers-grid">
-            @foreach ($order->tickets as $ticket)
+            @foreach ($order->tickets as $index => $ticket)
                 <div>
                     @foreach ($ticket->selected_numbers as $number)
                         <span class="number-bubble">{{ str_pad($number, 2, '0', STR_PAD_LEFT) }}</span>
                     @endforeach
                 </div>
+
+                @if($order->product->prize_type === 'bet')
+                    <table class="play-types">
+                        <tr>
+                            <th>Straight</th>
+                            <th>Rumble</th>
+                            <th>Chance</th>
+                        </tr>
+                        <tr>
+                            @php 
+                                $types = is_array($ticket->selected_play_types) ? $ticket->selected_play_types : [];
+                            @endphp
+                            <td>{{ in_array('Straight', $types) ? '1' : '0' }}</td>
+                            <td>{{ in_array('Rumble', $types) ? '1' : '0' }}</td>
+                            <td>{{ in_array('Chance', $types) ? '1' : '0' }}</td>
+                        </tr>
+                    </table>
+                @endif
+
+                @if(!$loop->last)
+                    <hr class="ticket-divider">
+                @endif
             @endforeach
 
         </div>

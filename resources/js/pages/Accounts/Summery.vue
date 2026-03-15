@@ -21,8 +21,6 @@ const { agent, agents } = defineProps<{
     from_date: string;
 }>();
 
-console.log(agent);
-
 const form = useForm({
     from: '',
     to: '',
@@ -257,7 +255,7 @@ function truncateTwo(num) {
                 <div class="text-center mb-4">
                     <h2 class="text-xl font-bold">Account Statement</h2>
                     <p class="text-sm text-gray-600">
-                        Statement Date: <strong>{{ from_date }} 12:00 AM</strong> to <strong > {{ to_date }} 11:59:59 PM</strong>
+                        Statement Date: <strong>{{ from_date }} 12:00:00</strong> to <strong > {{ to_date }} 11:59:59</strong>
                     </p>
                 </div>
                 <div class="mb-4">

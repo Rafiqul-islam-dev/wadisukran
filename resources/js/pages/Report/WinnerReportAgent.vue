@@ -20,8 +20,6 @@ const { agents, wins, all_agents, filters } = defineProps<{
     filters: { agent: string | number; from_date: string; to_date: string }
 }>()
 
-console.log(wins)
-
 const form = useForm({
     agent: filters?.agent ?? '',
     from_date: filters?.from_date ?? '',

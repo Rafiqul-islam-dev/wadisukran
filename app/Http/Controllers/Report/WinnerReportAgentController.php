@@ -24,6 +24,8 @@ class WinnerReportAgentController extends Controller
     }
     public function winnerReportAgent(Request $request)
     {
+        $all_agents = User::where('user_type', 'agent')->get();
+
         $agents = User::where('user_type', 'agent')
             ->where('status', 'active')
             ->select('id', 'name')
@@ -42,6 +44,7 @@ class WinnerReportAgentController extends Controller
             return Inertia::render('Report/WinnerReportAgent', [
                 'wins' => $wins,
                 'agents' => $agents,
+                'all_agents' => $all_agents,
                 'products' => $products,
                 'filters' => ['agent' => '', 'from_date' => '', 'to_date' => ''],
             ]);
@@ -54,7 +57,6 @@ class WinnerReportAgentController extends Controller
         ]);
 
        // Get all agents first (apply filter if needed)
-        $all_agents = User::where('user_type', 'agent')->get();
         $agents = User::query()->where('user_type', 'agent')
                       ->when($request->filled('agent'), function($q, $agent){
                         $q->where('id', $agent);

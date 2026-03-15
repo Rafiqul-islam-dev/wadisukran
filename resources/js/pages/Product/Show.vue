@@ -6,8 +6,6 @@ const { company_setting } = usePage().props;
 const { product } = defineProps<{
     product: Array<any>;
 }>();
-
-console.log(product);
 </script>
 
 

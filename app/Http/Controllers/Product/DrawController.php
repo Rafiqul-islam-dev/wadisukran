@@ -41,7 +41,7 @@ class DrawController extends Controller
 
             'products.*.id' => ['required', 'integer', 'exists:products,id'],
             'products.*.numbers' => ['required', 'array'],
-            'products.*.numbers.*' => ['integer']
+            'products.*.numbers.*' => ['string']
         ]);
         $toTime = Carbon::createFromFormat('Y-m-d H:i', $validated['date'] . ' ' . $validated['time']);
         $toTime->second(59);

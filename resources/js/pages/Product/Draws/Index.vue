@@ -36,9 +36,14 @@ products.forEach((product: any) => {
 });
 
 const generateForProduct = (product: any) => {
+  const max = product.type_number;
+  const maxLength = max <= 9 ? 1 : 2;
   drawNumbers[product.id] = Array.from(
     { length: product.pick_number },
-    () => (Math.floor(Math.random() * product.type_number) + 1).toString()
+    () => {
+      let val = (Math.floor(Math.random() * max) + 1).toString();
+      return maxLength === 2 ? val.padStart(2, '0') : val;
+    }
   );
 };
 
@@ -69,6 +74,11 @@ const handleNumberChange = (
     value = max.toString();
   }
 
+  // Auto-pad single digit if we can't possibly add another valid digit
+  if (value.length === 1 && maxLength === 2 && (Number(value) * 10) > max) {
+    value = value.padStart(2, '0');
+  }
+
   drawNumbers[product.id][index] = value;
   target.value = value;
 
@@ -79,6 +89,18 @@ const handleNumberChange = (
       if (next) next.focus();
     });
   }
+};
+
+const handleBlur = (product: any, index: number) => {
+    let value = drawNumbers[product.id][index];
+    if (!value) return;
+
+    const max = product.type_number;
+    const maxLength = max <= 9 ? 1 : 2;
+
+    if (maxLength === 2 && value.length === 1) {
+        drawNumbers[product.id][index] = value.padStart(2, '0');
+    }
 };
 
 
@@ -101,7 +123,10 @@ const handleSearch = () => {
         {
             preserveScroll: true,
             replace: true,
-            showProgress: false
+            showProgress: false,
+            onError: (error) => {
+                console.log(error)
+            }
         }
     );
 };
@@ -110,8 +135,8 @@ const saveDraw = () => {
     form.products = products
         .map((p: any) => {
             const numbers = (drawNumbers[p.id] ?? [])
-                .filter((n) => n !== '')     // remove empty inputs
-                .map((n) => Number(n));      // convert to number
+                .filter((n) => n !== '');     // remove empty inputs
+                // do not convert to number to preserve leading zeros
 
             // return null if no numbers
             if (numbers.length === 0) return null;
@@ -165,6 +190,10 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
 
         if (Number(value) > max) {
             value = max.toString();
+        }
+
+        if (maxLength === 2) {
+            value = value.padStart(2, '0');
         }
 
         currentNumbers[targetIndex] = value;
@@ -263,6 +292,7 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
 
                                                 @input="handleNumberChange(product, idx, $event)"
                                                 @paste="handlePaste(product, idx, $event)"
+                                                @blur="handleBlur(product, idx)"
                                                 v-model="drawNumbers[product.id][idx]"
                                                 class="w-8 md:w-12 h-8 md:h-12 text-center text-lg font-semibold"
                                             />

@@ -24,7 +24,6 @@ const { filters, products, product_prizes, product, summary, orders } = definePr
     product: Array<any>;
 }>();
 
-console.log(orders)
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -43,14 +42,34 @@ const inputs = ref<HTMLInputElement[]>([]);
 
 const handleInput = (index: number, event: Event) => {
     const target = event.target as HTMLInputElement;
-    target.value = target.value.replace(/\D/g, '');
-    filter.value.pick_number[index] = target.value;
+    let value = target.value.replace(/\D/g, '');
 
-    if (!product) return;
+    if (!product) {
+        target.value = value;
+        filter.value.pick_number[index] = value;
+        return;
+    }
 
-    const maxLength = product.type_number <= 9 ? 1 : 2;
+    const max = product.type_number;
+    const maxLength = max <= 9 ? 1 : 2;
 
-    if (target.value.length >= maxLength) {
+    // limit length
+    value = value.slice(0, maxLength);
+
+    // limit value
+    if (Number(value) > max) {
+        value = max.toString();
+    }
+
+    // Auto-pad single digit if we can't possibly add another valid digit
+    if (value.length === 1 && maxLength === 2 && (Number(value) * 10) > max) {
+        value = value.padStart(2, '0');
+    }
+
+    target.value = value;
+    filter.value.pick_number[index] = value;
+
+    if (value.length >= maxLength) {
         nextTick(() => {
             const next = inputs.value[index + 1];
             if (next) {
@@ -200,6 +219,31 @@ const matchTypes = computed(() => {
     });
 
     return options;
+});
+
+const groupedOrders = computed(() => {
+    if (!orders || !orders.length) return [];
+    
+    const map = new Map();
+    orders.forEach((order) => {
+        if (!map.has(order.invoice_no)) {
+            map.set(order.invoice_no, {
+                invoice_no: order.invoice_no,
+                product_name: order.product_name,
+                created_at: order.created_at,
+                vendor_name: order.vendor_name,
+                vendor_address: order.vendor_address,
+                items: [],
+                total_win_amount: 0,
+            });
+        }
+        
+        const group = map.get(order.invoice_no);
+        group.items.push(order);
+        group.total_win_amount += (Number(order.win_amount) || 0);
+    });
+    
+    return Array.from(map.values()).sort((a, b) => b.total_win_amount - a.total_win_amount);
 });
 
 const formattedDate = computed(() => {
@@ -401,7 +445,7 @@ const formattedDate = computed(() => {
                             <h2 class="text-white font-bold text-lg">Winner Vendors</h2>
                         </div>
                         <span class="bg-white bg-opacity-20 text-black text-sm font-semibold px-3 py-1 rounded-full">
-                            {{ orders?.length ?? 0 }} Winners
+                            {{ groupedOrders?.length ?? 0 }} Winners
                         </span>
                     </div>
 
@@ -448,46 +492,48 @@ const formattedDate = computed(() => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                <tr v-for="(order, index) in orders" :key="index"
+                                <tr v-for="(group, index) in groupedOrders" :key="index"
                                     class="hover:bg-orange-50 transition-colors duration-200 group">
 
                                     <!-- SL -->
-                                    <td class="px-2 py-4">
+                                    <td class="px-2 py-4 align-top">
                                         <span
-                                            class="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                            class="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-xs font-bold mt-1">
                                             {{ index + 1 }}
                                         </span>
                                     </td>
-                                    <td>
-                                        {{ order.product_name }}
+                                    <td class="py-4 align-top">
+                                        <div class="mt-2">{{ group.product_name }}</div>
                                     </td>
-                                    <td>
-                                        {{ order.invoice_no }}
+                                    <td class="py-4 align-top">
+                                        <div class="mt-2">{{ group.invoice_no }}</div>
                                     </td>
-                                    <td>
-                                        {{ order.created_at }}
+                                    <td class="py-4 align-top">
+                                        <div class="mt-2">{{ group.created_at }}</div>
                                     </td>
-                                    <td>
-                                        <div class="flex gap-2">
-                                            <span v-for="type in order.types" :key="type">{{ type }}</span>
+                                    <td class="py-4 align-top">
+                                        <div v-for="(item, i) in group.items" :key="'types-' + i" class="mb-2 last:mb-0 min-h-[32px] flex items-center">
+                                            <div class="flex gap-2">
+                                                <span v-for="type in item.types" :key="type">{{ type }}</span>
+                                            </div>
                                         </div>
                                     </td>
 
                                     <!-- Vendor Name -->
-                                    <td class="py-4">
-                                        <div class="flex items-center gap-3">
+                                    <td class="py-4 align-top">
+                                        <div class="flex items-center gap-3 mt-1">
                                             <div>
-                                                <p class="text-sm font-semibold text-gray-900">{{ order.vendor_name }}
+                                                <p class="text-sm font-semibold text-gray-900">{{ group.vendor_name }}
                                                 </p>
-                                                <p class="text-xs text-gray-400">{{ order.vendor_address }}</p>
+                                                <p class="text-xs text-gray-400">{{ group.vendor_address }}</p>
                                             </div>
                                         </div>
                                     </td>
 
                                     <!-- Raffle Ticket Numbers -->
-                                    <td class="py-4">
-                                        <div class="flex gap-1 flex-wrap">
-                                            <span v-for="number in order.selected_numbers" :key="number"
+                                    <td class="py-4 align-top">
+                                        <div v-for="(item, i) in group.items" :key="'numbers-' + i" class="flex gap-1 flex-wrap mb-2 last:mb-0 min-h-[32px] items-center">
+                                            <span v-for="number in item.selected_numbers" :key="number"
                                                 class="w-8 h-8 bg-gradient-to-br from-orange-400 to-amber-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
                                                 {{ number }}
                                             </span>
@@ -495,24 +541,26 @@ const formattedDate = computed(() => {
                                     </td>
 
                                     <!-- Match Type -->
-                                    <td class=" py-4">
-                                        <span
-                                            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
-                                            :class="{
-                                                'bg-green-100 text-green-700': order.match_type === 'Straight',
-                                                'bg-blue-100 text-blue-700': order.match_type === 'Rumble',
-                                                'bg-purple-100 text-purple-700': order.match_type?.startsWith('Chance'),
-                                                'bg-indigo-100 text-indigo-700': order.match_type?.startsWith('Number'),
-                                            }">
-                                            {{ order.match_type }}
-                                        </span>
+                                    <td class="py-4 align-top">
+                                        <div v-for="(item, i) in group.items" :key="'match-' + i" class="mb-2 last:mb-0 min-h-[32px] flex items-center">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
+                                                :class="{
+                                                    'bg-green-100 text-green-700': item.match_type === 'Straight',
+                                                    'bg-blue-100 text-blue-700': item.match_type === 'Rumble',
+                                                    'bg-purple-100 text-purple-700': item.match_type?.startsWith('Chance'),
+                                                    'bg-indigo-100 text-indigo-700': item.match_type?.startsWith('Number'),
+                                                }">
+                                                {{ item.match_type }}
+                                            </span>
+                                        </div>
                                     </td>
 
                                     <!-- Win Amount -->
-                                    <td class=" py-4">
-                                        <div class="flex items-center gap-2">
+                                    <td class="py-4 align-top">
+                                        <div class="flex items-center gap-2 mt-2">
                                             <span class="text-sm font-bold text-green-600">
-                                                {{ order.win_amount }} {{ company_setting?.currency }}
+                                                {{ group.total_win_amount }} {{ company_setting?.currency }}
                                             </span>
                                         </div>
                                     </td>

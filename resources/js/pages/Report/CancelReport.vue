@@ -21,7 +21,6 @@ const { users, filters, orders, company } = defineProps<{
     filters: Record<string, any>;
     product_prizes: Array<any>;
 }>();
-console.log(company)
 const modalVisible = ref(false);
 const selectedOrder = ref<any | null>(null);
 const showModal = ref(false);
