@@ -28,4 +28,4 @@ yarn-error.log
 /public/uploads/*
 /public/banners/*
 /public/test.html
-/index.html
+# /index.html
