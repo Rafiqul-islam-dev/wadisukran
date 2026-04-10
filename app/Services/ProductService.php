@@ -27,6 +27,7 @@ class ProductService
 
         $product = Product::create([
             'title'        => $data['title'],
+            'product_number' => $data['product_number'],
             'category_id'  => $data['category_id'],
             'price'        => $data['price'],
             'draw_type'    => $data['draw_type'],
@@ -77,6 +78,7 @@ class ProductService
         }
 
         $product->title       = $data['title'];
+        $product->product_number = $data['product_number'];
         $product->category_id = $data['category_id'];
         $product->price       = $data['price'];
         $product->draw_type   = $data['draw_type'];

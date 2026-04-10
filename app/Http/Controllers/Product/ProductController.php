@@ -47,6 +47,7 @@ class ProductController extends Controller
     {
         $data = [
             'title' => $request->title,
+            'product_number' => $request->product_number,
             'category_id' => $request->category_id,
             'price' => $request->price,
             'draw_type' => ($request->draw_type === 'regular' ? $request->regular_type : $request->draw_type),
@@ -80,6 +81,7 @@ class ProductController extends Controller
             'product' => [
                 'id' => $product->id,
                 'title' => $product->title,
+                'product_number' => $product->product_number,
                 'price' => $product->price,
                 'draw_time' => $product->draw_time,
                 'image_url' => $product->image_url,
@@ -98,6 +100,7 @@ class ProductController extends Controller
         // dd($request->all());
         $data = [
             'title' => $request->title,
+            'product_number' => $request->product_number,
             'category_id' => $request->category_id,
             'price' => $request->price,
             'draw_type' => $request->draw_type === 'once' ? $request->draw_type : $request->regular_type,

@@ -28,6 +28,7 @@ const editingProduct = ref(null);
 const imagePreview = ref(null);
 const form = useForm({
     title: '',
+    product_number: '',
     category_id: '',
     price: '',
     draw_time: [],
@@ -49,6 +50,7 @@ const editProduct = (product) => {
     isEditing.value = true;
     editingProduct.value = product;
     form.title = product.title;
+    form.product_number = product.product_number;
     form.category_id = product.category_id;
     form.price = product.price;
     form.draw_type = product.draw_type === 'once' ? 'once' : 'regular';
@@ -534,6 +536,15 @@ function removeDrawTime(index: number) {
                                                 placeholder="Enter product title" required />
                                             <p v-if="form.errors.title" class="text-red-600 text-sm">
                                                 {{ form.errors.title }}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Product Number</label>
+                                            <input v-model="form.product_number" type="number"
+                                                class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                placeholder="Enter product number" required />
+                                            <p v-if="form.errors.product_number" class="text-red-600 text-sm">
+                                                {{ form.errors.product_number }}
                                             </p>
                                         </div>
                                         <div>

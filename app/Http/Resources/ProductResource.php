@@ -69,9 +69,22 @@ class ProductResource extends JsonResource
             $draw_time = $next_time->format('H:i:s');
         }
 
+        $numberImage = null;
+
+        if (!empty($this->product_number)) {
+            $imagePath = 'asset/number-' . $this->product_number . '.png';
+
+            if (file_exists(public_path($imagePath))) {
+                $numberImage = asset($imagePath);
+            }
+        }
+
+
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'product_number' => $this->product_number,
+            'number_image' => $numberImage,
             'price' => (float) $this->price,
             'drawDate' => $draw_date ? $draw_date->format('Y-m-d') : '',
             'drawTime' => $draw_time ? Carbon::parse($draw_time)->format('H:i:s') : '',
