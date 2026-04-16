@@ -139,7 +139,13 @@ class OrderController extends Controller
                 }
             }
             $salesDateTime = Carbon::parse($order->created_at)->format('Y-m-d, H:i');
-            // dd($salesTime);
+           if (!empty($order->product?->product_number)) {
+                $imagePath = 'asset/number-' . $order->product->product_number . '.png';
+
+                if (file_exists(public_path($imagePath))) {
+                    $numberImage = asset($imagePath);
+                }
+            }
 
             $data = [
                 'id' => $order->id,
@@ -157,6 +163,7 @@ class OrderController extends Controller
                 'product_title' => $order->product ? $order->product->title : null,
                 'product_price' => $order->product ? $order->product->price : null,
                 'image' => $order->product ? static_asset($order->product->image) : null,
+                'number_image' => $numberImage,
                 'draw_date' => $order->created_at ? Carbon::parse($order->created_at)->format('d M, Y') : null,
                 'draw_time' => $draw_time,
                 'vendor_name' => $order->user ? $order->user->name : null,

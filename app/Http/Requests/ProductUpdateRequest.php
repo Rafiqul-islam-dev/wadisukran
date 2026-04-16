@@ -19,8 +19,7 @@ class ProductUpdateRequest extends FormRequest
             'title' => [
                 'required',
                 'string',
-                'max:255',
-                'unique:products,title,'.$productId,
+                'max:255'
             ],
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',

@@ -23,20 +23,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 const deleteModal = ref(false);
 const deletingHistory = ref<any>(null);
 
-const { wins, products, logoUrl } = defineProps<{
+const { wins, products, logoUrl, cupIcon, filters } = defineProps<{
     wins: any;
     products: Array<any>;
     logoUrl: string;
+    cupIcon: string;
+    filters: any;
 }>();
 
 const WHATSAPP_TO = '88001714963096';
 
 const form = useForm({
-    product_id: '',
-    start_date: '',
-    start_time: '',
-    end_date: '',
-    end_time: ''
+    product_id: filters.product_id || '',
+    start_date: filters.start_date || '',
+    start_time: filters.start_time || '',
+    end_date: filters.end_date || '',
+    end_time: filters.end_time || ''
 });
 
 const formatDate = (date: string) => {
@@ -58,14 +60,7 @@ const formatTime = (time: string) => {
     }).format(date);
 };
 
-const formatTimeImage = (time: string) => {
-    const date = new Date(time);
-    return new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-    }).format(date);
-};
+
 
 const parseNumbers = (winNumber: any): string[] => {
     if (!winNumber) return [];
@@ -112,6 +107,24 @@ const handleSearch = () => {
 
 // ─── Canvas Helpers ────────────────────────────────────────────────────────────
 
+const LEFT_PANEL_W = 118;
+const RIGHT_PANEL_W = 210;
+const ROW_HEIGHT = 50;
+const ROW_SPACING = 8;
+const CARD_PADDING = 20;
+const CARD_CORNER = 22;
+const BADGE_W_CONST = 148;                                   // must match BADGE_W in buildResultCanvas
+const BADGE_END_X  = LEFT_PANEL_W + 10 + BADGE_W_CONST;     // right edge of the badge pill (= 276)
+const WHITE_END_X  = BADGE_END_X + 8;                        // kept for reference
+
+const formatResultDate = (date: string): string => {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+};
+
 function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -126,19 +139,235 @@ function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
     ctx.closePath();
 }
 
-function drawBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number, text: string) {
-    ctx.shadowColor = 'rgba(0,0,0,0.45)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 2;
+function drawCardBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
+    const GRAY_GAP   = 10;              // gap from top / bottom / right card edges
+    const GRAY_LEFT  = LEFT_PANEL_W + 80; // 5px gap from logo panel edge (gray goes more left)
+    const GRAY_TOP   = GRAY_GAP;
+    const GRAY_W     = W - GRAY_LEFT - GRAY_GAP;
+    const GRAY_H     = H - GRAY_GAP * 2;
+    const GRAY_R     = 20;  // border-radius of the gray inner panel
+
+    // ── Step 1: Clip to card shape ──
+    ctx.save();
+    drawRoundRect(ctx, 0, 0, W, H, CARD_CORNER);
+    ctx.clip();
+
+    // ── Step 2: White background fills entire card ──
+    ctx.fillStyle = '#edf0f3';
+    ctx.fillRect(0, 0, W, H);
+
+    // Diagonal lines over white (subtle dark)
+    ctx.strokeStyle = 'rgba(0,0,0,0.055)';
+    ctx.lineWidth = 1;
+    for (let i = -H * 2; i < W + H * 2; i += 16) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + H, H);
+        ctx.stroke();
+    }
+
+    // ── Step 3: Gray inner panel (inside white) ──
+    ctx.save();
+    drawRoundRect(ctx, GRAY_LEFT, GRAY_TOP, GRAY_W, GRAY_H, GRAY_R);
+
+    const grayGrad = ctx.createLinearGradient(GRAY_LEFT, GRAY_TOP, W, H);
+    grayGrad.addColorStop(0, '#b6c3cc');
+    grayGrad.addColorStop(0.5, '#9db0bb');
+    grayGrad.addColorStop(1, '#8ea2ae');
+    ctx.fillStyle = grayGrad;
+    ctx.fill();
+
+    // Diagonal lines clipped to gray panel area
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1.2;
+    for (let i = GRAY_LEFT - H * 2; i < W + H * 2; i += 16) {
+        ctx.beginPath();
+        ctx.moveTo(i, GRAY_TOP);
+        ctx.lineTo(i + GRAY_H, GRAY_TOP + GRAY_H);
+        ctx.stroke();
+    }
+    ctx.restore(); // end gray clip
+
+    ctx.restore(); // end card clip
+
+    // ── Step 4: Card outer border ──
+    ctx.strokeStyle = 'rgba(0,0,0,0.14)';
+    ctx.lineWidth = 2.5;
+    drawRoundRect(ctx, 0, 0, W, H, CARD_CORNER);
+    ctx.stroke();
+}
+
+
+function drawLeftPanel(ctx: CanvasRenderingContext2D, H: number, logoImg: HTMLImageElement | null, cupImg: HTMLImageElement | null) {
+    const cx = LEFT_PANEL_W / 2;
+
+    // ── Logo ──
+    const logoW = 80;
+    const logoH = 80;
+    const logoY = CARD_PADDING + logoH / 2 + 10;
+
+    if (logoImg) {
+        ctx.drawImage(logoImg, cx - logoW / 2, logoY - logoH / 2, logoW, logoH);
+    } else {
+        ctx.beginPath();
+        ctx.arc(cx, logoY, 38, 0, Math.PI * 2);
+        ctx.fillStyle = '#1e3a6e';
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('LOGO', cx, logoY);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    // ── "BUY OUR PRODUCT GET COUPON" ──
+    const textY = H * 0.46;
+    ctx.fillStyle = '#0d1a2e';
+    ctx.textAlign = 'center';
+    ['BUY OUR', 'PRODUCT', 'GET COUPON'].forEach((line, i) => {
+        ctx.font = `bold ${i === 2 ? 11 : 12}px Arial, sans-serif`;
+        ctx.fillText(line, cx, textY + i * 17);
+    });
+
+    // ── Trophy ──
+    drawTrophy(ctx, cx, H * 0.8, cupImg);
+}
+
+function drawTrophy(ctx: CanvasRenderingContext2D, cx: number, cy: number, cupImg: HTMLImageElement | null) {
+    if (cupImg) {
+        const iconW = 74;
+        const iconH = 82;
+        ctx.drawImage(cupImg, cx - iconW / 2, cy - iconH / 2, iconW, iconH);
+        return;
+    }
+
+    const s = 1.55;
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    const cupGrad = ctx.createLinearGradient(-14 * s, -20 * s, 14 * s, 14 * s);
+    cupGrad.addColorStop(0, '#ffe066');
+    cupGrad.addColorStop(0.45, '#f0b429');
+    cupGrad.addColorStop(1, '#b8860b');
+
+    // Cup body
+    ctx.beginPath();
+    ctx.moveTo(-14 * s, -20 * s);
+    ctx.lineTo(-14 * s, -8 * s);
+    ctx.bezierCurveTo(-15 * s, 6 * s, -8 * s, 12 * s, 0, 14 * s);
+    ctx.bezierCurveTo(8 * s, 12 * s, 15 * s, 6 * s, 14 * s, -8 * s);
+    ctx.lineTo(14 * s, -20 * s);
+    ctx.closePath();
+    ctx.fillStyle = cupGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#9a6e00';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Top rim
+    ctx.beginPath();
+    ctx.ellipse(0, -20 * s, 14 * s, 3.5 * s, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe57a';
+    ctx.fill();
+
+    // Handles
+    ctx.strokeStyle = '#f0b429';
+    ctx.lineWidth = 4 * s;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-14 * s, -16 * s);
+    ctx.arc(-21 * s, -10 * s, 8 * s, -0.9, 1.6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(14 * s, -16 * s);
+    ctx.arc(21 * s, -10 * s, 8 * s, Math.PI + 0.9, -1.6, true);
+    ctx.stroke();
+
+    // Stem
+    ctx.fillStyle = '#f0b429';
+    ctx.fillRect(-3.5 * s, 14 * s, 7 * s, 8 * s);
+
+    // Base
+    ctx.beginPath();
+    drawRoundRect(ctx, -16 * s, 22 * s, 32 * s, 6 * s, 3);
+    ctx.fillStyle = '#f0b429';
+    ctx.fill();
+    ctx.strokeStyle = '#9a6e00';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Shine
+    ctx.beginPath();
+    ctx.ellipse(-4 * s, -14 * s, 2.5 * s, 5.5 * s, -0.3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawCouponBadge(
+    ctx: CanvasRenderingContext2D,
+    title: string,
+    productNumber: string | number | null,
+    x: number, y: number,
+    w: number, h: number
+) {
+    // Navy pill background
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, '#243f7a');
+    grad.addColorStop(1, '#162d5a');
+    ctx.fillStyle = grad;
+    drawRoundRect(ctx, x, y, w, h, h / 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    const cy = y + h / 2;
+    const numStr = productNumber != null ? String(productNumber) : '';
+
+    // Font sizes: title normal, number BIG
+    const titleFontSize = Math.min(h * 0.36, 15);
+    const numFontSize   = Math.min(h * 0.72, 30);
+
+    // Measure both parts to center them together
+    ctx.font = `bold ${titleFontSize}px Arial, sans-serif`;
+    const titleW = ctx.measureText(title + (numStr ? ' ' : '')).width;
+    ctx.font = `bold ${numFontSize}px Arial, sans-serif`;
+    const numW = numStr ? ctx.measureText(numStr).width : 0;
+
+    const totalW = titleW + numW;
+    // Centered inside badge
+    const startX = x + (w - totalW) / 2;
+
+    // Draw title text
+    ctx.font = `bold ${titleFontSize}px Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(title + (numStr ? ' ' : ''), startX, cy + (numFontSize - titleFontSize) * 0.08);
+
+    // Draw number — larger, aligned to baseline with title
+    if (numStr) {
+        ctx.font = `bold ${numFontSize}px Arial, sans-serif`;
+        ctx.fillText(numStr, startX + titleW, cy);
+    }
+
+    ctx.textBaseline = 'alphabetic';
+}
+
+function drawWinBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, text: string) {
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 1;
     ctx.shadowOffsetY = 3;
 
-    const ballGrad = ctx.createRadialGradient(cx - radius * 0.3, cy - radius * 0.3, radius * 0.1, cx, cy, radius);
-    ballGrad.addColorStop(0, '#fff8ec');
-    ballGrad.addColorStop(0.6, '#f5e6c8');
-    ballGrad.addColorStop(1, '#e8d0a0');
-    ctx.fillStyle = ballGrad;
+    const grad = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.28, r * 0.05, cx, cy, r);
+    grad.addColorStop(0, '#f9f9f9');
+    grad.addColorStop(0.65, '#e2e2e2');
+    grad.addColorStop(1, '#c5c5c5');
+    ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
@@ -147,159 +376,88 @@ function drawBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius:
     ctx.shadowOffsetY = 0;
 
     ctx.fillStyle = '#1a1a1a';
-    ctx.font = `bold ${radius * 0.85}px Arial, sans-serif`;
+    ctx.font = `bold ${r * 0.88}px Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, cx, cy);
     ctx.textBaseline = 'alphabetic';
 }
 
-function drawProductBadge(ctx: CanvasRenderingContext2D, title: string, x: number, y: number, badgeW: number, badgeH: number) {
-    const badgeGrad = ctx.createLinearGradient(x, y, x + badgeW, y);
-    badgeGrad.addColorStop(0, '#1a0a3d');
-    badgeGrad.addColorStop(1, '#2d1b69');
-    ctx.fillStyle = badgeGrad;
-    drawRoundRect(ctx, x, y, badgeW, badgeH, badgeH / 2);
+function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string) {
+    const px  = W - RIGHT_PANEL_W + 6;
+    const pw  = RIGHT_PANEL_W - 30;
+    const pcx = px + pw / 2;
+    const BOX_GAP = 8;
+
+    // ── Pre-calculate all box heights ──
+    const resH  = Math.max(Math.round(H * 0.3),  75);
+    const giftH = Math.max(Math.round(H * 0.21), 52);
+    const timeH = Math.max(Math.round(H * 0.17), 48);
+
+    // ── Vertically center the whole group ──
+    const totalH = resH + BOX_GAP + giftH + BOX_GAP + timeH;
+    const startY = Math.round((H - totalH) / 2);
+
+    const resY  = startY;
+    const giftY = resY  + resH  + BOX_GAP;
+    const timeY = giftY + giftH + BOX_GAP;
+
+    // ── RESULT box ──
+    const resGrad = ctx.createLinearGradient(px, resY, px, resY + resH);
+    resGrad.addColorStop(0, '#243f7a');
+    resGrad.addColorStop(1, '#162d5a');
+    ctx.fillStyle = resGrad;
+    drawRoundRect(ctx, px, resY, pw, resH, 8);
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 1.5;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${Math.min(resH * 0.3, 20)}px Arial, sans-serif`;
+    ctx.fillText('RESULT', pcx, resY + resH * 0.36);
+    ctx.font = `bold ${Math.min(resH * 0.24, 14)}px Arial, sans-serif`;
+    ctx.fillText(resultDate, pcx, resY + resH * 0.7);
+    ctx.textBaseline = 'alphabetic';
+
+    // ── CURRENT GIFT box ──
+    ctx.fillStyle = '#cc2a2a';
+    drawRoundRect(ctx, px, giftY, pw, giftH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${Math.min(giftH * 0.3, 13)}px Arial, sans-serif`;
+    ctx.fillText('CURRENT GIFT', pcx, giftY + giftH * 0.33);
+    ctx.font = `bold ${Math.min(giftH * 0.27, 12)}px Arial, sans-serif`;
+    ctx.fillText('AED 500,000', pcx, giftY + giftH * 0.68);
+    ctx.textBaseline = 'alphabetic';
+
+    // ── DRAW TIME box ──
+    ctx.fillStyle = '#f4f4f4';
+    drawRoundRect(ctx, px, timeY, pw, timeH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${Math.min(badgeH * 0.38, 22)}px Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(title, x + badgeW / 2, y + badgeH / 2);
+    ctx.fillStyle = '#0d1a2e';
+    ctx.font = `bold ${Math.min(timeH * 0.28, 13)}px Arial, sans-serif`;
+    ctx.fillText('DRAW TIME', pcx, timeY + timeH * 0.28);
+    ctx.font = `bold ${Math.min(timeH * 0.26, 12)}px Arial, sans-serif`;
+    ctx.fillText('12:00 AM', pcx, timeY + timeH * 0.57);
+    ctx.fillStyle = '#1565c0';
+    ctx.font = `bold ${Math.min(timeH * 0.24, 11)}px Arial, sans-serif`;
+    ctx.fillText('Everyday', pcx, timeY + timeH * 0.84);
     ctx.textBaseline = 'alphabetic';
 }
 
-function drawHeader(ctx: CanvasRenderingContext2D, W: number, logoImg: HTMLImageElement | null, dateLabel: string) {
-    const logoSize = 80;
-    const logoX = 18;
-    const logoY = 14;
-
-    if (logoImg) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-        ctx.restore();
-    } else {
-        ctx.beginPath();
-        ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('WIN', logoX + logoSize / 2, logoY + logoSize / 2);
-        ctx.textBaseline = 'alphabetic';
-    }
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('DAILY PRODUCT OFFER ACTIVITIES RESULT', (W / 2) - 40, 62);
-
-    const dateBoxW = 220;
-    const dateBoxH = 36;
-    const dateBoxX = W - dateBoxW - 16;
-    const dateBoxY = 16;
-
-    ctx.fillStyle = '#ffffff';
-    drawRoundRect(ctx, dateBoxX, dateBoxY, dateBoxW, dateBoxH, 6);
-    ctx.fill();
-
-    ctx.fillStyle = '#1a1a1a';
-    ctx.font = 'bold 15px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(dateLabel, dateBoxX + dateBoxW / 2, dateBoxY + dateBoxH / 2);
-    ctx.textBaseline = 'alphabetic';
-}
-
-function drawBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
-    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-    bgGrad.addColorStop(0, '#2d1b69');
-    bgGrad.addColorStop(0.5, '#1a0a3d');
-    bgGrad.addColorStop(1, '#0f0520');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = 'rgba(255,255,255,0.015)';
-    for (let i = 0; i < W; i += 40) {
-        ctx.fillRect(i, 0, 1, H);
-    }
-}
-
-function drawProductRow(
-    ctx: CanvasRenderingContext2D,
-    productTitle: string,
-    numbers: string[],
-    fromTime: string | null,
-    toTime: string | null,
-    W: number,
-    rowY: number,
-    rowH: number
-) {
-    const rowX = 30;
-    const rowW = W - 60;
-    const rowRadius = 40;
-
-    ctx.shadowColor = 'rgba(0,0,0,0.4)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 6;
-
-    const rowGrad = ctx.createLinearGradient(rowX, rowY, rowX, rowY + rowH);
-    rowGrad.addColorStop(0, '#7e22ce');
-    rowGrad.addColorStop(1, '#6b21a8');
-    ctx.fillStyle = rowGrad;
-    drawRoundRect(ctx, rowX, rowY, rowW, rowH, rowRadius);
-    ctx.fill();
-
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    const centerY = rowY + rowH / 2;
-
-    const badgeX = rowX + 20;
-    const badgeW = 160;
-    const badgeH = 60;
-    drawProductBadge(ctx, productTitle, badgeX, centerY - badgeH / 2, badgeW, badgeH);
-
-    if (numbers.length > 0) {
-        const ballRadius = 36;
-        const ballSpacing = 84;
-        const ballStartX = badgeX + badgeW + 40 + ballRadius;
-
-        numbers.forEach((num, i) => {
-            drawBall(ctx, ballStartX + i * ballSpacing, centerY, ballRadius, num);
-        });
-    }
-
-    if (numbers.length > 0 && fromTime && toTime) {
-        ctx.fillStyle = 'rgba(255,255,255,0.75)';
-        ctx.font = 'bold 13px Arial';
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${formatTimeImage(toTime)}`, rowX + rowW - 20, centerY);
-        ctx.textBaseline = 'alphabetic';
-    }
-}
 
 function loadLogo(url: string): Promise<HTMLImageElement | null> {
     return new Promise((resolve) => {
         if (!url) return resolve(null);
-
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => resolve(img);
@@ -308,35 +466,47 @@ function loadLogo(url: string): Promise<HTMLImageElement | null> {
     });
 }
 
-function createCanvas(rowCount: number): {
-    canvas: HTMLCanvasElement;
-    ctx: CanvasRenderingContext2D;
-    W: number;
-    H: number;
-    HEADER_H: number;
-    ROW_H: number;
-    ROW_GAP: number;
-} {
-    const W = 1200;
-    const HEADER_H = 120;
-    const ROW_H = 90;
-    const ROW_GAP = 10;
-    const FOOTER_H = 30;
-    const H = HEADER_H + rowCount * (ROW_H + ROW_GAP) + FOOTER_H;
+function buildResultCanvas(
+    rows: Array<{ title: string; productNumber: string | number | null; numbers: string[] }>,
+    logoImg: HTMLImageElement | null,
+    cupImg: HTMLImageElement | null,
+    resultDate: string
+): HTMLCanvasElement {
+    const W = 900;
+    const rowCount = Math.max(rows.length, 1);
+    const contentH = rowCount * ROW_HEIGHT + (rowCount - 1) * ROW_SPACING;
+    const H = Math.max(CARD_PADDING * 2 + contentH, 300);
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
     canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
 
-    return {
-        canvas,
-        ctx: canvas.getContext('2d')!,
-        W,
-        H,
-        HEADER_H,
-        ROW_H,
-        ROW_GAP
-    };
+    drawCardBackground(ctx, W, H);
+    drawLeftPanel(ctx, H, logoImg, cupImg);
+    drawInfoPanel(ctx, W, H, resultDate);
+
+    // Center rows
+    const BADGE_W = 100;
+    const BADGE_X = LEFT_PANEL_W + 10;
+    const BALL_R = 27;
+    const BALL_PITCH = BALL_R * 2 + 8;
+
+    const startY = Math.round((H - contentH) / 2);
+
+    rows.forEach((row, i) => {
+        const rowY = startY + i * (ROW_HEIGHT + ROW_SPACING);
+        const BADGE_H = ROW_HEIGHT - 10;
+        drawCouponBadge(ctx, row.title, row.productNumber, BADGE_X, rowY + 5, BADGE_W, BADGE_H);
+
+        const ballStartX = BADGE_X + BADGE_W + BALL_R + 10;
+        const ballCY = rowY + ROW_HEIGHT / 2;
+        row.numbers.forEach((num, ni) => {
+            drawWinBall(ctx, ballStartX + ni * BALL_PITCH, ballCY, BALL_R, num);
+        });
+    });
+
+    return canvas;
 }
 
 const openWhatsAppChat = (message: string) => {
@@ -353,45 +523,26 @@ const handleDownload = async (win: any) => {
     const rows = products.map((product) => {
         const isMatch = product.id === win.product_id;
         return {
-            productTitle: product.title,
+            title: product.title,
+            productNumber: product.product_number ?? null,
             numbers: isMatch ? parseNumbers(win.win_number) : [],
-            fromTime: isMatch ? (win.from_time ?? null) : null,
-            toTime: isMatch ? (win.to_time ?? null) : null,
         };
     });
 
-    const { canvas, ctx, W, H, HEADER_H, ROW_H, ROW_GAP } = createCanvas(rows.length);
-
-    drawBackground(ctx, W, H);
-
-    const dateLabel = `${formatDate(win.draw_time)}  ${win.to_time ? formatTimeImage(win.to_time) : ''}`;
-    drawHeader(ctx, W, logoImg, dateLabel);
-
-    let currentY = HEADER_H;
-    rows.forEach((row) => {
-        drawProductRow(ctx, row.productTitle, row.numbers, row.fromTime, row.toTime, W, currentY, ROW_H);
-        currentY += ROW_H + ROW_GAP;
-    });
+    const cupImg = await loadLogo(cupIcon || '/public/assets/cup-icon.png');
+    const resultDate = formatResultDate(win.draw_time);
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
 
     const fileName = `draw-result-${(win.product?.title ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
-
-    // image download
     const link = document.createElement('a');
     link.download = fileName;
     link.href = canvas.toDataURL('image/png');
     link.click();
 
-    // whatsapp text open
+    // WhatsApp message
     const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
-    const message = `Draw result ready.
-Product: ${win.product?.title ?? 'N/A'}
-Date: ${formatDate(win.draw_time)}
-Time: ${ win.to_time ? `${formatTime(win.to_time)}` : 'N/A'}
-Win Number: ${numbers}`;
-
-    setTimeout(() => {
-        openWhatsAppChat(message);
-    }, 800);
+    const message = `Draw result ready.\nProduct: ${win.product?.title ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
+    setTimeout(() => openWhatsAppChat(message), 800);
 
     toast.success('Image downloaded. WhatsApp chat opened.');
 };
@@ -408,34 +559,23 @@ const handleDownloadAll = async () => {
     const logoImg = await loadLogo(logoUrl);
 
     const rows = allWins.map((win: any) => ({
-        productTitle: win.product?.title ?? 'Unknown',
+        title: win.product?.title ?? 'Unknown',
+        productNumber: win.product?.product_number ?? null,
         numbers: parseNumbers(win.win_number),
-        fromTime: win.from_time ?? null,
-        toTime: win.to_time ?? null,
     }));
 
-    const { canvas, ctx, W, H, HEADER_H, ROW_H, ROW_GAP } = createCanvas(rows.length);
-
-    drawBackground(ctx, W, H);
-
+    const cupImg = await loadLogo(cupIcon || '/public/assets/cup-icon.png');
     const latestWin = allWins[0];
-    const dateLabel = `${formatDate(latestWin.draw_time)}  ${latestWin.to_time ? formatTimeImage(latestWin.to_time) : ''}`;
-    drawHeader(ctx, W, logoImg, dateLabel);
-
-    let currentY = HEADER_H;
-    rows.forEach((row: any) => {
-        drawProductRow(ctx, row.productTitle, row.numbers, row.fromTime, row.toTime, W, currentY, ROW_H);
-        currentY += ROW_H + ROW_GAP;
-    });
+    const resultDate = filters.start_date ? formatResultDate(filters.start_date) : formatResultDate(latestWin.draw_time);
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
 
     const fileName = `draw-results-all-${Date.now()}.png`;
-
     const link = document.createElement('a');
     link.download = fileName;
     link.href = canvas.toDataURL('image/png');
     link.click();
 
-    toast.success(`Downloaded ${allWins.length} results and opened WhatsApp.`);
+    toast.success(`Downloaded ${allWins.length} results.`);
 };
 </script>
 

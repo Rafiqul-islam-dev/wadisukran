@@ -53,26 +53,34 @@ class DrawController extends Controller
 
     public function histories(Request $request)
     {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        if (!$startDate && !$endDate && !$request->product_id) {
+            $startDate = Carbon::today()->toDateString();
+            $endDate = Carbon::today()->toDateString();
+        }
+
         $wins = Win::latest()
             ->when($request->product_id, function ($query, $product_id) {
                 $query->where('product_id', $product_id);
             })
-            ->when($request->start_date || $request->start_time, function ($query) use ($request) {
+            ->when($startDate || $request->start_time, function ($query) use ($startDate, $request) {
                 $from = null;
-                if ($request->start_date) {
+                if ($startDate) {
                     $from = Carbon::parse(
-                        $request->start_date . ' ' . ($request->start_time ?? '00:00:00')
+                        $startDate . ' ' . ($request->start_time ?? '00:00:00')
                     );
                 }
                 if ($from) {
                     $query->where('from_time', '>=', $from);
                 }
             })
-            ->when($request->end_date || $request->end_time, function ($query) use ($request) {
+            ->when($endDate || $request->end_time, function ($query) use ($endDate, $request) {
                 $to = null;
-                if ($request->end_date) {
+                if ($endDate) {
                     $to = Carbon::parse(
-                        $request->end_date . ' ' . ($request->end_time ?? '23:59:59')
+                        $endDate . ' ' . ($request->end_time ?? '23:59:59')
                     );
                 }
                 if ($to) {
@@ -84,11 +92,20 @@ class DrawController extends Controller
         
         $products = Product::orderBy('title')->get();
         $company = CompannySetting::first();
+        
 
         return Inertia::render('Product/Draws/History', [
             'wins' => $wins,
             'products' => $products,
-            'logoUrl' => $company->getLogoUrlAttribute()
+            'logoUrl' => $company->getLogoUrlAttribute(),
+            'cupIcon' => static_asset('asset/icon-cup.png'),
+            'filters' => [
+                'product_id' => $request->product_id,
+                'start_date' => $startDate,
+                'start_time' => $request->start_time,
+                'end_date' => $endDate,
+                'end_time' => $request->end_time,
+            ]
         ]);
     }
 
