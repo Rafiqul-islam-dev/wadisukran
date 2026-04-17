@@ -523,7 +523,7 @@ const handleDownload = async (win: any) => {
     const rows = products.map((product) => {
         const isMatch = product.id === win.product_id;
         return {
-            title: product.title,
+            title: product.title+' '+product.product_number,
             productNumber: product.product_number ?? null,
             numbers: isMatch ? parseNumbers(win.win_number) : [],
         };
@@ -533,7 +533,7 @@ const handleDownload = async (win: any) => {
     const resultDate = formatResultDate(win.draw_time);
     const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
 
-    const fileName = `draw-result-${(win.product?.title ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
+    const fileName = `draw-result-${(win.product?.title+" "+win.product?.product_number ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
     const link = document.createElement('a');
     link.download = fileName;
     link.href = canvas.toDataURL('image/png');
@@ -541,7 +541,7 @@ const handleDownload = async (win: any) => {
 
     // WhatsApp message
     const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
-    const message = `Draw result ready.\nProduct: ${win.product?.title ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
+    const message = `Draw result ready.\nProduct: ${win.product?.title+" "+win.product?.product_number ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
     setTimeout(() => openWhatsAppChat(message), 800);
 
     toast.success('Image downloaded. WhatsApp chat opened.');
@@ -559,7 +559,7 @@ const handleDownloadAll = async () => {
     const logoImg = await loadLogo(logoUrl);
 
     const rows = allWins.map((win: any) => ({
-        title: win.product?.title ?? 'Unknown',
+        title: win.product?.title+" "+win.product?.product_number ?? 'Unknown',
         productNumber: win.product?.product_number ?? null,
         numbers: parseNumbers(win.win_number),
     }));
@@ -601,7 +601,7 @@ const handleDownloadAll = async () => {
                                         :key="product.id"
                                         :value="product.id"
                                     >
-                                        {{ product.title }}
+                                        {{ product.title }} {{ product.product_number }}
                                     </option>
                                 </select>
                             </div>
@@ -676,7 +676,7 @@ const handleDownloadAll = async () => {
                                     </td>
 
                                     <td class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r text-center">
-                                        {{ win?.product?.title }}
+                                        {{ win?.product?.title }} {{ win?.product?.product_number }}
                                     </td>
 
                                     <td class="px-6 py-4 border-r text-center">

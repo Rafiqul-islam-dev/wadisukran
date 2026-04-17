@@ -209,7 +209,7 @@ function downloadPdf() {
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200">
                             <option value="">All Products</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">
-                                {{ product.title }}
+                                {{ product.title }} {{ product.product_number }}
                             </option>
                         </select>
                     </div>
@@ -430,7 +430,7 @@ function downloadPdf() {
                                     {{ formatDate(order.created_at) }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 font-medium">{{
-                                    order.product?.title }}</td>
+                                    order.product?.title }} {{ order.product?.product_number }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">
                                     <div v-for="ticket in order.tickets" :key="ticket.id" class="mb-2 last:mb-0">
                                         <div class="flex gap-1">
@@ -550,7 +550,7 @@ function downloadPdf() {
                                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 mb-8">
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 class="text-2xl font-bold text-gray-900">
-                                                {{ selectedOrder.product?.title }}
+                                                {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }}
                                             </h3>
                                             <span
                                                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
@@ -683,7 +683,7 @@ function downloadPdf() {
                                                 <div class="p-4 bg-gray-50 rounded-xl">
                                                     <p class="text-sm text-gray-600">Product Name</p>
                                                     <p class="font-semibold text-lg">
-                                                        {{ selectedOrder.product?.title }}
+                                                        {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -779,7 +779,7 @@ function downloadPdf() {
                                             </div>
                                             <div class="p-4 bg-white rounded-xl shadow-sm">
                                                 <p class="text-sm text-gray-600">
-                                                    {{ selectedOrder.product?.title }} Big Prize on
+                                                    {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }} Big Prize on
                                                     {{ formatDate(selectedOrder.sales_date) }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">

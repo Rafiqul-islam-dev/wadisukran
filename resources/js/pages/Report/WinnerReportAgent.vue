@@ -361,7 +361,7 @@ const extractNumbers = (order: any): string[] => {
                                         <td class="p-3">{{ idx + 1 }}</td>
                                         <td class="p-3">{{ formatDate(order.created_at) }}</td>
                                         <td class="p-3 font-medium">{{ order.invoice_no }}</td>
-                                        <td class="p-3">{{ order.product?.title ?? '-' }}</td>
+                                        <td class="p-3">{{ order.product?.title+" "+order.product?.product_number ?? '-' }}</td>
                                         <td class="p-3">{{ order.description ?? 'winner' }}</td>
 
                                         <td class="p-3">

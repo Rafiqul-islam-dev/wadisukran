@@ -15,7 +15,7 @@ const { product } = defineProps<{
             <!-- Header -->
             <div class="flex justify-between items-center mb-8">
                 <div>
-                    <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ product.title }}</h1>
+                    <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ product.title }} {{ product.product_number }}</h1>
                     <p class="text-gray-600">Product Details</p>
                 </div>
 
@@ -28,7 +28,7 @@ const { product } = defineProps<{
                     <div class="space-y-6">
                         <!-- Product Image -->
                         <div class="relative">
-                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title"
+                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title+' '+product.product_number"
                                 class="w-full h-64 object-cover rounded-xl border-2 border-gray-200" />
                             <div v-else
                                 class="w-full h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl border-2 border-gray-200 flex items-center justify-center">

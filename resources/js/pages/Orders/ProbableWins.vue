@@ -276,7 +276,7 @@ const formattedDate = computed(() => {
                             class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">All Products</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">
-                                {{ product.title }}
+                                {{ product.title }} {{ product.product_number }}
                             </option>
                         </select>
                         <p class="text-red-500 text-sm mt-1" v-if="errors.product">{{ errors.product }}</p>

@@ -274,7 +274,7 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
                                     :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                                     <td
                                         class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
-                                        {{ product.title }}
+                                        {{ product.title }} {{ product.product_number }}
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">

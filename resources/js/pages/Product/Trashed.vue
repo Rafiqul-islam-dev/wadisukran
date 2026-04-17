@@ -104,7 +104,7 @@ function formatDrawTime(time) {
                                     <div class="flex items-center">
                                         <div
                                             class="h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-100 flex-shrink-0">
-                                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title"
+                                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title+' '+product.product_number"
                                                 class="w-full h-full object-cover" />
                                             <div v-else class="flex items-center justify-center h-full">
                                                 <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
@@ -121,7 +121,7 @@ function formatDrawTime(time) {
 
                                 <!-- Title -->
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ product.title }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ product.title }} {{ product.product_number }}</div>
                                     <div class="text-sm text-gray-500">{{ product.showing_type }} | Pick {{
                                         product.pick_number }}</div>
                                 </td>

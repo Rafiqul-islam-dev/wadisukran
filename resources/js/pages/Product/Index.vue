@@ -49,7 +49,7 @@ const form = useForm({
 const editProduct = (product) => {
     isEditing.value = true;
     editingProduct.value = product;
-    form.title = product.title;
+    form.title = product.title + " " + product.product_number;
     form.product_number = product.product_number;
     form.category_id = product.category_id;
     form.price = product.price;
@@ -355,7 +355,7 @@ function removeDrawTime(index: number) {
                                     <div class="flex items-center">
                                         <div
                                             class="h-16 w-24 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-indigo-100 flex-shrink-0">
-                                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title"
+                                            <img v-if="product.image_url" :src="product.image_url" :alt="product.title+' '+product.product_number"
                                                 class="w-full h-full object-cover" />
                                             <div v-else class="flex items-center justify-center h-full">
                                                 <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
@@ -372,7 +372,7 @@ function removeDrawTime(index: number) {
 
                                 <!-- Title -->
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ product.title }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ product.title }} {{ product.product_number }}</div>
                                     <div class="text-sm text-gray-500">{{ product.showing_type }} | Pick {{
                                         product.pick_number }}</div>
                                 </td>
@@ -863,7 +863,7 @@ function removeDrawTime(index: number) {
                     <DialogTitle>Are you sure?</DialogTitle>
                     <DialogDescription>
                         This Product
-                        <span v-if="deletingProduct" class="font-semibold">"{{ deletingProduct?.title }}"</span>
+                        <span v-if="deletingProduct" class="font-semibold">"{{ deletingProduct?.title }} {{ deletingProduct?.product_number }}"</span>
                         will delete permanently.
                     </DialogDescription>
                 </DialogHeader>

@@ -159,7 +159,7 @@ function goTo(url) {
                             class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
                             <option value="">Select Product</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">{{ product.title
-                            }}</option>
+                            }} {{ product.product_number }}</option>
                         </select>
                     </div>
                     <div>
@@ -235,7 +235,7 @@ function goTo(url) {
                                     {{ win?.check_win?.total_prize }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">{{
-                                    win?.product?.title }}</td>
+                                    win?.product?.title }} {{ win?.product?.product_number }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <button v-if="win.is_claimed === 0" @click="handleIndividualClaim(win.invoice_no)"
                                         class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">

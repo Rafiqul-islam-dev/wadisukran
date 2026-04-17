@@ -154,7 +154,7 @@ function goTo(url) {
                                                 <option value="">Select Product</option>
                                                 <option v-for="product in products" :key="product.id"
                                                     :value="product.id">{{ product.title
-                                                    }}</option>
+                                                    }} {{ product.product_number }}</option>
                                             </select>
                                         </div>
                                         <div>
@@ -237,7 +237,7 @@ function goTo(url) {
                                                     <td
                                                         class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">
                                                         {{
-                                                            win?.product?.title }}</td>
+                                                            win?.product?.title }} {{ win?.product?.product_number }}</td>
                                                     <td class="px-4 py-4 whitespace-nowrap">
                                                         <button v-if="win.is_claimed === 0"
                                                             @click="handleIndividualClaim(win.invoice_no)"

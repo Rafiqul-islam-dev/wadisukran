@@ -319,7 +319,7 @@ function closeModal() {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                                        {{ order.product?.title || 'N/A' }}
+                                        {{ order.product?.title+" "+order.product?.product_number || 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">

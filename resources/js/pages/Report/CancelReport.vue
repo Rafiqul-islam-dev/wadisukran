@@ -300,7 +300,7 @@ function closeModal() {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
                                         class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                                        {{ order.product?.title || 'N/A' }}
+                                        {{ order.product?.title+" "+order.product?.product_number || 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
@@ -402,7 +402,7 @@ function closeModal() {
                                     <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 mb-8">
                                         <div class="flex items-center justify-between mb-4">
                                             <h3 class="text-2xl font-bold text-gray-900">
-                                                {{ selectedOrder.product?.title }}
+                                                {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }}
                                             </h3>
                                             <span
                                                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
@@ -535,7 +535,7 @@ function closeModal() {
                                                 <div class="p-4 bg-gray-50 rounded-xl">
                                                     <p class="text-sm text-gray-600">Product Name</p>
                                                     <p class="font-semibold text-lg">
-                                                        {{ selectedOrder.product?.title }}
+                                                        {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -631,7 +631,7 @@ function closeModal() {
                                             </div>
                                             <div class="p-4 bg-white rounded-xl shadow-sm">
                                                 <p class="text-sm text-gray-600">
-                                                    {{ selectedOrder.product?.title }} Big Prize on
+                                                    {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }} Big Prize on
                                                     {{ formatDate(selectedOrder.sales_date) }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">
