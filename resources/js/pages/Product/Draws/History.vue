@@ -390,9 +390,9 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
     const BOX_GAP = 8;
 
     // ── Pre-calculate all box heights ──
-    const resH  = Math.max(Math.round(H * 0.3),  75);
-    const giftH = Math.max(Math.round(H * 0.21), 52);
-    const timeH = Math.max(Math.round(H * 0.17), 48);
+    const resH  = 75;
+    const giftH = 65;
+    const timeH = 50;
 
     // ── Vertically center the whole group ──
     const totalH = resH + BOX_GAP + giftH + BOX_GAP + timeH;
