@@ -22,7 +22,7 @@ class ProductOrderResource extends JsonResource
             'user_name' => $this->user->name ?? 'N/A',
             'user_phone' => $this->user->phone ?? 'N/A',
             'product_id' => $this->product_id,
-            'product_title' => $this->product->title ?? 'N/A',
+            'product_title' => $this->product->title.' '.$this->product->product_number ?? 'N/A',
             'product_image' => $this->product->image ? asset('storage/' . $this->product->image) : null,
             'product_price' => $this->product->price ?? 'N/A',
             'quantity' => $this->quantity,

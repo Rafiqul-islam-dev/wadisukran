@@ -18,7 +18,7 @@ class CancelledOrderResource extends JsonResource
             'id' => $this->id,
             'invoice_no' => $this->invoice_no,
             'status' => $this->status,
-            'product_title' => $this->product->title ?? 'N/A',
+            'product_title' => $this->product->title.' '.$this->product->product_number ?? 'N/A',
             'created_at' => $this->created_at ? $this->created_at->format('Y-m-d') : 'N/A',
         ];
     }

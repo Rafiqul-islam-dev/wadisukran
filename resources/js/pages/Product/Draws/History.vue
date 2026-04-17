@@ -523,7 +523,7 @@ const handleDownload = async (win: any) => {
     const rows = products.map((product) => {
         const isMatch = product.id === win.product_id;
         return {
-            title: product.title+' '+product.product_number,
+            title: product.title,
             productNumber: product.product_number ?? null,
             numbers: isMatch ? parseNumbers(win.win_number) : [],
         };
@@ -559,7 +559,7 @@ const handleDownloadAll = async () => {
     const logoImg = await loadLogo(logoUrl);
 
     const rows = allWins.map((win: any) => ({
-        title: win.product?.title+" "+win.product?.product_number ?? 'Unknown',
+        title: win.product?.title ?? 'Unknown',
         productNumber: win.product?.product_number ?? null,
         numbers: parseNumbers(win.win_number),
     }));

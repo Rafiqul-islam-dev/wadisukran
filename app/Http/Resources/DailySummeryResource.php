@@ -10,7 +10,7 @@ class DailySummeryResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'product_title' => $this->product_title,
+            'product_title' => $this->product_title.' '.$this->product_number,
             'total_price' => (float) $this->total_price,
             'total_commission' => (float) $this->total_commission,
             'cancel_orders' => (int) $this->cancel_orders,

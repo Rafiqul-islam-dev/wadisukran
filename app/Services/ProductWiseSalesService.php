@@ -26,6 +26,7 @@ class ProductWiseSalesService
             ->selectRaw('
                 orders.product_id,
                 products.title as product_title,
+                products.product_number as product_number,
                 SUM(CASE WHEN orders.status = "Printed" THEN orders.total_price ELSE 0 END) as total_price,
                 SUM(CASE WHEN orders.status = "Printed" THEN orders.commission ELSE 0 END) as total_commission,
                 COUNT(CASE WHEN orders.status = "Cancel" THEN 1 END) as cancel_orders,
