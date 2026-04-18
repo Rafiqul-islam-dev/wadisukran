@@ -25,37 +25,59 @@
 
         .ticket-wrapper {
             margin: 0 auto;
-            padding: 10px;
+            padding: 5px;
             background: #fff;
         }
 
         /* ── Header / Logo ── */
-        .header {
-            text-align: center;
-            margin-bottom: 4px;
+        .header-table {
+            width: 100%;
+            margin-bottom: 2px;
+            table-layout: fixed;
+            padding: 0 20px;
         }
 
-        .header img {
-            width: 70px;
+        .header-table td {
+            vertical-align: middle;
+        }
+
+        .header-left {
+            text-align: left;
+            width: 50%;
+        }
+
+        .header-left img {
+            width: 80px;
             height: auto;
         }
 
-        .header h2 {
+        .header-left h2 {
             font-size: 16px;
             font-weight: bold;
-            margin-top: 4px;
-            color: #222;
+            margin-top: 2px;
+            color: #1a2656;
+            text-transform: uppercase;
+        }
+
+        .header-right {
+            text-align: right;
+            width: 50%;
+        }
+
+        .header-right img {
+            width: 80px;
+            height: auto;
         }
 
         /* ── Draw Info ── */
         .draw-info {
             width: 100%;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .draw-info tr td {
-            padding: 1px 0;
-            font-size: 10.5px;
+            padding: 0;
+            font-size: 10px;
         }
 
         .draw-info tr td:first-child {
@@ -70,7 +92,7 @@
         /* ── Section Title ── */
         .section-title {
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -79,12 +101,12 @@
         /* ── Tax Invoice Table ── */
         .invoice-table {
             width: 100%;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .invoice-table tr td {
-            padding: 2px 0;
-            font-size: 10.5px;
+            padding: 0;
+            font-size: 10px;
         }
 
         .invoice-table tr td:first-child {
@@ -100,11 +122,11 @@
         .divider {
             border: none;
             border-top: 1px dashed #aaa;
-            margin: 2px 0;
+            margin: 1px 0;
         }
 
-        /* ── Ticket Details ── */
-        .ticket-details-title {
+        /* ── Coupon Details ── */
+        .coupon-details-title {
             text-align: center;
             font-size: 12px;
             font-weight: bold;
@@ -116,14 +138,14 @@
 
         .ticket-image img {
             width: auto;
-            height: 80px;
+            height: 60px;
         }
 
         .numbers-title {
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
 
         /* ── Number Bubbles ── */
@@ -133,22 +155,22 @@
 
         .number-bubble {
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            border: 1.5px solid #333;
+            border: 1px solid #333;
             text-align: center;
-            line-height: 16px;
-            font-size: 10px;
+            line-height: 14px;
+            font-size: 9px;
             font-weight: bold;
-            margin: 1px 1px;
+            margin: 1px;
         }
 
         /* ── Play Types ── */
         .play-types {
             width: 100%;
             max-width: 150px;
-            margin: 2px auto 4px auto;
+            margin: 1px auto 2px auto;
             text-align: center;
             font-size: 9px;
             border-collapse: collapse;
@@ -158,32 +180,32 @@
             font-weight: bold;
             padding: 0 3px 0 3px;
             color: #333;
-            line-height: 1.2;
+            line-height: 1;
         }
 
         .play-types td {
             text-align: center;
             color: #555;
             padding-top: 0;
-            line-height: 1.2;
+            line-height: 1;
         }
 
         .ticket-divider {
             border: none;
             border-top: 1px dashed #ccc;
-            margin: 3px auto;
+            margin: 2px auto;
             width: 80%;
         }
 
         /* ── Point of Sale ── */
         .pos-table {
             width: 100%;
-            margin-bottom: 6px;
+            margin-bottom: 2px;
         }
 
         .pos-table tr td {
-            padding: 2px 0;
-            font-size: 10.5px;
+            padding: 0;
+            font-size: 10px;
             vertical-align: top;
         }
 
@@ -197,52 +219,82 @@
         }
 
         .prize-note {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: bold;
-            margin-top: 4px;
-            line-height: 1.5;
+            margin-top: 2px;
+            line-height: 1.2;
         }
 
         /* ── QR Code ── */
         .qr-section {
             text-align: center;
-            margin: 10px 0;
+            margin: 4px 0;
         }
 
         .qr-section img {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
         }
 
         /* ── Footer ── */
         .footer {
             border-top: 1px solid #ccc;
-            padding-top: 8px;
+            padding-top: 4px;
+        }
+
+        .footer-table {
+            width: 100%;
+        }
+
+        .footer-logo {
+            width: 35%;
             text-align: center;
+            vertical-align: top;
         }
 
-        .footer .company-name {
-            font-size: 12px;
-            font-weight: bold;
+        .footer-logo img {
+            width: 65px;
+            height: auto;
         }
 
-        .footer .company-sub {
-            font-size: 10px;
+        .footer-info {
+            width: 65%;
+            vertical-align: top;
+            text-align: left;
+            padding-left: 10px;
+        }
+
+        .footer-info .company-name {
+            font-size: 13px;
             font-weight: bold;
             margin-bottom: 4px;
+            text-transform: uppercase;
         }
 
-        .footer p {
-            font-size: 9.5px;
-            color: #444;
-            line-height: 1.6;
+        .info-list {
+            font-size: 10.5px;
+            color: #222;
+        }
+
+        .info-list td {
+            padding: 1px 0;
+            vertical-align: top;
+        }
+
+        .info-list td.label {
+            width: 50px;
+        }
+
+        .info-list td.colon {
+            width: 10px;
+            text-align: center;
         }
 
         .printed-at {
-            margin-top: 8px;
-            font-size: 9px;
-            color: #777;
-            text-align: center;
+            margin-top: 10px;
+            font-size: 10.5px;
+            color: #222;
+            text-align: left;
         }
     </style>
 </head>
@@ -251,10 +303,17 @@
 
     <div class="ticket-wrapper">
         {{-- ══ HEADER ══ --}}
-        <div class="header">
-            <img src="{{ public_path(company_setting()->logo) }}" alt="Logo">
-            <h2>{{ $order->product->title }}</h2>
-        </div>
+        <table class="header-table">
+            <tr>
+                <td class="header-left">
+                    <img src="{{ public_path('asset/shukran.png') }}" alt="Shukran Logo">
+                    <h2>{{ $order->product->title }}</h2>
+                </td>
+                <td class="header-right">
+                    <img src="{{ public_path('asset/number-'.$order->product->product_number.'.png') }}" alt="Product Number">
+                </td>
+            </tr>
+        </table>
 
         {{-- ══ DRAW INFO ══ --}}
         <table class="draw-info">
@@ -308,8 +367,8 @@
 
         <hr class="divider">
 
-        {{-- ══ TICKET DETAILS ══ --}}
-        <div class="ticket-details-title">Ticket Details</div>
+        {{-- ══ COUPON DETAILS ══ --}}
+        <div class="coupon-details-title">Coupon Details</div>
         <hr class="divider">
 
         <div class="ticket-image">
@@ -385,14 +444,41 @@
 
         {{-- ══ FOOTER ══ --}}
         <div class="footer">
-            <div class="company-name">{{ company_setting()->name }}</div>
-            <p>Address: {{ company_setting()->address }}</p>
-            <p>Email: {{ company_setting()->email }}</p>
-            <p>Website: {{ company_setting()->website }}</p>
-        </div>
-
-        <div class="printed-at">
-            Printed at: {{ now()->format('d M. Y, h:i A') }}
+            <table class="footer-table">
+                <tr>
+                    <td class="footer-logo">
+                        <img src="{{ public_path(company_setting()->logo) }}" alt="Logo">
+                    </td>
+                    <td class="footer-info">
+                        <div class="company-name">{{ company_setting()->name }}</div>
+                        <table class="info-list">
+                            <tr>
+                                <td class="label">Address</td>
+                                <td class="colon">:</td>
+                                <td>{{ company_setting()->address }}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Mobile</td>
+                                <td class="colon">:</td>
+                                <td>{{ company_setting()->phone }}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Email</td>
+                                <td class="colon">:</td>
+                                <td>{{ company_setting()->email }}</td>
+                            </tr>
+                            <tr>
+                                <td class="label">Website</td>
+                                <td class="colon">:</td>
+                                <td>{{ company_setting()->website }}</td>
+                            </tr>
+                        </table>
+                        <div class="printed-at">
+                            Printed at: {{ now()->format('d M. Y, h:i A') }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
     </div>
