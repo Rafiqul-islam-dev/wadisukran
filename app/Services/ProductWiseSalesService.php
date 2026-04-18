@@ -32,7 +32,7 @@ class ProductWiseSalesService
                 COUNT(CASE WHEN orders.status = "Cancel" THEN 1 END) as cancel_orders,
                 0 as total_prize_paid
             ')
-            ->groupBy('orders.product_id', 'products.title')
+            ->groupBy('orders.product_id', 'products.title', 'products.product_number')
             ->get();
         return [
             'name' => $user?->name,
