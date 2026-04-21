@@ -11,10 +11,11 @@ class DailySummeryResource extends JsonResource
     {
         return [
             'product_title' => $this->product_title.' '.$this->product_number,
-            'total_price' => (float) $this->total_price,
-            'total_commission' => (float) $this->total_commission,
-            'cancel_orders' => (int) $this->cancel_orders,
-            'total_prize_paid' => (float) $this->total_prize_paid,
+            'total_sell' => (float) ($this->total_sell + $this->cancel_sell),
+            'cancel_sell' => (float) $this->cancel_sell,
+            'net_sell' => (float) $this->total_sell,
+            'commission' => (float) $this->total_commission,
+            'prize_paid' => (float) $this->total_prize_paid,
         ];
     }
 }
