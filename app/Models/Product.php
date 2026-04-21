@@ -24,6 +24,7 @@ class Product extends Model
         'prize_type',
         'type_number',
         'is_active',
+        'order_by',
     ];
 
     protected $casts = [

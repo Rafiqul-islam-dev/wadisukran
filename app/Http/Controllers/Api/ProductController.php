@@ -23,13 +23,15 @@ class ProductController extends Controller
         $products = Product::active()
             ->orderBy('id', 'desc')
             ->get()
+            ->sortBy('order_by')
             ->filter(function ($product) {
                 return $this->productService->checkProductAvailability($product);
-            });
+            })
+            ->values();
 
         return ProductResource::collection($products)->additional([
-            'phone_require' => company_setting()->customer_phone_require === 1 ? true : false
-        ]);;
+            'phone_require' => company_setting()->customer_phone_require === 1
+        ]);
     }
 
 

@@ -37,7 +37,8 @@ class ProductService
             'type_number'  => $data['type_number'],
             'prize_type'   => $data['prize_type'],
             'image'        => $imagePath,
-            'is_active'    => $data['is_active'] ?? false
+            'is_active'    => $data['is_active'] ?? false,
+            'order_by'     => $data['order_by'] ?? 0
         ]);
 
         foreach ($data['prizes'] as $prize) {
@@ -87,6 +88,7 @@ class ProductService
         $product->pick_number = $data['pick_number'];
         $product->type_number = $data['type_number'];
         $product->prize_type  = $data['prize_type'];
+        $product->order_by    = $data['order_by'] ?? 0;
         $product->save();
 
         $product->prizes()->delete();

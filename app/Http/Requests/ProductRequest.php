@@ -27,7 +27,8 @@ class ProductRequest extends FormRequest
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
             'prize_type' => 'required|in:bet,number',
             'bet_prizes' => 'nullable|array',
-            'number_prizes' => 'nullable|array'
+            'number_prizes' => 'nullable|array',
+            'order_by' => 'nullable|integer|min:0'
         ];
     }
 
@@ -67,6 +68,8 @@ class ProductRequest extends FormRequest
             'bet_prizes.array' => 'Prizes must be an array.',
             'number_prizes.required' => 'prize must be configured.',
             'number_prizes.array' => 'Prizes must be an array.',
+            'order_by.integer' => 'Order By must be a number.',
+            'order_by.min' => 'Order By cannot be negative.',
         ];
     }
     public function withValidator($validator)

@@ -38,6 +38,7 @@ const form = useForm({
     pick_number: '',
     prize_type: 'bet',
     type_number: '',
+    order_by: 0,
     bet_prizes: [
         { type: 'bet', name: 'straight', prize: 0, chance_number: null },
         { type: 'bet', name: 'rumble', prize: 0, chance_number: null },
@@ -67,6 +68,7 @@ const editProduct = (product) => {
         { type: 'bet', name: 'Chance', prize: 0, chance_number: 1 }
     ];
     form.number_prizes = product.prize_type === 'number' ? product.prizes : [];
+    form.order_by = product.order_by ?? 0;
     showModal.value = true;
 }
 
@@ -337,6 +339,10 @@ function removeDrawTime(index: number) {
                                 </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Serial Number
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Status
                                 </th>
                                 <th
@@ -398,6 +404,9 @@ function removeDrawTime(index: number) {
                                     </div>
                                 </td>
 
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ product.order_by }}</div>
+                                </td>
                                 <!-- Status -->
                                 <td class="px-6 py-4">
                                     <div @click="statusChange(product)" class="cursor-pointer">
@@ -416,6 +425,7 @@ function removeDrawTime(index: number) {
                                         </span>
                                     </div>
                                 </td>
+                                
 
                                 <!-- Actions -->
                                 <td class="px-6 py-4 text-right">
@@ -538,6 +548,16 @@ function removeDrawTime(index: number) {
                                                 {{ form.errors.title }}
                                             </p>
                                         </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">Order By</label>
+                                                <input v-model="form.order_by" type="number" min="0"
+                                                    class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
+                                                    placeholder="0" />
+                                                <p v-if="form.errors.order_by" class="text-red-600 text-sm">
+                                                    {{ form.errors.order_by }}
+                                                </p>
+                                            </div>
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Product Number</label>
                                             <input v-model="form.product_number" type="number"
@@ -547,6 +567,9 @@ function removeDrawTime(index: number) {
                                                 {{ form.errors.product_number }}
                                             </p>
                                         </div>
+                                        </div>
+
+
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-2">
                                                 Category
@@ -667,7 +690,7 @@ function removeDrawTime(index: number) {
 
 
                                         <!-- Game Settings -->
-                                        <div class="grid grid-cols-3 gap-1">
+                                        <div class="grid grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Pick
                                                     Number</label>
@@ -702,6 +725,7 @@ function removeDrawTime(index: number) {
                                                 </p>
                                             </div>
                                         </div>
+                                        
                                     </div>
 
                                     <!-- Right Column -->

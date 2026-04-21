@@ -56,7 +56,8 @@ class ProductController extends Controller
             'type_number' => $request->type_number,
             'image' => $request->image,
             'prize_type' => $request->prize_type,
-            'prizes' => $request->prize_type === 'bet' ? $request->bet_prizes : $request->number_prizes
+            'prizes' => $request->prize_type === 'bet' ? $request->bet_prizes : $request->number_prizes,
+            'order_by' => $request->order_by ?? 0
         ];
 
         $this->productService->createProduct($data);
@@ -90,7 +91,8 @@ class ProductController extends Controller
                 'type_number' => $product->type_number,
                 'prizes' => $product->prizes,
                 'is_active' => $product->is_active,
-                'is_daily' => $product->is_daily
+                'is_daily' => $product->is_daily,
+                'order_by' => $product->order_by
             ]
         ]);
     }
@@ -110,7 +112,8 @@ class ProductController extends Controller
             'type_number' => $request->type_number,
             'image' => $request->image,
             'prize_type' => $request->prize_type,
-            'prizes' => $request->prize_type === 'bet' ? $request->bet_prizes : $request->number_prizes
+            'prizes' => $request->prize_type === 'bet' ? $request->bet_prizes : $request->number_prizes,
+            'order_by' => $request->order_by ?? 0
         ];
 
         $this->productService->updateProduct($product, $data);

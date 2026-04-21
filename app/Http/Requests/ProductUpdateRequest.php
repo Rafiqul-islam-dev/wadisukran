@@ -33,6 +33,7 @@ class ProductUpdateRequest extends FormRequest
             'prize_type' => 'required|in:bet,number',
             'bet_prizes' => 'nullable|array',
             'number_prizes' => 'nullable|array',
+            'order_by' => 'nullable|integer|min:0'
         ];
     }
 
@@ -52,6 +53,8 @@ class ProductUpdateRequest extends FormRequest
             'type_number.required' => 'Max type number is required.',
             'image.image' => 'File must be an image.',
             'image.mimes' => 'Image must be jpeg, png, jpg, or gif.',
+            'order_by.integer' => 'Order By must be a number.',
+            'order_by.min' => 'Order By cannot be negative.',
         ];
     }
 
