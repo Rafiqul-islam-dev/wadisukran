@@ -88,7 +88,7 @@ class ProductResource extends JsonResource
             'price' => (float) $this->price,
             'drawDate' => $draw_date ? $draw_date->format('Y-m-d') : '',
             'drawTime' => $draw_time ? Carbon::parse($draw_time)->format('H:i:s') : '',
-            'prizes' => $this->formatPrizes($this->prizes),
+            'prizes' => $this->formatPrizes($this->prizes()->orderBy('prize', 'desc')->get()),
             'image' => $this->image_url ? url($this->image_url) : 'https://picsum.photos/60/60?random=' . $this->id,
             'type' => $this->draw_type,
             'pick_number' => $this->pick_number,
@@ -120,7 +120,7 @@ public function formatPrizes($prizes)
         }
 
         if ($prize->type === 'number') {
-            $label = trim($prize->name) . ' Digit Match';
+            $label = ucfirst($prize->name) . ($this->pick_number == 1 ? ' Number' : ' Digit Match');
             $prize_array[$label] = $formattedPrize;
         } else {
             $label = trim($prize->name) . ' ' . ucfirst($prize->type);

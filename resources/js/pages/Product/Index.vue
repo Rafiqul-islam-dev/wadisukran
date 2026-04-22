@@ -50,7 +50,7 @@ const form = useForm({
 const editProduct = (product) => {
     isEditing.value = true;
     editingProduct.value = product;
-    form.title = product.title + " " + product.product_number;
+    form.title = product.title;
     form.product_number = product.product_number;
     form.category_id = product.category_id;
     form.price = product.price;
@@ -192,38 +192,64 @@ function formatDrawTime(time) {
 }
 
 // Watch pick_number changes to update bet_prizes array
-watch(() => form.pick_number, (newPickNumber) => {
-    if (form.prize_type === 'bet' && newPickNumber) {
-        const pickNum = parseInt(newPickNumber);
+watch(() => form.pick_number, (newPickNumber, oldPickNumber) => {
+    if (newPickNumber == 1) {
+        form.prize_type = 'number';
+    }
 
-        // Always keep straight and rumble
-        const basePrizes = [
-            {
-                type: 'bet',
-                name: 'Straight',
-                prize: form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0,
-                chance_number: null
-            },
-            {
-                type: 'bet',
-                name: 'Rumble',
-                prize: form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0,
-                chance_number: null
+    if (oldPickNumber !== undefined && oldPickNumber !== '') {
+        if (newPickNumber != oldPickNumber) {
+            // Reset number prizes
+            form.number_prizes = [];
+            
+            // Reset bet prizes
+            if (newPickNumber) {
+                const pickNum = parseInt(newPickNumber);
+                const basePrizes = [
+                    { type: 'bet', name: 'Straight', prize: 0, chance_number: null },
+                    { type: 'bet', name: 'Rumble', prize: 0, chance_number: null }
+                ];
+                for (let i = 1; i <= pickNum; i++) {
+                    basePrizes.push({
+                        type: 'bet', name: 'Chance', prize: 0, chance_number: i
+                    });
+                }
+                form.bet_prizes = basePrizes;
             }
-        ];
-
-        // Add chance prizes based on pick_number
-        for (let i = 1; i <= pickNum; i++) {
-            const existingPrize = form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i);
-            basePrizes.push({
-                type: 'bet',
-                name: 'Chance',
-                prize: existingPrize?.prize || 0,
-                chance_number: i
-            });
         }
+    } else {
+        if (form.prize_type === 'bet' && newPickNumber) {
+            const pickNum = parseInt(newPickNumber);
 
-        form.bet_prizes = basePrizes;
+            // Always keep straight and rumble
+            const basePrizes = [
+                {
+                    type: 'bet',
+                    name: 'Straight',
+                    prize: form.bet_prizes.find(p => p.name === 'Straight')?.prize || 0,
+                    chance_number: null
+                },
+                {
+                    type: 'bet',
+                    name: 'Rumble',
+                    prize: form.bet_prizes.find(p => p.name === 'Rumble')?.prize || 0,
+                    chance_number: null
+                }
+            ];
+
+            // Add chance prizes based on pick_number
+            for (let i = 1; i <= pickNum; i++) {
+                const existingPrize = form.bet_prizes.find(p => p.name === 'Chance' && p.chance_number === i);
+                basePrizes.push({
+                    type: 'bet',
+                    name: 'Chance',
+                    prize: existingPrize?.prize || 0,
+                    chance_number: i
+                });
+            }
+
+            form.bet_prizes = basePrizes;
+        }
     }
 });
 
@@ -232,6 +258,30 @@ const chancePrizes = computed(() => {
     if (!form.pick_number) return [];
     const pickNum = parseInt(form.pick_number);
     return Array.from({ length: pickNum }, (_, i) => i + 1);
+});
+
+// Computed property to sort number prizes based on pick_number
+const sortedNumberPrizes = computed(() => {
+    if (!form.number_prizes) return [];
+    
+    return [...form.number_prizes].sort((a, b) => {
+        if (form.pick_number == 1) {
+            const order = { 'platinum': 1, 'golden': 2, 'normal': 3 };
+            const aOrder = order[String(a.name).toLowerCase()] || 99;
+            const bOrder = order[String(b.name).toLowerCase()] || 99;
+            return aOrder - bOrder;
+        } else {
+            return parseInt(a.name) - parseInt(b.name);
+        }
+    });
+});
+
+// Watch prize_type to prevent setting to bet when pick_number is 1
+watch(() => form.prize_type, (newType) => {
+    if (newType === 'bet' && form.pick_number == 1) {
+        form.prize_type = 'number';
+        toast.error("Cannot select Bet prize when Pick Number is 1");
+    }
 });
 
 function updateBetPrize(name, chanceNumber, value) {
@@ -717,7 +767,7 @@ function removeDrawTime(index: number) {
                                                 <select v-model="form.prize_type"
                                                     class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300"
                                                     required>
-                                                    <option value="bet">Bet Based</option>
+                                                    <option value="bet" :disabled="form.pick_number == 1">Bet Based</option>
                                                     <option value="number">Number Based</option>
                                                 </select>
                                                 <p v-if="form.errors.prize_type" class="text-red-600 text-sm">
@@ -812,9 +862,16 @@ function removeDrawTime(index: number) {
                                                         id="prize-key">
                                                         <option disabled value="">Select number</option>
 
-                                                        <option v-for="n in form.pick_number" :key="n" :value="n">
-                                                            {{ n }}
-                                                        </option>
+                                                        <template v-if="form.pick_number == 1">
+                                                            <option value="golden">Golden Number</option>
+                                                            <option value="platinum">Platinum Number</option>
+                                                            <option value="normal">Normal Number</option>
+                                                        </template>
+                                                        <template v-else>
+                                                            <option v-for="n in form.pick_number" :key="n" :value="n">
+                                                                {{ n }}
+                                                            </option>
+                                                        </template>
                                                     </select>
                                                     <input id="prize-value" type="number"
                                                         placeholder="Prize Value (e.g., 3000.00 AED)"
@@ -830,10 +887,10 @@ function removeDrawTime(index: number) {
                                                 <p v-if="form.errors.number_prizes" class="text-red-600 text-sm">
                                                     {{ form.errors.number_prizes }}
                                                 </p>
-                                                <div v-for="(value, key) in form.number_prizes" :key="key"
+                                                <div v-for="(value, key) in sortedNumberPrizes" :key="key"
                                                     class="flex justify-between items-center bg-white p-3 rounded-lg border">
                                                     <div>
-                                                        <span class="font-medium text-gray-700">{{ value.name }} Numbers
+                                                        <span class="font-medium text-gray-700 capitalize">{{ value.name }} Numbers
                                                             :
                                                         </span>
                                                         <span class="text-gray-600 ml-2">{{ value.prize }}</span>
