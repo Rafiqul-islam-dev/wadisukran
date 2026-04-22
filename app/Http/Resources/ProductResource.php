@@ -135,7 +135,7 @@ public function formatPrizes($prizes)
         });
 
         $chanceTexts = array_map(function ($item) {
-            return $item['chance_number'] . ' Digit Match ' .
+            return $item['chance_number'] . ' Match ' .' '.
                 number_format($item['prize'], 2, '.', '') . ' AED';
         }, $chancePrizes);
 
