@@ -117,12 +117,12 @@ class OrderController extends Controller
                 $draw_time = Carbon::parse($order->created_at)
                     ->addDay()
                     ->startOfDay()
-                    ->format('h:i A');
+                    ->format('h:i:s');
             } else if ($order->product?->draw_type === 'hourly') {
                 $draw_time = Carbon::parse($order->created_at)
                     ->addHour()
                     ->startOfHour()
-                    ->format('h:i A');
+                    ->format('h:i:s');
             } else if ($order->product?->draw_type === 'once') {
                 $createdAt = Carbon::parse($order->created_at);
 
@@ -132,13 +132,13 @@ class OrderController extends Controller
                 // compare order created time with midday boundary
                 if ($createdAt->lt($createdAt->copy()->startOfDay()->addHours(12))) {
                     // before 12:00 PM
-                    $draw_time = $midDay->format('h:i A');
+                    $draw_time = $midDay->format('h:i:s');
                 } else {
                     // 12:00 PM or after
-                    $draw_time = $endDay->format('h:i A');
+                    $draw_time = $endDay->format('h:i:s');
                 }
             }
-            $salesDateTime = Carbon::parse($order->created_at)->format('Y-m-d, H:i');
+            $salesDateTime = Carbon::parse($order->created_at)->format('Y-m-d, h:i:s');
            if (!empty($order->product?->product_number)) {
                 $imagePath = 'asset/number-' . $order->product->product_number . '.png';
 
@@ -149,7 +149,7 @@ class OrderController extends Controller
 
             $data = [
                 'id' => $order->id,
-                'customer_phone' => $order->customer ? $order->customer->country_code.''. $order->customer->phone : null,
+                'customer_phone' => $order->customer ? $order->customer->phone : null,
                 'company_phone' => company_setting() ? company_setting()->phone : null,
                 'company_whatsapp' => company_setting() ? company_setting()->whatsapp : null,
                 'product_id' => $order->product_id,
@@ -160,13 +160,14 @@ class OrderController extends Controller
                 'vat_percentage' => $order->vat_percentage,
                 'sales_date' =>  $salesDateTime,
                 'draw_number' => $order->draw_number,
-                'product_title' => $order->product ? $order->product->title : null,
+                'product_title' => $order->product ? $order->product->title.' '.$order->product->product_number : null,
                 'product_price' => $order->product ? $order->product->price : null,
                 'image' => $order->product ? static_asset($order->product->image) : null,
                 'number_image' => $numberImage,
                 'draw_date' => $order->created_at ? Carbon::parse($order->created_at)->format('d M, Y') : null,
                 'draw_time' => $draw_time,
                 'vendor_name' => $order->user ? $order->user->name : null,
+                'vendor_address' => $order->user ? $order->user->address : null,
                 'trn' => $order->user ? $order->user->agent->trn: null,
                 'qr_url' => $order->qr_url,
                 'company_name' => company_setting() ? company_setting()->name : null,
