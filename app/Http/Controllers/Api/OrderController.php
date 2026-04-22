@@ -160,7 +160,7 @@ class OrderController extends Controller
                 'vat_percentage' => $order->vat_percentage,
                 'sales_date' =>  $salesDateTime,
                 'draw_number' => $order->draw_number,
-                'product_title' => $order->product ? $order->product->title : null,
+                'product_title' => $order->product ? $order->product->title.' '.$order->product->product_number : null,
                 'product_price' => $order->product ? $order->product->price : null,
                 'image' => $order->product ? static_asset($order->product->image) : null,
                 'number_image' => $numberImage,
