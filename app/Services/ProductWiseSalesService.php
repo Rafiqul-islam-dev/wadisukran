@@ -42,8 +42,8 @@ class ProductWiseSalesService
     return [
         'name' => $user?->name,
         'address' => $user?->address,
-        'from_date' => $fromDate->format('Y-m-d h:i A'),
-        'to_date' => $toDate->format('Y-m-d h:i A'),
+        'from_date' => $fromDate->format('Y-m-d h:i:s'),
+        'to_date' => $toDate->format('Y-m-d h:i:s'),
         'trn' => $user?->agent?->trn,
         'products' => DailySummeryResource::collection($orders),
         'total_sell' => (float) ($orders->sum('total_sell') + $orders->sum('cancel_sell')),
