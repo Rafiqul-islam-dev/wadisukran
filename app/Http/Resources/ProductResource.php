@@ -103,7 +103,6 @@ public function formatPrizes($prizes)
     $chancePrizes = [];
 
     foreach ($prizes as $prize) {
-        // Chance + bet হলে আলাদা format হবে
         if (trim($prize->name) === 'Chance' && $prize->type === 'bet') {
             $chancePrizes[] = [
                 'chance_number' => (int) ($prize->chance_number ?? 0),
@@ -120,7 +119,7 @@ public function formatPrizes($prizes)
         }
 
         if ($prize->type === 'number') {
-            $label = ucfirst($prize->name) . ($this->pick_number == 1 ? ' Number' : ' Digit Match');
+            $label = ucfirst($prize->name) . ($this->pick_number == 1 ? ' Match' : ' Digit Match');
             $prize_array[$label] = $formattedPrize;
         } else {
             $label = trim($prize->name) . ' ' . ucfirst($prize->type);
@@ -131,7 +130,7 @@ public function formatPrizes($prizes)
     // Chance prizes format by chance_number
     if (!empty($chancePrizes)) {
         usort($chancePrizes, function ($a, $b) {
-            return $b['chance_number'] <=> $a['chance_number']; // high to low
+            return $b['chance_number'] <=> $a['chance_number'];
         });
 
         $chanceTexts = array_map(function ($item) {
