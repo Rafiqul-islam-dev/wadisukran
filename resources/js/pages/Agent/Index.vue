@@ -37,7 +37,8 @@ const form = useForm({
     photo: null,
     username: '',
     password: '',
-    join_date: ''
+    join_date: '',
+    google_map: ''
 });
 
 function openModal() {
@@ -56,6 +57,7 @@ const editModal = (user) => {
     form.password = '';
     form.address = user.address;
     form.join_date = user.join_date;
+    form.google_map = user.agent?.google_map;
     showModal.value = true;
 }
 
@@ -71,6 +73,7 @@ function closeModal() {
     form.address = '';
     form.trn = '';
     form.password = '';
+    form.google_map = '';
     showModal.value = false;
 }
 
@@ -478,6 +481,15 @@ function printPdf() {
                                             placeholder="Enter new password" />
                                         <p v-if="form.errors.password" class="text-red-600 text-sm">
                                             {{ form.errors.password }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Google Map Link</label>
+                                        <input v-model="form.google_map" type="text"
+                                            class="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-300"
+                                            placeholder="Enter Google Map link" />
+                                        <p v-if="form.errors.google_map" class="text-red-600 text-sm">
+                                            {{ form.errors.google_map }}
                                         </p>
                                     </div>
                                     <div class="md:col-span-2">

@@ -125,6 +125,13 @@ const totals = computed(() => {
             total_due: 0,
         }
     );
+
+    if (props.selected_agent_id && rows.length > 0) {
+        summary.old_balance = Number(rows[0].old_balance || 0);
+        summary.total_due = Number(rows[rows.length - 1].total_due || 0);
+    }
+
+    return summary;
 });
 </script>
 
@@ -230,7 +237,8 @@ const totals = computed(() => {
                         <thead class="bg-gray-100 text-gray-700">
                             <tr>
                                 <th class="px-4 py-3 border-b">SL</th>
-                                <th class="px-4 py-3 border-b">Agent</th>
+                                <th v-if="selected_agent_id" class="px-4 py-3 border-b">Date</th>
+                                <th v-else class="px-4 py-3 border-b">Agent</th>
                                 <th class="px-4 py-3 border-b text-right">Total Sale</th>
                                 <th class="px-4 py-3 border-b text-right">Commission</th>
                                 <th class="px-4 py-3 border-b text-right">Winning Amount</th>
@@ -239,6 +247,7 @@ const totals = computed(() => {
                                 <th class="px-4 py-3 border-b text-right">Cancel</th>
                                 <th class="px-4 py-3 border-b text-right">Old Balance</th>
                                 <th class="px-4 py-3 border-b text-right">Net Amount</th>
+                                <th class="px-4 py-3 border-b text-right">Total Due</th>
                             </tr>
                         </thead>
 
@@ -249,7 +258,10 @@ const totals = computed(() => {
                                 class="border-t border-gray-200 hover:bg-orange-50/40 transition"
                             >
                                 <td class="px-4 py-3">{{ index + 1 }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-800">
+                                <td v-if="selected_agent_id" class="px-4 py-3 font-medium text-gray-800">
+                                    {{ item.date }}
+                                </td>
+                                <td v-else class="px-4 py-3 font-medium text-gray-800">
                                     <div>{{ item.agent_name }}</div>
                                     <div v-if="item.agent_address" class="text-xs text-gray-500 mt-1">
                                         {{ item.agent_address }}
@@ -263,24 +275,9 @@ const totals = computed(() => {
                                 <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_cancel) }}</td>
                                 <td class="px-4 py-3 text-right">{{ truncateTwo(item.old_balance) }}</td>
                                 <td class="px-4 py-3 text-right font-medium">{{ truncateTwo(item.net_amount) }}</td>
-                                
+                                <td class="px-4 py-3 text-right font-medium text-indigo-600">{{ truncateTwo(item.total_due) }}</td>
                             </tr>
                         </tbody>
-
-                        <tfoot class="bg-orange-50 font-bold text-gray-800">
-                            <tr>
-                                <td colspan="2" class="px-4 py-3 border-t">Grand Total</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_sell) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_commission) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_win) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_claim) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_posting) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.total_cancel) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.old_balance) }}</td>
-                                <td class="px-4 py-3 border-t text-right">{{ truncateTwo(totals.net_amount) }}</td>
-                               
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>

@@ -132,6 +132,12 @@ function goTo(url) {
     })
 }
 
+const formatDateTime = (d: string) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return dt.toLocaleString()
+}
+
 </script>
 <template>
     <Head title="Check Wins" />
@@ -179,7 +185,15 @@ function goTo(url) {
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                            <tr>
+                             <tr>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    SL
+                                </th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                    Date Time
+                                </th>
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                     Invoice No
@@ -211,8 +225,14 @@ function goTo(url) {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="win in wins?.data" :key="win.id"
+                            <tr v-for="(win, index) in wins?.data" :key="win.id"
                                 class="hover:bg-orange-50 transition-colors duration-200">
+                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                    {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                    {{ formatDateTime(win.created_at) }}
+                                </td>
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">{{
                                     win.invoice_no }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">

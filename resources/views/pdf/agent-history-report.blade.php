@@ -126,7 +126,11 @@
         <thead>
             <tr>
                 <th style="width: 5%;">SL</th>
-                <th style="width: 50%;">Agent</th>
+                @if($selected_agent_id)
+                    <th>Date</th>
+                @else
+                    <th style="width: 30%;">Agent</th>
+                @endif
                 <th>Total Sale</th>
                 <th>Commission</th>
                 <th>Winning Amount</th>
@@ -154,7 +158,11 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td class="text-left">
-                        {{ $item['agent_name'] }}
+                        @if($selected_agent_id)
+                            {{ $item['date'] }}
+                        @else
+                            {{ $item['agent_name'] }}
+                        @endif
                     </td>
                     <td class="text-right">{{ number_format($item['total_sell'], 2) }}</td>
                     <td class="text-right">{{ number_format($item['total_commission'], 2) }}</td>
@@ -168,27 +176,10 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" style="text-align:center;">No data found.</td>
+                    <td colspan="{{ $selected_agent_id ? 11 : 11 }}" style="text-align:center;">No data found.</td>
                 </tr>
             @endforelse
         </tbody>
-
-        @if(count($agent_histories))
-            <tfoot>
-                <tr class="footer-total">
-                    <td colspan="2">Grand Total</td>
-                    <td class="text-right">{{ number_format($grand_total_sell, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_commission, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_win, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_claim, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_posting, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_cancel, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_old_balance, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_net_amount, 2) }}</td>
-                    <td class="text-right">{{ number_format($grand_total_due, 2) }}</td>
-                </tr>
-            </tfoot>
-        @endif
     </table>
 </body>
 </html>

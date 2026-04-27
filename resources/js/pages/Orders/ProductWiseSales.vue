@@ -138,19 +138,19 @@ const handleSearch = () => {
                             <div class="space-y-1 mb-3">
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Sales:</span>
-                                    <span class="font-mono font-semibold">{{ product.total_price }}</span>
+                                    <span class="font-mono font-semibold">{{ product.total_sell }}</span>
                                 </div>
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Commission:</span>
-                                    <span class="font-mono font-semibold">{{ product.total_commission }}</span>
+                                    <span class="font-mono font-semibold">{{ product.commission }}</span>
                                 </div>
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Prize Paid:</span>
-                                    <span class="font-mono font-semibold">{{ product.total_prize_paid }}</span>
+                                    <span class="font-mono font-semibold">{{ product.prize_paid }}</span>
                                 </div>
                                 <div class="flex justify-between text-gray-700">
                                     <span>Cancel Order:</span>
-                                    <span class="font-mono font-semibold">{{ product.cancel_orders }}</span>
+                                    <span class="font-mono font-semibold">{{ product.cancel_sell }}</span>
                                 </div>
                             </div>
                         </div>
@@ -174,7 +174,7 @@ const handleSearch = () => {
                                 </div>
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Cancel Orders:</span>
-                                    <span class="font-mono font-semibold">{{ data?.total_cancel_orders }}</span>
+                                    <span class="font-mono font-semibold">{{ data?.total_cancel_sell }}</span>
                                 </div>
                             </div>
                         </div>

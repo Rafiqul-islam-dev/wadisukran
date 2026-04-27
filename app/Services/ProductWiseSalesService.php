@@ -16,26 +16,31 @@ class ProductWiseSalesService
     $fromDate = Carbon::parse($from)->startOfDay();
     $toDate = Carbon::parse($to)->endOfDay();
 
-        $orders = Order::when($user, function ($q, $user) {
-            $q->where('orders.user_id', $user->id);
-        })
-        ->where('orders.created_at', '>=', $fromDate)
-        ->where('orders.created_at', '<=', $toDate)
-        ->whereIn('orders.status', ['Printed', 'Cancel', 'Cancel-Request'])
-        ->leftJoin('products', 'products.id', '=', 'orders.product_id')
-        ->leftJoin('claims', function ($join) {
-            $join->on('claims.invoice_no', '=', 'orders.invoice_no')
-                 ->where('claims.claimed_by', '=', Auth::id());
-        })
-        ->selectRaw('
-            orders.product_id,
-            products.title as product_title,
-            products.product_number as product_number,
-            SUM(CASE WHEN orders.status = "Printed" THEN orders.commission ELSE 0 END) as total_commission,
-            SUM(CASE WHEN orders.status IN ("Cancel", "Cancel-Request") THEN orders.total_price ELSE 0 END) as cancel_sell,
-            SUM(CASE WHEN orders.status = "Printed" THEN orders.total_price ELSE 0 END) as total_sell,
-            SUM(COALESCE(claims.amount, 0)) as total_prize_paid
-        ')
+        $orders = Order::where(function($q) use ($fromDate, $toDate, $user) {
+                $q->where(function($q1) use ($fromDate, $toDate, $user) {
+                    $q1->whereBetween('orders.created_at', [$fromDate, $toDate]);
+                    if ($user) {
+                        $q1->where('orders.user_id', $user->id);
+                    }
+                })
+                ->orWhereHas('claim', function($q2) use ($fromDate, $toDate, $user) {
+                    $q2->whereBetween('created_at', [$fromDate, $toDate]);
+                    if ($user) {
+                        $q2->where('claimed_by', $user->id);
+                    }
+                });
+            })
+            ->leftJoin('products', 'products.id', '=', 'orders.product_id')
+            ->leftJoin('claims', 'claims.invoice_no', '=', 'orders.invoice_no')
+            ->selectRaw('
+                orders.product_id,
+                products.title as product_title,
+                products.product_number as product_number,
+                SUM(CASE WHEN orders.created_at BETWEEN ? AND ? AND orders.status = "Printed" ' . ($user ? 'AND orders.user_id = '.$user->id : '') . ' THEN orders.commission ELSE 0 END) as total_commission,
+                SUM(CASE WHEN orders.status IN ("Cancel", "Cancel-Request") AND orders.created_at BETWEEN ? AND ? ' . ($user ? 'AND orders.user_id = '.$user->id : '') . ' THEN orders.total_price ELSE 0 END) as cancel_sell,
+                SUM(CASE WHEN orders.status = "Printed" AND orders.created_at BETWEEN ? AND ? ' . ($user ? 'AND orders.user_id = '.$user->id : '') . ' THEN orders.total_price ELSE 0 END) as total_sell,
+                SUM(CASE WHEN claims.created_at BETWEEN ? AND ? ' . ($user ? 'AND claims.claimed_by = '.$user->id : '') . ' THEN COALESCE(claims.amount, 0) ELSE 0 END) as total_prize_paid
+            ', [$fromDate, $toDate, $fromDate, $toDate, $fromDate, $toDate, $fromDate, $toDate])
         ->groupBy('orders.product_id', 'products.title', 'products.product_number')
         ->get();
 

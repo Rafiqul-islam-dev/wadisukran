@@ -31,7 +31,8 @@ class AgentRequest extends FormRequest
             'role' => 'required|string|exists:roles,name',
             'join_date' => 'required|date',
             'commission' => 'required|numeric|min:0|max:100',
-            'trn' => 'required|unique:agents,trn'
+            'trn' => 'required|unique:agents,trn',
+            'google_map' => 'nullable|string'
         ];
     }
 

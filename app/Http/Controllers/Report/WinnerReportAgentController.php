@@ -25,25 +25,19 @@ class WinnerReportAgentController extends Controller
     public function winnerReportAgent(Request $request)
     {
         $all_agents = User::where('user_type', 'agent')->get();
-
-        $agents = User::where('user_type', 'agent')
-            ->where('status', 'active')
-            ->select('id', 'name')
-            ->get();
-
         $products = Product::active()->get();
 
         $hasSearch = $request->filled('agent') || $request->filled('from_date') || $request->filled('to_date');
 
         if (!$hasSearch) {
-            $wins = new LengthAwarePaginator([], 0, 8, 1, [
+            $wins = new LengthAwarePaginator([], 0, 10, 1, [
                 'path' => $request->url(),
                 'query' => $request->query(),
             ]);
 
             return Inertia::render('Report/WinnerReportAgent', [
                 'wins' => $wins,
-                'agents' => $agents,
+                'agents' => User::where('user_type', 'agent')->where('status', 'active')->select('id', 'name')->get(),
                 'all_agents' => $all_agents,
                 'products' => $products,
                 'filters' => ['agent' => '', 'from_date' => '', 'to_date' => ''],
@@ -56,30 +50,37 @@ class WinnerReportAgentController extends Controller
             'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
         ]);
 
-       // Get all agents first (apply filter if needed)
-        $agents = User::query()->where('user_type', 'agent')
-                      ->when($request->filled('agent'), function($q, $agent){
-                        $q->where('id', $agent);
-                      })->get();
+        // Get agents - if a specific one is selected, use it; otherwise use active ones
+        $agents = User::query()
+            ->where('user_type', 'agent')
+            ->when($request->filled('agent'), function($q) use ($request) {
+                $q->where('id', $request->agent);
+            }, function($q) {
+                $q->where('status', 'active');
+            })
+            ->get();
 
-        // Prepare summary array
-        $agentSummary = [];
-
-        // Preload orders with necessary filters
+        // Optimized: only fetch winning orders for the relevant agents and in the date range
         $orders = Order::query()
             ->where('is_winner', 1)
+            ->where('status', 'Printed')
+            ->whereIn('user_id', $agents->pluck('id'))
             ->when($request->from_date, fn($q) => $q->whereDate('created_at', '>=', $request->from_date))
             ->when($request->to_date, fn($q) => $q->whereDate('created_at', '<=', $request->to_date))
             ->get()
-            ->groupBy('user_id'); // group orders by agent's user_id
+            ->groupBy('user_id');
+
+        $agentSummary = [];
 
         foreach ($agents as $agent) {
-            $agentOrders = $orders[$agent->id] ?? []; // get orders for this agent or empty
-            $totalPrize = $claimedPrize = $unclaimedPrize = 0;
+            $agentOrders = $orders[$agent->id] ?? [];
+            $totalPrize = 0;
+            $claimedPrize = 0;
+            $unclaimedPrize = 0;
 
             foreach ($agentOrders as $order) {
                 $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($order->invoice_no);
-                $prize = (float)($checkWin['total_prize'] ?? ($checkWin->total_prize ?? 0));
+                $prize = (float)($checkWin['total_prize'] ?? 0);
 
                 $totalPrize += $prize;
 
@@ -90,6 +91,8 @@ class WinnerReportAgentController extends Controller
                 }
             }
 
+            // Optional: If you want to skip agents with 0 prizes when searching, 
+            // you could add a check here. But usually showing 0 is better for clarity.
             $agentSummary[] = [
                 'user_id' => $agent->id,
                 'user' => $agent,
@@ -101,14 +104,14 @@ class WinnerReportAgentController extends Controller
 
         // Pagination
         $perPage = 10;
-        $page = request()->get('page', 1);
+        $page = (int)$request->get('page', 1);
 
-        $wins = new \Illuminate\Pagination\LengthAwarePaginator(
+        $wins = new LengthAwarePaginator(
             array_slice($agentSummary, ($page - 1) * $perPage, $perPage),
             count($agentSummary),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
         return Inertia::render('Report/WinnerReportAgent', [
@@ -117,7 +120,7 @@ class WinnerReportAgentController extends Controller
             'all_agents' => $all_agents,
             'products' => $products,
             'filters' => [
-                'agent' => $request->agent,
+                'agent' => $request->filled('agent') ? (int)$request->agent : '',
                 'from_date' => $request->from_date,
                 'to_date' => $request->to_date,
             ]
@@ -132,26 +135,35 @@ class WinnerReportAgentController extends Controller
             'to_date'   => ['nullable', 'date', 'after_or_equal:from_date'],
         ]);
 
-        $agents = User::query()->where('user_type', 'agent')
-                    ->when($request->filled('agent'), function($q, $agent){
-                    $q->where('id', $agent);
-                    })->get();
+        $agents = User::query()
+            ->where('user_type', 'agent')
+            ->when($request->filled('agent'), function($q) use ($request) {
+                $q->where('id', $request->agent);
+            }, function($q) {
+                $q->where('status', 'active');
+            })
+            ->get();
 
-        $agentSummary = [];
         $orders = Order::query()
             ->where('is_winner', 1)
+            ->where('status', 'Printed')
+            ->whereIn('user_id', $agents->pluck('id'))
             ->when($request->from_date, fn($q) => $q->whereDate('created_at', '>=', $request->from_date))
             ->when($request->to_date, fn($q) => $q->whereDate('created_at', '<=', $request->to_date))
             ->get()
             ->groupBy('user_id');
 
+        $agentSummary = [];
+
         foreach ($agents as $agent) {
             $agentOrders = $orders[$agent->id] ?? [];
-            $totalPrize = $claimedPrize = $unclaimedPrize = 0;
+            $totalPrize = 0;
+            $claimedPrize = 0;
+            $unclaimedPrize = 0;
 
             foreach ($agentOrders as $order) {
                 $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($order->invoice_no);
-                $prize = (float)($checkWin['total_prize'] ?? ($checkWin->total_prize ?? 0));
+                $prize = (float)($checkWin['total_prize'] ?? 0);
 
                 $totalPrize += $prize;
 
@@ -176,11 +188,12 @@ class WinnerReportAgentController extends Controller
         $pdf = Pdf::loadView('pdf.agent_report', [
             'wins' => $agentSummary,
             'company' => $company,
-            'from_date' => Carbon::parse($request->from_date)->startOfDay(),
-            'to_date' => Carbon::parse($request->to_date)->endOfDay()
+            'from_date' => $request->from_date ? Carbon::parse($request->from_date)->startOfDay() : '-',
+            'to_date' => $request->to_date ? Carbon::parse($request->to_date)->endOfDay() : '-'
         ]);
 
-        return $pdf->download('agent_report_' . ($agent->name ?? 'report') . '_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
+        $filename = 'agent_report_' . ($agents->count() == 1 ? $agents->first()->name : 'summary') . '_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function winnerReportAgentDetails(Request $request)
@@ -194,6 +207,7 @@ class WinnerReportAgentController extends Controller
 
         $q = Order::query()
             ->where('is_winner', 1)
+            ->where('status', 'Printed')
             ->where('user_id', $request->agent)
             ->with(['user', 'product', 'user.agent', 'tickets'])
             ->latest();
@@ -228,6 +242,7 @@ class WinnerReportAgentController extends Controller
 
         $q = Order::query()
             ->where('is_winner', 1)
+            ->where('status', 'Printed')
             ->where('user_id', $request->agent)
             ->with(['user', 'product', 'user.agent', 'tickets'])
             ->latest();
@@ -255,8 +270,8 @@ class WinnerReportAgentController extends Controller
             'lists' => $lists,
             'company' => $company,
             'agent' => $agent,
-            'from_date' => Carbon::parse($request->from_date)->startOfDay(),
-            'to_date' => Carbon::parse($request->to_date)->endOfDay(),
+            'from_date' => $request->from_date ? Carbon::parse($request->from_date)->startOfDay() : '-',
+            'to_date' => $request->to_date ? Carbon::parse($request->to_date)->endOfDay() : '-',
             'claimed' => $request->claimed,
         ]);
 
