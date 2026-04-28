@@ -516,7 +516,8 @@ class CheckWinService
 
             return [
                 'total_prize' => array_sum(array_column($summery, 'total_amount')),
-                'tickets' => $orders->pluck('selected_numbers')->toArray()
+                'tickets' => $orders->pluck('selected_numbers')->toArray(),
+                'win_date' => $win->draw_time
             ];
         }
     }
