@@ -306,20 +306,48 @@ class OrderController extends Controller
                             }
                         }
                     } else {
-                        $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
-                        $numberPrizes = $product->prizes
-                            ->sortByDesc('name');
+                        if($product->pick_number == 1){
+                            $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                            $matchedValue = $matchedNumbers->first();
+                            
+                            $prizeTypeName = 'Normal Number';
+                            if ($matchedValue !== null) {
+                                $val = (int)$matchedValue;
+                                if ($val >= 5 && $val <= 7) {
+                                    $prizeTypeName = 'Golden Number';
+                                } elseif ($val >= 25 && $val <= 27) {
+                                    $prizeTypeName = 'Platinum Number';
+                                }
+                            }
+
+                            $numberPrizes = $product->prizes->sortByDesc('name');
+                            foreach ($numberPrizes as $prize) {
+                                $key = $prize->name;
+                                $data[$key] = false;
+
+                                if ($isNumberWinner) continue;
+
+                                if ($matchedValue !== null && strcasecmp($prize->name, $prizeTypeName) == 0) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            }
+                        } else {
+                            $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
+                            $numberPrizes = $product->prizes
+                                ->sortByDesc('name');
 
 
-                        foreach ($numberPrizes as $prize) {
-                            $key = 'Number ' . (int) $prize->name;
-                            $data[$key] = false;
+                            foreach ($numberPrizes as $prize) {
+                                $key = 'Number ' . (int) $prize->name;
+                                $data[$key] = false;
 
-                            if ($isNumberWinner) continue;
+                                if ($isNumberWinner) continue;
 
-                            if ($matchCount == (int) $prize->name) {
-                                $data[$key] = true;
-                                $isNumberWinner = true;
+                                if ($matchCount == (int) $prize->name) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
                             }
                         }
                     }
@@ -391,7 +419,7 @@ class OrderController extends Controller
                 }
                 // Number types
                 foreach ($summery as $key => $sum) {
-                    if (str_starts_with($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
+                    if (str_contains($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
                         $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
                         $order['match_type'] = $key;
                     }

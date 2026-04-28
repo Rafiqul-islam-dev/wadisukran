@@ -16,6 +16,7 @@ class Agent extends Model
         'trn',
         'commission',
         'temp_password',
+        'google_map',
     ];
 
     protected $dates = ['join_date'];

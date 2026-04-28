@@ -118,10 +118,24 @@ function truncateTwo(num) {
             </div>
             <div  class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-5 m-auto">
                 <div v-if="agent" class="overflow-x-auto text-center p-5">
-                    <button @click="openModal"
-                    class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
-                        Print
-                    </button>
+                    <div class="flex justify-between gap-2">
+                        <div class="flex gap-2">
+                            <button @click="openModal"
+                            class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
+                                Print
+                            </button>
+                            <button v-print="'#printDiv'"
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg text-center m-auto hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-md hover:shadow-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                    </path>
+                                </svg>
+                                <span>PDF</span>
+                            </button>
+                        </div>
+                        <div></div>
+                    </div>
                     <!-- Header -->
                     <div class="text-center mb-4">
                         <h2 class="text-xl font-bold">Account Statement</h2>
@@ -228,7 +242,7 @@ function truncateTwo(num) {
             </div>
         </div>
 
-        <div v-if="showModal" class="fixed inset-0 bg-gray-500/40 bg-opacity-50 flex items-center justify-center z-50">
+        <div v-if="agent" v-show="showModal" class="fixed inset-0 bg-gray-500/40 bg-opacity-50 flex items-center justify-center z-50">
             <div id="printDiv"
                 class="bg-white w-[900px] max-h-[97vh] overflow-y-auto rounded-lg shadow-lg p-6 relative">
 

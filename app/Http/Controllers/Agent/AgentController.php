@@ -47,7 +47,7 @@ class AgentController extends Controller
                 });
             })
             ->whereHas('agent')
-            ->with('agent:user_id,username,trn,commission')
+            ->with('agent:user_id,username,trn,commission,google_map')
             ->latest()
             ->get();
 
@@ -89,7 +89,8 @@ class AgentController extends Controller
             'address' => 'nullable|string',
             'role' => 'required|string|exists:roles,name',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10048',
-            'password' => 'nullable|string'
+            'password' => 'nullable|string',
+            'google_map' => 'nullable|string'
         ]);
         $this->agentService->updateUser($user, $validated);
 

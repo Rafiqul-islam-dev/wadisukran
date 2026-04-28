@@ -223,6 +223,9 @@ const extractNumbers = (order: any): string[] => {
                                                 <tr>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
+                                                        SL</th>
+                                                    <th
+                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
                                                         Vendor Name</th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
@@ -243,8 +246,11 @@ const extractNumbers = (order: any): string[] => {
                                             </thead>
 
                                             <tbody class="divide-y divide-gray-200">
-                                                <tr v-for="row in wins?.data" :key="row.user_id"
+                                                <tr v-for="(row, index) in wins?.data" :key="row.user_id"
                                                     class="hover:bg-gray-50">
+                                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                                        {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
+                                                    </td>
                                                     <td class="px-6 py-4">
                                                         <div class="font-semibold text-gray-900">{{ row?.user?.name }}
                                                         </div>

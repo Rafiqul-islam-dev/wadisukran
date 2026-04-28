@@ -66,4 +66,25 @@ class AccountsLedgerController extends Controller
         $this->agentAccountService->store($data);
         return back();
     }
+
+    public function update(Request $request, AgentAccount $ledger){
+        $request->validate([
+            'agent' => 'required|exists:users,id',
+            'amount' => 'required|numeric|min:1',
+            'description' => 'nullable|string',
+            'date' => 'required|date',
+            'payment_type' => 'required|numeric|in:1,2'
+        ]);
+
+        $data = [
+            'user_id' => $request->agent,
+            'created_at' => Carbon::parse($request->date)->endOfDay(),
+            'amount'  => $request->payment_type == 1 ? $request->amount : -$request->amount,
+            'description' => $request->description,
+            'payment_type' => $request->payment_type
+        ];
+
+        $ledger->update($data);
+        return back();
+    }
 }

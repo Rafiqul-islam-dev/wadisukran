@@ -26,6 +26,7 @@ class AgentService
                 'username' => $data['username'],
                 'trn' => $data['trn'] ?? null,
                 'commission' => $data['commission'],
+                'google_map' => $data['google_map'] ?? null,
                 'temp_password' => isset($data['plain_password'])
                     ? Crypt::encryptString($data['plain_password'])
                     : null,
@@ -42,6 +43,7 @@ class AgentService
             'username' => $data['username'],
             'trn' => $data['trn'],
             'commission' => $data['commission'],
+            'google_map' => $data['google_map'] ?? null,
         ]);
         return 'Agent updated successfully.';
     }
