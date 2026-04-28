@@ -24,6 +24,7 @@ class AgentService
             ['user_id' => $user->id],
             [
                 'username' => $data['username'],
+                'serial' => $data['serial'] ?? null,
                 'trn' => $data['trn'] ?? null,
                 'commission' => $data['commission'],
                 'google_map' => $data['google_map'] ?? null,

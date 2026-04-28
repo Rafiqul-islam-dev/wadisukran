@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Product;
 
 use App\Http\Controllers\Controller;
+use App\Models\CompannySetting;
 use App\Models\Order;
-use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Services\CheckWinService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class CheckWinController extends Controller
@@ -30,6 +31,12 @@ class CheckWinController extends Controller
                 ->when($request->invoice_no, function($q, $invoice){
                     $q->where('invoice_no', $invoice);
                 })
+                ->when($request->from_date, function ($q, $from_date) {
+                    $q->whereDate('created_at', '>=', $from_date);
+                })
+                ->when($request->to_date, function ($q, $to_date) {
+                    $q->whereDate('created_at', '<=', $to_date);
+                })
                 ->with(['user', 'product', 'user.agent', 'tickets'])
                 ->latest()
                 ->paginate(5);
@@ -44,8 +51,47 @@ class CheckWinController extends Controller
         $products = Product::active()->get();
         return Inertia::render('CheckWin/Index', [
             'wins' => $wins,
-            'products' => $products
+            'products' => $products,
+            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date'])
         ]);
+    }
+
+    public function checkWinsPdf(Request $request)
+    {
+        $wins = Order::where('is_winner', 1)
+                ->where('is_claimed', 1)
+                ->when($request->product_id, function($q, $product){
+                    $q->where('product_id', $product);
+                })
+                ->when($request->invoice_no, function($q, $invoice){
+                    $q->where('invoice_no', $invoice);
+                })
+                ->when($request->from_date, function ($q, $from_date) {
+                    $q->whereDate('created_at', '>=', $from_date);
+                })
+                ->when($request->to_date, function ($q, $to_date) {
+                    $q->whereDate('created_at', '<=', $to_date);
+                })
+                ->with(['user', 'product', 'user.agent', 'tickets'])
+                ->latest()
+                ->get();
+
+        $wins->transform(function ($item) {
+            $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
+            $item->check_win = $check_win;
+            return $item;
+        });
+
+        $company = CompannySetting::firstOrFail();
+
+        $pdf = Pdf::loadView('pdf.check_wins_report', [
+            'wins' => $wins,
+            'company' => $company,
+            'from_date' => $request->from_date ?? '-',
+            'to_date' => $request->to_date ?? '-'
+        ]);
+
+        return $pdf->download('check_wins_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 
     public function check_win(Request $request)

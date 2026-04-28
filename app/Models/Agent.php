@@ -13,6 +13,7 @@ class Agent extends Model
     protected $fillable = [
         'user_id',
         'username',
+        'serial',
         'trn',
         'commission',
         'temp_password',

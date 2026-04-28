@@ -12,9 +12,10 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/reports/winner-report',
     },
 ];
-const { wins, products } = defineProps<{
+const { wins, products, filters } = defineProps<{
     wins: Array<any>;
     products: Array<any>;
+    filters: any;
 }>();
 const invoice_no = ref('');
 const errors = ref([]);
@@ -33,8 +34,10 @@ const totalWonAmount = computed(() => {
 });
 
 const form = useForm({
-    invoice_no: '',
-    product_id: ''
+    invoice_no: filters?.invoice_no ?? '',
+    product_id: filters?.product_id ?? '',
+    from_date: filters?.from_date ?? '',
+    to_date: filters?.to_date ?? '',
 });
 
 const handleSearch = () => {
@@ -42,6 +45,16 @@ const handleSearch = () => {
         showProgress: false,
         preserveState: true
     })
+}
+
+function downloadPdf() {
+    const queryParams = new URLSearchParams({
+        product_id: form.product_id || '',
+        invoice_no: form.invoice_no || '',
+        from_date: form.from_date || '',
+        to_date: form.to_date || '',
+    });
+    window.location.href = route('reports.winner-report-pdf') + '?' + queryParams.toString();
 }
 
 const checkmsg = computed(() => checkMsg.value)
@@ -134,6 +147,12 @@ function goTo(url) {
         showProgress: false
     })
 }
+
+const formatDateTime = (d: string) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return dt.toLocaleString()
+}
 </script>
 
 <template>
@@ -161,10 +180,22 @@ function goTo(url) {
                                             <input v-model="form.invoice_no" type="text" placeholder="Invoice No.."
                                                 class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
                                         </div>
-                                        <div class="flex items-center flex-col">
+                                        <div>
+                                            <input v-model="form.from_date" type="date"
+                                                class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                                        </div>
+                                        <div>
+                                            <input v-model="form.to_date" type="date"
+                                                class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                                        </div>
+                                        <div class="flex items-center gap-2">
                                             <button @click="handleSearch"
                                                 class="cursor-pointer px-6 py-2 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-xl hover:from-teal-600 hover:to-green-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
                                                 Search
+                                            </button>
+                                            <button @click="downloadPdf"
+                                                class="cursor-pointer px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                                                Print
                                             </button>
                                         </div>
                                     </div>
@@ -178,7 +209,19 @@ function goTo(url) {
                                                 <tr>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                        SL
+                                                    </th>
+                                                    <th
+                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                        Date Time
+                                                    </th>
+                                                    <th
+                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                                         Invoice No
+                                                    </th>
+                                                    <th
+                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                        Win Date
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -207,16 +250,30 @@ function goTo(url) {
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200">
-                                                <tr v-for="win in wins?.data" :key="win.id"
+                                                <tr v-for="(win, index) in wins?.data" :key="win.id"
                                                     class="hover:bg-orange-50 transition-colors duration-200">
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                        {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
+                                                    </td>
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                        {{ formatDateTime(win.created_at) }}
+                                                    </td>
                                                     <td
                                                         class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                                                         {{
                                                             win.invoice_no }}</td>
+                                                    <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                                        {{ win?.check_win?.win_date }}
+                                                    </td>
                                                     <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                                        <span v-for="ticket in win?.check_win?.tickets"
-                                                            class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block text-center rounded-lg text-xs font-semibold">
-                                                            <span v-for="item in ticket" class="p-1">{{ item }}</span>
+                                                        <span v-for="ticket in win?.check_win?.tickets" :key="ticket.id"
+                                                            class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block rounded-lg text-xs font-semibold">
+                                                            <span v-for="(item, idx) in ticket.selected_numbers" :key="idx"
+                                                                class="p-1">{{ item }}</span>
+                                                            <span
+                                                                class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded text-[10px] whitespace-nowrap ml-2">
+                                                                {{ ticket.prize_name }}
+                                                            </span>
                                                         </span>
                                                     </td>
                                                     <td class="px-4 py-4 text-sm text-gray-900">

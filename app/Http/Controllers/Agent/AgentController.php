@@ -61,14 +61,15 @@ class AgentController extends Controller
         $validated = $request->validated();
 
         $name = $validated['name'];
-        $firstWord = strtolower(strtok($name, ' '));
-
-        do {
-            $randomNumber = rand(100, 999);
-            $username = $firstWord . '-' . $randomNumber;
-        } while (Agent::where('username', $username)->exists());
+        $prefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3));
+        
+        $maxSerial = Agent::withTrashed()->max('serial') ?? Agent::withTrashed()->count();
+        $serial = $maxSerial + 1;
+        
+        $username = $prefix . '-' . str_pad($serial, 4, '0', STR_PAD_LEFT);
 
         $validated['username'] = $username;
+        $validated['serial'] = $serial;
         $validated['plain_password'] = $username;
         $validated['password'] = $username;
 
