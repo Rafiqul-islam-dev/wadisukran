@@ -24,7 +24,6 @@ class CheckWinController extends Controller
     public function index(Request $request)
     {
         $wins = Order::where('is_winner', 1)
-                ->where('is_claimed', 1)
                 ->when($request->product_id, function($q, $product){
                     $q->where('product_id', $product);
                 })

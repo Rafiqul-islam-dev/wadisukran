@@ -8,10 +8,20 @@
         .header h1 { margin: 0; }
         .info { margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
         th { background-color: #f2f2f2; }
-        .ticket-tag { background-color: #e1f5fe; color: #01579b; padding: 2px 5px; border-radius: 4px; display: block; margin: 2px; font-size: 10px; }
-        .prize-tag { background-color: #bbdefb; color: #0d47a1; padding: 1px 3px; border-radius: 3px; font-size: 9px; }
+        .circle { 
+            display: inline-block; 
+            width: 20px; 
+            height: 20px; 
+            line-height: 20px; 
+            text-align: center; 
+            border: 1px solid #333; 
+            border-radius: 50%; 
+            font-size: 10px; 
+            margin-right: 2px;
+        }
+        .row-stack { margin-bottom: 5px; height: 22px; line-height: 22px; }
     </style>
 </head>
 <body>
@@ -24,34 +34,45 @@
     <table>
         <thead>
             <tr>
-                <th>SL</th>
-                <th>Win Date</th>
+                <th>SI</th>
+                <th>Date</th>
                 <th>Invoice No</th>
-                <th>Tickets</th>
-                <th>Vendor</th>
-                <th>Total Prize</th>
-                <th>Product</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Number</th>
+                <th>Price (AED)</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
             @foreach($wins as $index => $win)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $win->check_win['win_date'] ?? '-' }}</td>
+                <td>{{ $win->created_at->format('d M Y h:i A') }}</td>
                 <td>{{ $win->invoice_no }}</td>
+                <td>{{ $win->product->title ?? '' }} {{ $win->product->product_number ?? '' }}</td>
                 <td>
                     @foreach($win->check_win['tickets'] as $ticket)
-                        <div class="ticket-tag">
+                        <div class="row-stack">{{ $ticket['prize_name'] }}</div>
+                    @endforeach
+                </td>
+                <td>
+                    @foreach($win->check_win['tickets'] as $ticket)
+                        <div class="row-stack">
                             @foreach($ticket['selected_numbers'] as $num)
-                                {{ $num }} 
+                                <span class="circle">{{ $num }}</span>
                             @endforeach
-                            <span class="prize-tag">{{ $ticket['prize_name'] }}</span>
                         </div>
                     @endforeach
                 </td>
-                <td>{{ $win->user->name }}</td>
-                <td>{{ $win->check_win['total_prize'] }}</td>
-                <td>{{ $win->product->title }} {{ $win->product->product_number }}</td>
+                <td>AED {{ $win->check_win['total_prize'] }}</td>
+                <td>
+                    @if($win->is_claimed == 0)
+                        Not Claimed
+                    @else
+                        Claimed
+                    @endif
+                </td>
             </tr>
             @endforeach
         </tbody>

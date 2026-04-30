@@ -209,11 +209,11 @@ const formatDateTime = (d: string) => {
                                                 <tr>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        SL
+                                                        SI
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Date Time
+                                                        Date
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -221,27 +221,19 @@ const formatDateTime = (d: string) => {
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Win Date
+                                                        Type
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Ticket No
+                                                        Description
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Vendor Name
+                                                        Number
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Address
-                                                    </th>
-                                                    <th
-                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Total Prize
-                                                    </th>
-                                                    <th
-                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                                        Product
+                                                        Price (AED)
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -252,50 +244,38 @@ const formatDateTime = (d: string) => {
                                             <tbody class="divide-y divide-gray-200">
                                                 <tr v-for="(win, index) in wins?.data" :key="win.id"
                                                     class="hover:bg-orange-50 transition-colors duration-200">
-                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
                                                         {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
                                                     </td>
-                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
                                                         {{ formatDateTime(win.created_at) }}
                                                     </td>
-                                                    <td
-                                                        class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                                                        {{
-                                                            win.invoice_no }}</td>
-                                                    <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                                        {{ win?.check_win?.win_date }}
+                                                    <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap align-top">
+                                                        {{ win.invoice_no }}
                                                     </td>
-                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
-                                                        <span v-for="ticket in win?.check_win?.tickets" :key="ticket.id"
-                                                            class="px-2 py-1 mb-1 bg-blue-100 text-blue-800 block rounded-lg text-xs font-semibold">
-                                                            <span v-for="(item, idx) in ticket.selected_numbers" :key="idx"
-                                                                class="p-1">{{ item }}</span>
-                                                            <span
-                                                                class="bg-blue-200 text-blue-900 px-2 py-0.5 rounded text-[10px] whitespace-nowrap ml-2">
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium align-top">
+                                                        {{ win?.product?.title }} {{ win?.product?.product_number }}
+                                                    </td>
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
+                                                        <div class="flex flex-col gap-2">
+                                                            <div v-for="ticket in win?.check_win?.tickets" :key="'desc-'+ticket.id" class="h-6 flex items-center text-sm text-gray-600 whitespace-nowrap">
                                                                 {{ ticket.prize_name }}
-                                                            </span>
-                                                        </span>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td class="px-4 py-4 text-sm text-gray-900">
-                                                        <p class="font-medium text-gray-900">{{ win?.user?.name }}</p>
-                                                        <p class="text-teal-600 text-xs mt-1"
-                                                            v-if="win.user?.agent?.username">{{
-                                                                win?.user?.agent?.username }}</p>
-
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
+                                                        <div class="flex flex-col gap-2">
+                                                            <div v-for="ticket in win?.check_win?.tickets" :key="'num-'+ticket.id" class="h-6 flex items-center gap-1">
+                                                                <span v-for="(item, idx) in ticket.selected_numbers" :key="idx" class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-500 text-xs font-medium text-gray-700">
+                                                                    {{ item }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td class="px-4 py-4 text-sm text-gray-900">
-                                                        <p class="  mt-1 truncate max-w-[180px]"
-                                                            v-if="win.user?.address">{{
-                                                                win.user.address }}</p>
+                                                    <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap align-top">
+                                                        AED {{ win?.check_win?.total_prize }}
                                                     </td>
-                                                    <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                                        {{ win?.check_win?.total_prize }}
-                                                    </td>
-                                                    <td
-                                                        class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium">
-                                                        {{
-                                                            win?.product?.title }} {{ win?.product?.product_number }}</td>
-                                                    <td class="px-4 py-4 whitespace-nowrap">
+                                                    <td class="px-4 py-4 whitespace-nowrap align-top">
                                                         <button v-if="win.is_claimed === 0"
                                                             @click="handleIndividualClaim(win.invoice_no)"
                                                             class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">

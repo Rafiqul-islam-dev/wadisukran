@@ -48,10 +48,39 @@ class AccountsLedgerController extends Controller
     public function store(Request $request){
         $request->validate([
             'agent' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string',
             'date' => 'required|date',
-            'payment_type' => 'required|numeric|in:1,2'
+            'payment_type' => 'required|numeric|in:1,2',
+            'amount' => [
+                'required',
+                'numeric',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    $account = AgentAccount::where('user_id', $request->agent)
+                        ->selectRaw('type, sum(amount) as amount')
+                        ->groupBy('type')
+                        ->pluck('amount', 'type');
+
+                    $total_due = ($account['sell'] ?? 0) 
+                               - (
+                                   ($account['commission'] ?? 0) 
+                                   + ($account['claim'] ?? 0) 
+                                   + ($account['posting'] ?? 0)
+                               );
+
+                    if ($request->payment_type == 1) {
+                        if ($value > $total_due) {
+                            $fail('Amount cannot be greater than total due (' . number_format($total_due, 2) . ').');
+                        }
+                    } else {
+                        if ($total_due >= 0) {
+                            $fail('Cannot process payment. Total due is positive or zero (' . number_format($total_due, 2) . ').');
+                        } elseif ($value > abs($total_due)) {
+                            $fail('Amount cannot be greater than (' . number_format(abs($total_due), 2) . ').');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $data = [
@@ -70,10 +99,40 @@ class AccountsLedgerController extends Controller
     public function update(Request $request, AgentAccount $ledger){
         $request->validate([
             'agent' => 'required|exists:users,id',
-            'amount' => 'required|numeric|min:1',
             'description' => 'nullable|string',
             'date' => 'required|date',
-            'payment_type' => 'required|numeric|in:1,2'
+            'payment_type' => 'required|numeric|in:1,2',
+            'amount' => [
+                'required',
+                'numeric',
+                'min:1',
+                function ($attribute, $value, $fail) use ($request, $ledger) {
+                    $account = AgentAccount::where('user_id', $request->agent)
+                        ->where('id', '!=', $ledger->id) // Exclude current ledger for update calculation
+                        ->selectRaw('type, sum(amount) as amount')
+                        ->groupBy('type')
+                        ->pluck('amount', 'type');
+
+                    $total_due = ($account['sell'] ?? 0) 
+                               - (
+                                   ($account['commission'] ?? 0) 
+                                   + ($account['claim'] ?? 0) 
+                                   + ($account['posting'] ?? 0)
+                               );
+
+                    if ($request->payment_type == 1) {
+                        if ($value > $total_due) {
+                            $fail('Amount cannot be greater than total due (' . number_format($total_due, 2) . ').');
+                        }
+                    } else {
+                        if ($total_due >= 0) {
+                            $fail('Cannot process payment. Total due is positive or zero (' . number_format($total_due, 2) . ').');
+                        } elseif ($value > abs($total_due)) {
+                            $fail('Amount cannot be greater than the available negative balance (' . number_format(abs($total_due), 2) . ').');
+                        }
+                    }
+                },
+            ],
         ]);
 
         $data = [
