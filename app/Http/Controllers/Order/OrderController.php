@@ -35,7 +35,7 @@ class OrderController extends Controller
             $query->where('user_id', Auth::id());
         });
 
-        if (!$request->date_from && !$request->date_to) {
+        if (!$request->date_from && !$request->date_to && !$request->invoice_no) {
             $orders = $orders->whereDate('created_at', today());
         }
         if ($request->btn === 'search') {

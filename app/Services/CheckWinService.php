@@ -401,6 +401,7 @@ class CheckWinService
                     $isRumbleWinner = false;
                     $isChanceWinner = false;
                     $isNumberWinner = false;
+                    $prize_name = null;
 
                     $ticketTypes   = is_array($order->selected_play_types)
                         ? $order->selected_play_types
@@ -414,6 +415,7 @@ class CheckWinService
                                     $ticketNumbers->count() === $len &&
                                     $ticketNumbers->all() === $numbersStraight->all();
                                 $data[$type->name] = $isStraightWinner;
+                                if ($isStraightWinner) $prize_name = 'Straight';
                             } else if ($type->name === 'Rumble' && in_array('Rumble', $ticketTypes, true)) {
                                 if ($isStraightWinner == false) {
                                     $isRumbleWinner =
@@ -421,6 +423,7 @@ class CheckWinService
                                         $ticketNumbers->sort()->values()->all() === $numbersSorted->all();
                                 }
                                 $data[$type->name] = $isRumbleWinner;
+                                if ($isRumbleWinner) $prize_name = 'Rumble';
                             }
                         }
                         if (in_array('Chance', $ticketTypes, true)) {
@@ -447,6 +450,7 @@ class CheckWinService
                                 if ($matchCount == (int) $chanceType->chance_number) {
                                     $data[$key] = true;
                                     $isChanceWinner = true;
+                                    $prize_name = 'Chance ' . $chanceType->chance_number;
                                 }
                             }
                         }
@@ -465,12 +469,14 @@ class CheckWinService
                             if ($matchCount === (int) $prize->name) {
                                 $data[$key] = true;
                                 $isNumberWinner = true;
+                                $prize_name = 'Number ' . $prize->name;
                             }
                         }
                     }
                     $orderHasWon = $isStraightWinner || $isRumbleWinner || $isChanceWinner || $isNumberWinner;
 
                     if ($orderHasWon) {
+                        $data['prize_name'] = $prize_name;
                         return $data;
                     }
 
@@ -516,8 +522,8 @@ class CheckWinService
 
             return [
                 'total_prize' => array_sum(array_column($summery, 'total_amount')),
-                'tickets' => $orders->pluck('selected_numbers')->toArray(),
-                'win_date' => $win->draw_time
+                'tickets' => $orders->values()->toArray(),
+                'win_date' => Carbon::parse($win->created_at)->toDateString(),
             ];
         }
     }

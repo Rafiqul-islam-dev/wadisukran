@@ -109,6 +109,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('histories/delete/{win}', [DrawController::class, 'histories_delete'])->name('histories-delete');
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
+    Route::get('/check-wins-pdf', [CheckWinController::class, 'checkWinsPdf'])->name('check-wins-pdf');
     Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
     Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
@@ -151,6 +152,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('winner-report', [WinnerReportController::class, 'winnerReport'])->name('winner-report');
+        Route::get('winner-report-pdf', [WinnerReportController::class, 'winnerReportPdf'])->name('winner-report-pdf');
         Route::get('winner-report-agent', [WinnerReportAgentController::class, 'winnerReportAgent'])->name('winner-report-agent');
         Route::get('winner-report-agent-pdf', [WinnerReportAgentController::class, 'agentReportAgent'])->name('winner-report-agent-pdf');
         Route::get('cancel-report', [CancelReportController::class, 'cancelReport'])->name('cancel-report');
