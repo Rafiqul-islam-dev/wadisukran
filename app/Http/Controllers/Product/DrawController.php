@@ -56,11 +56,6 @@ class DrawController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        if (!$startDate && !$endDate && !$request->product_id) {
-            $startDate = Carbon::today()->toDateString();
-            $endDate = Carbon::today()->toDateString();
-        }
-
         $wins = Win::latest()
             ->when($request->product_id, function ($query, $product_id) {
                 $query->where('product_id', $product_id);

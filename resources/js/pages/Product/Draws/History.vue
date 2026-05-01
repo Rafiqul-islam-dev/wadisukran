@@ -23,6 +23,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 const deleteModal = ref(false);
 const deletingHistory = ref<any>(null);
 
+// Preview modal refs
+const previewModal = ref(false);
+const previewImageUrl = ref<string | null>(null);
+const previewFileName = ref<string>('draw-result.png');
+const previewWinData = ref<any>(null); // Store win data for WhatsApp
+
 const { wins, products, logoUrl, cupIcon, filters } = defineProps<{
     wins: any;
     products: Array<any>;
@@ -534,17 +540,12 @@ const handleDownload = async (win: any) => {
     const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
 
     const fileName = `draw-result-${(win.product?.title+" "+win.product?.product_number ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
-    const link = document.createElement('a');
-    link.download = fileName;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-
-    // WhatsApp message
-    const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
-    const message = `Draw result ready.\nProduct: ${win.product?.title+" "+win.product?.product_number ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
-    setTimeout(() => openWhatsAppChat(message), 800);
-
-    toast.success('Image downloaded. WhatsApp chat opened.');
+    
+    // Store for preview
+    previewImageUrl.value = canvas.toDataURL('image/png');
+    previewFileName.value = fileName;
+    previewWinData.value = win; // Store win data for WhatsApp
+    previewModal.value = true;
 };
 
 // ─── Download All Wins ────────────────────────────────────────────────────────
@@ -570,12 +571,34 @@ const handleDownloadAll = async () => {
     const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
 
     const fileName = `draw-results-all-${Date.now()}.png`;
-    const link = document.createElement('a');
-    link.download = fileName;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    
+    // Store for preview
+    previewImageUrl.value = canvas.toDataURL('image/png');
+    previewFileName.value = fileName;
+    previewModal.value = true;
 
-    toast.success(`Downloaded ${allWins.length} results.`);
+    toast.success(`Preview ready with ${allWins.length} results.`);
+};
+
+const confirmDownload = () => {
+    if (!previewImageUrl.value) return;
+    
+    const link = document.createElement('a');
+    link.download = previewFileName.value;
+    link.href = previewImageUrl.value;
+    link.click();
+    
+    // WhatsApp message when clicking download
+    if (previewWinData.value) {
+        const win = previewWinData.value;
+        const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
+        const message = `Draw result ready.\nProduct: ${win.product?.title+" "+win.product?.product_number ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
+        openWhatsAppChat(message);
+    }
+    
+    previewModal.value = false;
+    previewWinData.value = null;
+    toast.success('Image downloaded successfully.');
 };
 </script>
 
@@ -652,7 +675,7 @@ const handleDownloadAll = async () => {
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                             </svg>
-                            Download All
+                            View All
                         </Button>
                     </div>
 
@@ -711,7 +734,7 @@ const handleDownloadAll = async () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                                                 </svg>
-                                                Download
+                                                View
                                             </Button>
 
                                             <Button
@@ -745,6 +768,43 @@ const handleDownloadAll = async () => {
                 <DialogFooter>
                     <Button variant="outline" @click="deleteModal = false">Cancel</Button>
                     <Button variant="destructive" @click="confirmDelete">Delete</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Preview Dialog -->
+        <Dialog v-model:open="previewModal" class="max-w-6xl">
+            <DialogContent class="max-w-6xl max-h-[95vh] overflow-auto w-[95vw]">
+                <DialogHeader>
+                    <DialogTitle>Preview Draw Result</DialogTitle>
+                    <DialogDescription>
+                        Review the image before downloading.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div class="flex justify-center py-4">
+                    <img 
+                        v-if="previewImageUrl" 
+                        :src="previewImageUrl" 
+                        alt="Draw Result Preview" 
+                        class="max-w-full h-auto rounded-lg shadow-lg border"
+                    />
+                </div>
+                
+                <DialogFooter class="gap-2">
+                    <Button variant="outline" @click="previewModal = false">Cancel</Button>
+                    <Button 
+                        variant="default" 
+                        @click="confirmDownload"
+                        class="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+                        </svg>
+                        Download Now
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -16,6 +16,7 @@ const { wins, products } = defineProps<{
     wins: Array<any>;
     products: Array<any>;
 }>();
+console.log(wins);
 const invoice_no = ref('');
 const errors = ref([]);
 const showModal = ref(false);
@@ -450,3 +451,4 @@ function goTo(url) {
         </Transition>
     </AppLayout>
 </template>
+
