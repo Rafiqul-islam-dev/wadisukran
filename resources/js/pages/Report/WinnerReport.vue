@@ -259,7 +259,7 @@ const formatDateTime = (d: string) => {
                                                     </td>
                                                     <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
                                                         <div class="flex flex-col gap-2">
-                                                            <div v-for="ticket in win?.check_win?.tickets" :key="'desc-'+ticket.id" class="h-6 flex items-center text-sm text-gray-600 whitespace-nowrap">
+                                                            <div v-for="ticket in win?.check_win?.tickets" :key="'desc-'+ticket.id" class="h-6 flex items-center text-sm text-gray-600 whitespace-nowrap capitalize">
                                                                 {{ ticket.prize_name }}
                                                             </div>
                                                         </div>

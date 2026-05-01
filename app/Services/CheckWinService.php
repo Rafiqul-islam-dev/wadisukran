@@ -94,20 +94,39 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
+                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                        $matchCount = $matchedNumbers->count();
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
 
                         foreach ($numberPrizes as $prize) {
-                            $key = 'Number ' . (int) $prize->name;
+                            $key = is_numeric($prize->name) ? 'Number ' . $prize->name : $prize->name;
                             $data[$key] = false;
 
                             if ($isNumberWinner) continue;
 
-                            if ($matchCount === (int) $prize->name) {
-                                $data[$key] = true;
-                                $isNumberWinner = true;
+                            $prizeNameLower = strtolower($prize->name);
+                            if ($prizeNameLower === 'platinum') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [25, 26, 27])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else if ($prizeNameLower === 'golden') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else if ($prizeNameLower === 'normal') {
+                                if ($matchCount === 1 && !in_array($matchedNumbers->first(), [25, 26, 27, 5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else {
+                                if ($matchCount === (int) $prize->name) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
                             }
                         }
                     }
@@ -254,20 +273,39 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
+                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                        $matchCount = $matchedNumbers->count();
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
 
                         foreach ($numberPrizes as $prize) {
-                            $key = 'Number ' . (int) $prize->name;
+                            $key = is_numeric($prize->name) ? 'Number ' . $prize->name : $prize->name;
                             $data[$key] = false;
 
                             if ($isNumberWinner) continue;
 
-                            if ($matchCount === (int) $prize->name) {
-                                $data[$key] = true;
-                                $isNumberWinner = true;
+                            $prizeNameLower = strtolower($prize->name);
+                            if ($prizeNameLower === 'platinum') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [25, 26, 27])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else if ($prizeNameLower === 'golden') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else if ($prizeNameLower === 'normal') {
+                                if ($matchCount === 1 && !in_array($matchedNumbers->first(), [25, 26, 27, 5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
+                            } else {
+                                if ($matchCount === (int) $prize->name) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                }
                             }
                         }
                     }
@@ -455,21 +493,43 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
+                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                        $matchCount = $matchedNumbers->count();
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
 
                         foreach ($numberPrizes as $prize) {
-                            $key = 'Number ' . (int) $prize->name;
+                            $key = is_numeric($prize->name) ? 'Number ' . $prize->name : $prize->name;
                             $data[$key] = false;
 
                             if ($isNumberWinner) continue;
 
-                            if ($matchCount === (int) $prize->name) {
-                                $data[$key] = true;
-                                $isNumberWinner = true;
-                                $prize_name = 'Number ' . $prize->name;
+                            $prizeNameLower = strtolower($prize->name);
+                            if ($prizeNameLower === 'platinum') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [25, 26, 27])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                    $prize_name = $prize->name;
+                                }
+                            } else if ($prizeNameLower === 'golden') {
+                                if ($matchCount === 1 && in_array($matchedNumbers->first(), [5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                    $prize_name = $prize->name;
+                                }
+                            } else if ($prizeNameLower === 'normal') {
+                                if ($matchCount === 1 && !in_array($matchedNumbers->first(), [25, 26, 27, 5, 6, 7])) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                    $prize_name = $prize->name;
+                                }
+                            } else {
+                                if ($matchCount === (int) $prize->name) {
+                                    $data[$key] = true;
+                                    $isNumberWinner = true;
+                                    $prize_name = 'Number ' . $prize->name;
+                                }
                             }
                         }
                     }
