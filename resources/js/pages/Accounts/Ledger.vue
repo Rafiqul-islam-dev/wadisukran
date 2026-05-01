@@ -218,7 +218,7 @@ const submitForm = () => {
                                 class="hover:bg-orange-50 transition-colors duration-200">
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
-                                <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type === 1 ? 'Agent Payment Received'
+                                <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type == 1 ? 'Agent Payment Received'
                                     : 'Agent Payment Received From Company' }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.description || 'N/A' }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.created_at ? formatDate(ledger.created_at) :
