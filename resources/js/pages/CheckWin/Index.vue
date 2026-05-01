@@ -13,10 +13,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const { wins, products, filters } = defineProps<{
+const { wins, products, filters, totalPrice } = defineProps<{
     wins: Array<any>;
     products: Array<any>;
     filters: any;
+    totalPrice: number;
 }>();
 
 const invoice_no = ref('');
@@ -89,13 +90,20 @@ const handleSearch = () => {
 }
 
 function downloadPdf() {
+    if (!form.from_date || !form.to_date) {
+        toast.error('Please select From Date and To Date to print the report.');
+        return;
+    }
+
     const queryParams = new URLSearchParams({
         product_id: form.product_id || '',
         invoice_no: form.invoice_no || '',
         from_date: form.from_date || '',
         to_date: form.to_date || '',
     });
-    window.location.href = route('check-wins-pdf') + '?' + queryParams.toString();
+
+    // Open PDF preview in new tab
+    window.open(route('check-wins-pdf') + '?' + queryParams.toString(), '_blank');
 }
 
 const handleClose = () => {
@@ -280,14 +288,14 @@ const formatDateTime = (d: string) => {
                                     AED {{ win?.check_win?.total_prize }}
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap align-top">
-                                    <button v-if="win.is_claimed === 0" @click="handleIndividualClaim(win.invoice_no)"
-                                        class="inline-flex items-center cursor-pointer px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                                    <button v-if="win.is_claimed === 0" 
+                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg cursor-not-allowed">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
                                             </path>
                                         </svg>
-                                        Claim
+                                        Not Claimed
                                     </button>
                                     <button v-else disabled
                                         class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg cursor-not-allowed">
@@ -301,6 +309,17 @@ const formatDateTime = (d: string) => {
                                 </td>
                             </tr>
                         </tbody>
+                        <tfoot class="bg-gradient-to-r from-gray-100 to-gray-200 border-t-2 border-gray-300">
+                            <tr>
+                                <td colspan="6" class="px-6 py-4 text-right text-sm font-bold text-gray-700 uppercase tracking-wider">
+                                    Total Price (AED):
+                                </td>
+                                <td class="px-4 py-4 text-sm font-bold text-gray-900 whitespace-nowrap">
+                                    AED {{ totalPrice?.toFixed(2) ?? '0.00' }}
+                                </td>
+                                <td class="px-4 py-4"></td>
+                            </tr>
+                        </tfoot>
                     </table>
                     <div class="mt-4 flex justify-end py-5 px-6">
                         <nav class="flex items-center space-x-1">

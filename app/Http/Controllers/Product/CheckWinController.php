@@ -38,7 +38,7 @@ class CheckWinController extends Controller
                 })
                 ->with(['user', 'product', 'user.agent', 'tickets'])
                 ->latest()
-                ->paginate(5);
+                ->paginate(10);
 
         $wins->getCollection()->transform(function ($item) {
             $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
@@ -48,17 +48,20 @@ class CheckWinController extends Controller
         });
 
         $products = Product::active()->get();
+
+        $totalPrice = $wins->getCollection()->sum(fn ($item) => $item->check_win['total_prize'] ?? 0);
+
         return Inertia::render('CheckWin/Index', [
             'wins' => $wins,
             'products' => $products,
-            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date'])
+            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date']),
+            'totalPrice' => $totalPrice
         ]);
     }
 
     public function checkWinsPdf(Request $request)
     {
         $wins = Order::where('is_winner', 1)
-                ->where('is_claimed', 1)
                 ->when($request->product_id, function($q, $product){
                     $q->where('product_id', $product);
                 })
@@ -83,14 +86,17 @@ class CheckWinController extends Controller
 
         $company = CompannySetting::firstOrFail();
 
+        $totalPrice = $wins->sum(fn ($item) => $item->check_win['total_prize'] ?? 0);
+
         $pdf = Pdf::loadView('pdf.check_wins_report', [
             'wins' => $wins,
             'company' => $company,
             'from_date' => $request->from_date ?? '-',
-            'to_date' => $request->to_date ?? '-'
+            'to_date' => $request->to_date ?? '-',
+            'totalPrice' => $totalPrice
         ]);
 
-        return $pdf->download('check_wins_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
+        return $pdf->stream('check_wins_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 
     public function check_win(Request $request)
