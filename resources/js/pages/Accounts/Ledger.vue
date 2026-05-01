@@ -194,6 +194,9 @@ const submitForm = () => {
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-left">
+                                    SL
+                                </th>
+                                <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-left">
                                     Vendor
                                 </th>
                                 <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">
@@ -216,6 +219,7 @@ const submitForm = () => {
                         <tbody class="divide-y">
                             <tr v-for="(ledger, index) in ledgers.data" :key="ledger.id"
                                 class="hover:bg-orange-50 transition-colors duration-200">
+                                <td class="px-6 py-4 text-gray-700">{{ (ledgers.current_page - 1) * ledgers.per_page + index + 1 }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.user?.name || 'N/A' }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.amount || 'N/A' }}</td>
                                 <td class="px-6 py-4 text-gray-700">{{ ledger.payment_type == 1 ? 'Agent Payment Received'

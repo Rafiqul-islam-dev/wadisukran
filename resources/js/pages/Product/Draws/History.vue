@@ -400,9 +400,9 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
     const giftH = 65;
     const timeH = 50;
 
-    // ── Vertically center the whole group ──
+    // ── Position at top with 200px margin ──
     const totalH = resH + BOX_GAP + giftH + BOX_GAP + timeH;
-    const startY = Math.round((H - totalH) / 2);
+    const startY = 100;
 
     const resY  = startY;
     const giftY = resY  + resH  + BOX_GAP;
