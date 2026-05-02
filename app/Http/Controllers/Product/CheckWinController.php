@@ -36,6 +36,16 @@ class CheckWinController extends Controller
                 ->when($request->to_date, function ($q, $to_date) {
                     $q->whereDate('created_at', '<=', $to_date);
                 })
+                ->when($request->from_time, function ($q, $from_time) use ($request) {
+                    if ($request->from_date) {
+                        $q->whereTime('created_at', '>=', $from_time);
+                    }
+                })
+                ->when($request->to_time, function ($q, $to_time) use ($request) {
+                    if ($request->to_date) {
+                        $q->whereTime('created_at', '<=', $to_time);
+                    }
+                })
                 ->with(['user', 'product', 'user.agent', 'tickets'])
                 ->latest()
                 ->paginate(10);
@@ -57,7 +67,7 @@ class CheckWinController extends Controller
         return Inertia::render('CheckWin/Index', [
             'wins' => $wins,
             'products' => $products,
-            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date']),
+            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date', 'from_time', 'to_time']),
             'totalPrice' => $totalPrice
         ]);
     }
@@ -77,6 +87,16 @@ class CheckWinController extends Controller
                 ->when($request->to_date, function ($q, $to_date) {
                     $q->whereDate('created_at', '<=', $to_date);
                 })
+                ->when($request->from_time, function ($q, $from_time) use ($request) {
+                    if ($request->from_date) {
+                        $q->whereTime('created_at', '>=', $from_time);
+                    }
+                })
+                ->when($request->to_time, function ($q, $to_time) use ($request) {
+                    if ($request->to_date) {
+                        $q->whereTime('created_at', '<=', $to_time);
+                    }
+                })
                 ->with(['user', 'product', 'user.agent', 'tickets'])
                 ->latest()
                 ->get();
@@ -93,11 +113,14 @@ class CheckWinController extends Controller
 
         $totalPrice = $wins->sum(fn ($item) => $item->check_win['total_prize'] ?? 0);
 
+        $fromDateTime = $request->from_date ? ($request->from_time ? $request->from_date . ' ' . $request->from_time : $request->from_date) : '-';
+        $toDateTime = $request->to_date ? ($request->to_time ? $request->to_date . ' ' . $request->to_time : $request->to_date) : '-';
+
         $pdf = Pdf::loadView('pdf.check_wins_report', [
             'wins' => $wins,
             'company' => $company,
-            'from_date' => $request->from_date ?? '-',
-            'to_date' => $request->to_date ?? '-',
+            'from_date' => $fromDateTime,
+            'to_date' => $toDateTime,
             'totalPrice' => $totalPrice
         ]);
 
