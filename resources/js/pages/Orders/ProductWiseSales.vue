@@ -137,8 +137,16 @@ const handleSearch = () => {
                             <!-- Rows -->
                             <div class="space-y-1 mb-3">
                                 <div class="flex justify-between text-gray-700">
-                                    <span>Total Sales:</span>
+                                    <span>Total Sales:</span> 
                                     <span class="font-mono font-semibold">{{ product.total_sell }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-700">
+                                    <span>Cancel Order:</span>
+                                    <span class="font-mono font-semibold">{{ product.cancel_sell }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-700">
+                                    <span>Net Sales:</span>
+                                    <span class="font-mono font-semibold">{{ product.net_sell }}</span>
                                 </div>
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Commission:</span>
@@ -147,10 +155,6 @@ const handleSearch = () => {
                                 <div class="flex justify-between text-gray-700">
                                     <span>Total Prize Paid:</span>
                                     <span class="font-mono font-semibold">{{ product.prize_paid }}</span>
-                                </div>
-                                <div class="flex justify-between text-gray-700">
-                                    <span>Cancel Order:</span>
-                                    <span class="font-mono font-semibold">{{ product.cancel_sell }}</span>
                                 </div>
                             </div>
                         </div>
@@ -165,6 +169,14 @@ const handleSearch = () => {
                                     <span class="font-mono font-semibold">{{ data?.total_sell }}</span>
                                 </div>
                                 <div class="flex justify-between text-gray-700">
+                                    <span>Total Cancel Orders:</span>
+                                    <span class="font-mono font-semibold">{{ data?.total_cancel_sell }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-700">
+                                    <span>Net Sales:</span>
+                                    <span class="font-mono font-semibold">{{ data?.total_net_sell }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-700">
                                     <span>Total Commission:</span>
                                     <span class="font-mono font-semibold">{{ data?.total_commission }}</span>
                                 </div>
@@ -172,14 +184,14 @@ const handleSearch = () => {
                                     <span>Total Prize Paid:</span>
                                     <span class="font-mono font-semibold">{{ data?.total_prize_paid }}</span>
                                 </div>
-                                <div class="flex justify-between text-gray-700">
-                                    <span>Total Cancel Orders:</span>
-                                    <span class="font-mono font-semibold">{{ data?.total_cancel_sell }}</span>
+                                <div class="flex justify-between text-gray-700 mt-2 border-t border-gray-300 pt-2">
+                                    <span class="font-bold">Total Balance:</span>
+                                    <span class="font-mono font-bold">{{ data?.total_balance }}</span>
                                 </div>
                             </div>
                         </div>
 
-                         <button v-print="'#printDiv'"
+                        <button v-print="'#printDiv'"
                             class="hidden-print text-center mt-2 m-auto px-4 cursor-pointer py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
                             Print Pdf
                         </button>
