@@ -156,7 +156,20 @@ class CheckWinnerController extends Controller
             $claim_msg =  $this->checkWinService->ClaimWin($request->invoice_no);
             return response()->json([
                 'success' => true,
-                'message' => $claim_msg
+                'message' => $claim_msg,
+                'data' => [
+                    'invoice_no' => $order->invoice_no,
+                    'product' => $order->product->title.' '.$order->product->product_number,
+                    'draw_number' => $summery['draw_number'] ?? '',
+                    'vendor_name' => $order->user?->name ?? '',
+                    'sale_date' => $order->created_at->format('d M, Y H:i:s'),
+                    'payment_status' => 'Paid',
+                    'payment_date' => now()->format('d M, Y H:i:s'),
+                    'claimed_by' => Auth::user()->name ?? '',
+                    'claimed_by_address' => Auth::user()->address ?? '',
+                    'amount' => $summery['total_prize'],
+                    'tickets' => array_merge([], ...array_column($summery['summery'], 'tickets'))
+                ]
             ]);
         } else {
             return response()->json([

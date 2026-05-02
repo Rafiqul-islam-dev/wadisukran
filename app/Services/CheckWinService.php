@@ -189,7 +189,7 @@ class CheckWinService
             }
             $invoice->save();
         }
-        return ['summery' => $summery, 'total_prize' => $total_prize];
+        return ['summery' => $summery, 'total_prize' => $total_prize, 'draw_number' => $win?->draw_number];
     }
 
     public function CheckWinByInvoiceOnce(string $invoiceNo): array{
