@@ -28,6 +28,8 @@ const form = useForm({
     product_id: filters?.product_id ?? '',
     from_date: filters?.from_date ?? '',
     to_date: filters?.to_date ?? '',
+    from_time: filters?.from_time ?? '',
+    to_time: filters?.to_time ?? '',
 });
 
 const showModal = ref(false);
@@ -100,6 +102,8 @@ function downloadPdf() {
         invoice_no: form.invoice_no || '',
         from_date: form.from_date || '',
         to_date: form.to_date || '',
+        from_time: form.from_time || '',
+        to_time: form.to_time || '',
     });
 
     // Open PDF preview in new tab
@@ -179,42 +183,56 @@ const formatDateTime = (d: string) => {
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-2xl shadow-lg">
-                <div class="grid grid-cols-2 md:grid-cols-6 gap-4 p-3 mb-2 items-center">
-                    <div>
-                        <select name="" id="" v-model="form.product_id"
-                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
-                            <option value="">Select Product</option>
+            <div class="bg-white rounded-2xl shadow-lg p-4">
+                <div class="flex flex-wrap gap-3 items-end">
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(20%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Product</label>
+                        <select v-model="form.product_id"
+                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm">
+                            <option value="">All Products</option>
                             <option v-for="product in products" :key="product.id" :value="product.id">{{ product.title
                             }} {{ product.product_number }}</option>
                         </select>
                     </div>
-                    <div>
-                        <input v-model="form.invoice_no" type="text" placeholder="Invoice No.."
-                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(20%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Invoice No</label>
+                        <input v-model="form.invoice_no" type="text" placeholder="Enter invoice.."
+                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
                     </div>
-                    <div>
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(12.5%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">From Date</label>
                         <input v-model="form.from_date" type="date"
-                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                            class="w-full border-2 border-gray-200 px-2 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
                     </div>
-                    <div>
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(12.5%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">From Time</label>
+                        <input v-model="form.from_time" type="time"
+                            class="w-full border-2 border-gray-200 px-2 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
+                    </div>
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(12.5%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">To Date</label>
                         <input v-model="form.to_date" type="date"
-                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" />
+                            class="w-full border-2 border-gray-200 px-2 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
+                    </div>
+                    <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(12.5%-9px)]">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">To Time</label>
+                        <input v-model="form.to_time" type="time"
+                            class="w-full border-2 border-gray-200 px-2 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
                     </div>
                     <div class="flex items-center gap-2">
                         <button @click="handleSearch"
-                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-xl hover:from-teal-600 hover:to-green-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                            class="cursor-pointer px-5 py-2 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-xl hover:from-teal-600 hover:to-green-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-sm">
                             Search
                         </button>
                         <button @click="downloadPdf"
-                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                            class="cursor-pointer px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-sm">
                             Print
                         </button>
                     </div>
                 </div>
             </div>
             <!-- Table View -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mt-4">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">

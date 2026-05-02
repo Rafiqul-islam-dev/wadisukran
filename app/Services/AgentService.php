@@ -40,12 +40,20 @@ class AgentService
     public function updateUser(User $user, array $data): string
     {
         $this->userService->updateUser($user, $data);
-        Agent::updateOrCreate(['user_id' => $user->id], [
+
+        $agentData = [
             'username' => $data['username'],
             'trn' => $data['trn'],
             'commission' => $data['commission'],
             'google_map' => $data['google_map'] ?? null,
-        ]);
+        ];
+
+        // If password is provided, update temp_password with the new password
+        if (isset($data['password']) && !empty($data['password'])) {
+            $agentData['temp_password'] = Crypt::encryptString($data['password']);
+        }
+
+        Agent::updateOrCreate(['user_id' => $user->id], $agentData);
         return 'Agent updated successfully.';
     }
 

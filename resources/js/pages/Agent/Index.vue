@@ -15,8 +15,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const { users } = defineProps<{
+const { users, companyTrn } = defineProps<{
     users: Array<any>;
+    companyTrn: string | null;
 }>();
 
 const showModal = ref(false);
@@ -42,6 +43,8 @@ const form = useForm({
 });
 
 function openModal() {
+    // Auto-fill TRN from company settings when creating new agent
+    form.trn = companyTrn || '';
     showModal.value = true;
 }
 

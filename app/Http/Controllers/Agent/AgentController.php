@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AgentRequest;
 use App\Models\Agent;
+use App\Models\CompannySetting;
 use App\Models\User;
 use App\Services\AgentService;
 use Illuminate\Http\Request;
@@ -51,8 +52,13 @@ class AgentController extends Controller
             ->latest()
             ->get();
 
+        // Get company TRN for auto-filling when creating new agent
+        $companySetting = CompannySetting::first();
+        $companyTrn = $companySetting ? $companySetting->trn_no : null;
+
         return Inertia::render('Agent/Index', [
             'users' => $users,
+            'companyTrn' => $companyTrn,
         ]);
     }
 
@@ -62,16 +68,21 @@ class AgentController extends Controller
 
         $name = $validated['name'];
         $prefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 3));
-        
+
         $maxSerial = Agent::withTrashed()->max('serial');
         $serial = $maxSerial + 1;
-        
+
         $username = $prefix . '-' . str_pad($serial, 4, '0', STR_PAD_LEFT);
+
+        // Get TRN from company settings
+        $companySetting = CompannySetting::first();
+        $trn = $companySetting ? $companySetting->trn_no : null;
 
         $validated['username'] = $username;
         $validated['serial'] = $serial;
         $validated['plain_password'] = $username;
         $validated['password'] = $username;
+        $validated['trn'] = $trn;
 
         $this->agentService->createAgent($validated);
 
