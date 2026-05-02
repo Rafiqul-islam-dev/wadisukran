@@ -107,8 +107,18 @@ class CategoryController extends Controller
 
     public function status_change(Category $category)
     {
+        // dd($category);
         $category->status = $category->status === 1 ? 0 : 1;
         $category->save();
+
+        // Update products' is_active based on new category status
+        // If category is now Inactive (0), products become Active (1)
+        // If category is now Active (1), products become Inactive (0)
+        $productIsActive = $category->status === 1 ? 1 : 0;
+
+        // dd($productIsActive);
+        Product::where('category_id', $category->id)->update(['is_active' => $productIsActive]);
+
         return back();
     }
 }

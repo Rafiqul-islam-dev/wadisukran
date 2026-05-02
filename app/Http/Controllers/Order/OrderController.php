@@ -199,7 +199,7 @@ class OrderController extends Controller
                 $request->date_to . ' ' . ($request->time_to ?? '23:59:59')
             );
         }
-        $products = Product::active()->orderBy('title')->get();
+        $products = Product::orderBy('title')->get();
         $product_prizes = $request->product_id
             ? collect($this->product_prizes($request->product_id))
             : collect();

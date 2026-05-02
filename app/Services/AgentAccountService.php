@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AgentAccount;
+use App\Models\Incentive;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,11 +31,16 @@ class AgentAccountService
                     ->get()
                     ->pluck('total_amount', 'type');
 
+                $old_incentive = Incentive::where('user_id', $data['user_id'])
+                    ->where('incentive_date', '<=', Carbon::parse($data['created_at'])->toDateString())
+                    ->sum('amount');
+
                 $old_balance =
                     ($old_account['sell'] ?? 0)
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
+                        + $old_incentive
                     );
 
             } else {
@@ -48,11 +54,19 @@ class AgentAccountService
                     ->get()
                     ->pluck('total_amount', 'type');
 
+                $old_incentive = Incentive::where('user_id', $data['user_id'])
+                    ->whereBetween('incentive_date', [
+                        $previous_posting->created_at->toDateString(),
+                        Carbon::parse($data['created_at'])->toDateString(),
+                    ])
+                    ->sum('amount');
+
                 $old_balance =
                     (($old_account['sell'] ?? 0) + $previous_posting->old_due)
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
+                        + $old_incentive
                     );
             }
         }

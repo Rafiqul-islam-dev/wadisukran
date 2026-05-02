@@ -331,7 +331,7 @@ const formattedDate = computed(() => {
                     <p class="text-red-500 text-sm mt-1 text-center font-bold" v-if="errors.pick_number">{{
                         errors.pick_number }}</p>
                     <div class="text-center mt-3 flex gap-3 justify-center">
-                        <button @click="generateRandomNumbers"
+                        <button v-if="!product.is_active" @click="generateRandomNumbers"
                             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer">
                             Generate Random Numbers
                         </button>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Accounts\AccountsLedgerController;
 use App\Http\Controllers\Accounts\AccountsSummeryController;
+use App\Http\Controllers\Accounts\IncentiveController;
 use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -84,6 +85,11 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/ledger', [AccountsLedgerController::class, 'index'])->name('ledger');
         Route::post('/ledger-store', [AccountsLedgerController::class, 'store'])->name('ledger-store');
         Route::post('/ledger-update/{ledger}', [AccountsLedgerController::class, 'update'])->name('ledger-update');
+
+        Route::get('/incentives', [IncentiveController::class, 'index'])->middleware('can:show accounts incentives')->name('incentives');
+        Route::post('/incentives/store', [IncentiveController::class, 'store'])->middleware('can:create incentives')->name('incentives-store');
+        Route::post('/incentives/update/{incentive}', [IncentiveController::class, 'update'])->middleware('can:update incentives')->name('incentives-update');
+        Route::delete('/incentives/delete/{incentive}', [IncentiveController::class, 'destroy'])->middleware('can:delete incentives')->name('incentives-delete');
     });
 
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Accounts;
 
 use App\Http\Controllers\Controller;
 use App\Models\AgentAccount;
+use App\Models\Incentive;
 use App\Models\User;
 use App\Services\AgentAccountService;
 use Carbon\Carbon;
@@ -61,11 +62,14 @@ class AccountsLedgerController extends Controller
                         ->groupBy('type')
                         ->pluck('amount', 'type');
 
+                    $total_incentive = Incentive::where('user_id', $request->agent)->sum('amount');
+
                     $total_due = ($account['sell'] ?? 0) 
                                - (
                                    ($account['commission'] ?? 0) 
                                    + ($account['claim'] ?? 0) 
                                    + ($account['posting'] ?? 0)
+                                   + $total_incentive
                                );
 
                     if ($request->payment_type == 1) {
@@ -113,11 +117,14 @@ class AccountsLedgerController extends Controller
                         ->groupBy('type')
                         ->pluck('amount', 'type');
 
+                    $total_incentive = Incentive::where('user_id', $request->agent)->sum('amount');
+
                     $total_due = ($account['sell'] ?? 0) 
                                - (
                                    ($account['commission'] ?? 0) 
                                    + ($account['claim'] ?? 0) 
                                    + ($account['posting'] ?? 0)
+                                   + $total_incentive
                                );
 
                     if ($request->payment_type == 1) {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Accounts;
 use App\Http\Controllers\Controller;
 use App\Models\AgentAccount;
 use App\Models\AgentBill;
+use App\Models\Incentive;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\AgentAccountService;
@@ -25,20 +26,23 @@ class AccountsSummeryController extends Controller
     {
         $this->agentAccountService = $agentAccountService;
     }
-    public function index(Request $request){
+
+    public function index(Request $request)
+    {
         $agents_list = User::where('user_type', 'agent')
-                    ->where('status', 'active')
-                    ->get();
+            ->where('status', 'active')
+            ->get();
+
         $agent = null;
 
-        if($request->from && $request->to && $request->agent_id){
-           $account = AgentAccount::where('user_id', $request->agent_id)
-                ->when($request->from && $request->to, function ($q) use ($request) {
-                    $q->whereBetween('created_at', [
-                        Carbon::parse($request->from)->startOfDay(),
-                        Carbon::parse($request->to)->endOfDay(),
-                    ]);
-                })
+        if ($request->from && $request->to && $request->agent_id) {
+            $fromDate = Carbon::parse($request->from)->toDateString();
+            $toDate = Carbon::parse($request->to)->toDateString();
+            $fromStart = Carbon::parse($fromDate)->startOfDay();
+            $toEnd = Carbon::parse($toDate)->endOfDay();
+
+            $account = AgentAccount::where('user_id', $request->agent_id)
+                ->whereBetween('created_at', [$fromStart, $toEnd])
                 ->select('type', DB::raw('SUM(amount) as total_amount'))
                 ->groupBy('type')
                 ->get()
@@ -46,7 +50,7 @@ class AccountsSummeryController extends Controller
 
             $previous_posting = AgentAccount::where('user_id', $request->agent_id)
                 ->where('type', 'posting')
-                ->where('created_at', '<', Carbon::parse($request->from)->startOfDay())
+                ->where('created_at', '<', $fromStart)
                 ->latest()
                 ->first();
 
@@ -54,48 +58,60 @@ class AccountsSummeryController extends Controller
 
             if (!$previous_posting) {
                 $old_account = AgentAccount::where('user_id', $request->agent_id)
-                    ->where('created_at', '<', Carbon::parse($request->from)->startOfDay())
+                    ->where('created_at', '<', $fromStart)
                     ->select('type', DB::raw('SUM(amount) as total_amount'))
                     ->groupBy('type')
                     ->get()
                     ->pluck('total_amount', 'type');
+
+                $old_incentive = Incentive::where('user_id', $request->agent_id)
+                    ->whereDate('incentive_date', '<', $fromDate)
+                    ->sum('amount');
 
                 $old_balance =
                     ($old_account['sell'] ?? 0)
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
+                        + $old_incentive
                     );
-
             } else {
                 $old_account = AgentAccount::where('user_id', $request->agent_id)
-                    ->whereBetween('created_at', [
-                        $previous_posting->created_at,
-                        Carbon::parse($request->from)->startOfDay(),
-                    ])
+                    ->where('created_at', '>=', $previous_posting->created_at)
+                    ->where('created_at', '<', $fromStart)
                     ->select('type', DB::raw('SUM(amount) as total_amount'))
                     ->groupBy('type')
                     ->get()
                     ->pluck('total_amount', 'type');
+
+                $old_incentive = Incentive::where('user_id', $request->agent_id)
+                    ->whereDate('incentive_date', '>=', $previous_posting->created_at->toDateString())
+                    ->whereDate('incentive_date', '<', $fromDate)
+                    ->sum('amount');
 
                 $old_balance =
                     (($old_account['sell'] ?? 0) + $previous_posting->old_due)
                     - (
                         ($old_account['commission'] ?? 0)
                         + ($old_account['claim'] ?? 0)
+                        + $old_incentive
                     );
             }
 
             $total_cancel = Order::where('user_id', $request->agent_id)
-                            ->whereIn('status', ['Cancel', 'Cancel-Request'])
-                            ->whereBetween('created_at', [
-                                Carbon::parse($request->from)->startOfDay(),
-                                Carbon::parse($request->to)->endOfDay(),
-                            ])
-                            ->sum('total_price');
+                ->whereIn('status', ['Cancel', 'Cancel-Request'])
+                ->whereBetween('created_at', [$fromStart, $toEnd])
+                ->sum('total_price');
 
-            if($account){
+            // Only incentives added inside selected summary date range will be shown here.
+            $total_incentive = Incentive::where('user_id', $request->agent_id)
+                ->whereDate('incentive_date', '>=', $fromDate)
+                ->whereDate('incentive_date', '<=', $toDate)
+                ->sum('amount');
+
+            if ($account) {
                 $userDetails = User::find($request->agent_id);
+
                 $agent = [
                     'agent_name'       => $userDetails->name,
                     'agent_address'    => $userDetails->address,
@@ -105,20 +121,23 @@ class AccountsSummeryController extends Controller
                     'total_claim'      => !empty($account['claim']) ? $account['claim'] : 0,
                     'total_posting'    => !empty($account['posting']) ? $account['posting'] : 0,
                     'total_cancel'     => $total_cancel,
+                    'total_incentive'  => $total_incentive,
                     'net_amount'       =>
                         ($account['sell'] ?? 0)
                         - (
                             ($account['commission'] ?? 0)
                             + ($account['claim'] ?? 0)
                             + ($account['posting'] ?? 0)
+                            + $total_incentive
                         ),
                     'old_balance'      => $old_balance,
                     'total_due'        => (($account['sell'] ?? 0) + $old_balance)
-                                            - (
-                                                ($account['commission'] ?? 0)
-                                                + ($account['claim'] ?? 0)
-                                                + ($account['posting'] ?? 0)
-                                            )
+                        - (
+                            ($account['commission'] ?? 0)
+                            + ($account['claim'] ?? 0)
+                            + ($account['posting'] ?? 0)
+                            + $total_incentive
+                        ),
                 ];
             }
         }

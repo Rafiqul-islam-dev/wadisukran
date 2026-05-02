@@ -2,6 +2,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/vue3';
+import Multiselect from '@vueform/multiselect'
 import axios from 'axios';
 import { computed, Ref, ref } from 'vue';
 import { toast } from 'vue-sonner';
@@ -13,9 +14,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const { wins, products, filters, totalPrice } = defineProps<{
+const { wins, products, agents, filters, totalPrice } = defineProps<{
     wins: Array<any>;
     products: Array<any>;
+    agents: Array<any>;
     filters: any;
     totalPrice: number;
 }>();
@@ -24,7 +26,7 @@ const invoice_no = ref('');
 const errors = ref([]);
 
 const form = useForm({
-    invoice_no: filters?.invoice_no ?? '',
+    user_id: filters?.user_id ?? '',
     product_id: filters?.product_id ?? '',
     from_date: filters?.from_date ?? '',
     to_date: filters?.to_date ?? '',
@@ -99,7 +101,7 @@ function downloadPdf() {
 
     const queryParams = new URLSearchParams({
         product_id: form.product_id || '',
-        invoice_no: form.invoice_no || '',
+        user_id: form.user_id || '',
         from_date: form.from_date || '',
         to_date: form.to_date || '',
         from_time: form.from_time || '',
@@ -195,9 +197,8 @@ const formatDateTime = (d: string) => {
                         </select>
                     </div>
                     <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(20%-9px)]">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Invoice No</label>
-                        <input v-model="form.invoice_no" type="text" placeholder="Enter invoice.."
-                            class="w-full border-2 border-gray-200 px-3 py-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm" />
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Agent</label>
+                        <Multiselect v-model="form.user_id" :options="agents" valueProp="id" label="name" placeholder="All Agents" :searchable="true" class="w-full multiselect-sm" />
                     </div>
                     <div class="w-full sm:w-[calc(50%-6px)] lg:w-[calc(12.5%-9px)]">
                         <label class="block text-xs font-medium text-gray-600 mb-1">From Date</label>
