@@ -86,8 +86,26 @@ protected $agentAccountService;
                         $net_amount = $daily_sell - ($daily_commission + $daily_claim + $daily_posting);
                         $total_due = ($daily_sell + $running_balance) - ($daily_commission + $daily_claim + $daily_posting);
 
+                        $firstCreatedAt = $stats['first_created_at'] ? Carbon::parse($stats['first_created_at']) : null;
+                        $lastCreatedAt  = $stats['last_created_at'] ? Carbon::parse($stats['last_created_at']) : null;
+
+                        $firstCreatedAt = $stats['first_created_at'] ? Carbon::parse($stats['first_created_at']) : null;
+                        $lastCreatedAt  = $stats['last_created_at'] ? Carbon::parse($stats['last_created_at']) : null;
+
+                        if ($firstCreatedAt && $lastCreatedAt) {
+                            $dateTime = $firstCreatedAt->format('Y-m-d')
+                                . ' ('
+                                . $firstCreatedAt->format('g:i:s A')
+                                . ' - '
+                                . $lastCreatedAt->format('g:i:s A')
+                                . ')';
+                        } else {
+                            $dateTime = $dayStart->format('Y-m-d');
+                        }
+
                         $agent_histories[] = [
                             'date'             => $dayStart->format('Y-m-d'),
+                            'date_time'        => $dateTime,
                             'agent_id'         => $user->id,
                             'agent_name'       => $user->name,
                             'agent_address'    => $user->address,
@@ -220,18 +238,26 @@ protected $agentAccountService;
             ->get()
             ->pluck('total_amount', 'type');
 
+        // ওই date range এর actual first and last created_at time
+        $timeRow = AgentAccount::where('user_id', $user->id)
+            ->whereBetween('created_at', [$start, $end])
+            ->selectRaw('MIN(created_at) as first_created_at, MAX(created_at) as last_created_at')
+            ->first();
+
         $total_cancel = Order::where('user_id', $user->id)
             ->whereIn('status', ['Cancel', 'Cancel-Request'])
             ->whereBetween('created_at', [$start, $end])
             ->sum('total_price');
 
         return [
-            'sell'       => (float)($account['sell'] ?? 0),
-            'commission' => (float)($account['commission'] ?? 0),
-            'win'        => (float)($account['win'] ?? 0),
-            'claim'      => (float)($account['claim'] ?? 0),
-            'posting'    => (float)($account['posting'] ?? 0),
-            'cancel'     => (float)$total_cancel,
+            'sell'             => (float)($account['sell'] ?? 0),
+            'commission'       => (float)($account['commission'] ?? 0),
+            'win'              => (float)($account['win'] ?? 0),
+            'claim'            => (float)($account['claim'] ?? 0),
+            'posting'          => (float)($account['posting'] ?? 0),
+            'cancel'           => (float)$total_cancel,
+            'first_created_at' => $timeRow?->first_created_at,
+            'last_created_at'  => $timeRow?->last_created_at,
         ];
     }
 
