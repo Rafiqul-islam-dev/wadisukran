@@ -221,13 +221,17 @@ class WinnerReportAgentController extends Controller
 
         $list = $q->paginate(10)->withQueryString();
 
-        $list->getCollection()->transform(function ($item) {
+        $filteredCollection = $list->getCollection()->map(function ($item) {
             $checkWin = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
             $item->check_win = $checkWin;
             $item->claim_user = $item->claim?->claim_user?->name;
             $item->claimed_at = $item->claim?->created_at;
             return $item;
-        });
+        })->filter(function ($item) {
+            return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
+        })->values();
+
+        $list->setCollection($filteredCollection);
 
         return response()->json($list);
     }
@@ -260,7 +264,9 @@ class WinnerReportAgentController extends Controller
             $list->claim_user = $list->claim?->claim_user?->name;
             $list->claimed_at = $list->claim?->created_at;
             return $list;
-        });
+        })->filter(function ($list) {
+            return isset($list->check_win['total_prize']) && $list->check_win['total_prize'] > 0;
+        })->values();
 
         // return $lists;
         $company = CompannySetting::firstOrFail();

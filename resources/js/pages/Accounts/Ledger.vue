@@ -76,9 +76,13 @@ function formatDate(dateString: string | null) {
     if (!dateString) return '-';
 
     return new Date(dateString).toLocaleString('en-US', {
+        timeZone: 'Asia/Dubai',
         day: '2-digit',
         month: 'short',
-        year: 'numeric'
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
     });
 }
 

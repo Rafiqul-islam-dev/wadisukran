@@ -40,12 +40,15 @@ class CheckWinController extends Controller
                 ->latest()
                 ->paginate(10);
 
-        $wins->getCollection()->transform(function ($item) {
+        $filteredCollection = $wins->getCollection()->map(function ($item) {
             $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
-
             $item->check_win = $check_win;
             return $item;
-        });
+        })->filter(function ($item) {
+            return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
+        })->values();
+
+        $wins->setCollection($filteredCollection);
 
         $products = Product::active()->get();
 
@@ -78,11 +81,13 @@ class CheckWinController extends Controller
                 ->latest()
                 ->get();
 
-        $wins->transform(function ($item) {
+        $wins = $wins->map(function ($item) {
             $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
             $item->check_win = $check_win;
             return $item;
-        });
+        })->filter(function ($item) {
+            return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
+        })->values();
 
         $company = CompannySetting::firstOrFail();
 
