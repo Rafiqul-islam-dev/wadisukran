@@ -444,7 +444,7 @@ class OrderController extends Controller
             'product_prizes' => $product_prizes,
             'product' => $product,
             'summary' => collect($summery)->sortByDesc('total_amount')->all(),
-            'orders' => $orders->where('win_amount', '>', 0)?->sortByDesc('win_amount')->values()
+            'orders' => $orders?->where('win_amount', '>', 0)?->sortByDesc('win_amount')->values()
         ]);
     }
 
