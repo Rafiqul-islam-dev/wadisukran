@@ -139,7 +139,7 @@ class OrderController extends Controller
                 }
             }
             $salesDateTime = Carbon::parse($order->created_at)->format('Y-m-d, h:i:s');
-           if (!empty($order->product?->product_number)) {
+            if (!empty($order->product?->product_number)) {
                 $imagePath = 'asset/number-' . $order->product->product_number . '.png';
 
                 if (file_exists(public_path($imagePath))) {
