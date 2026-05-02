@@ -94,6 +94,7 @@ class ProductResource extends JsonResource
             'pick_number' => $this->pick_number,
             'showing_type' => ($this->prize_type == 'bet' ? 'prizes' : 'number'),
             'type_number' => $this->type_number,
+            'is_active' => $this->is_active,
         ];
     }
 

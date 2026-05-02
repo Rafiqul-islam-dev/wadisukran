@@ -216,12 +216,12 @@ function printPdf() {
                             </div>
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900">{{ user.name }}</h3>
-                                <p class="text-gray-500 text-sm">{{ user.email }}</p>
+                                <p class="text-gray-500 text-sm">Username: {{ user.agent?.username }}</p>
                             </div>
                         </div>
-                        <div class="space-y-2 text-sm">
+                        <!-- <div class="space-y-2 text-sm">
                             <p><span class="font-medium text-gray-700">Phone:</span> {{ user.phone || 'N/A' }}</p>
-                        </div>
+                        </div> -->
                         <div class="flex justify-between items-center mt-4">
                             <button @click="toggleUserStatus(user)"
                                 :class="user.status === 'active' ? 'text-red-600 hover:text-red-800 hover:bg-red-50' : 'text-green-600 hover:text-green-800 hover:bg-green-50'"

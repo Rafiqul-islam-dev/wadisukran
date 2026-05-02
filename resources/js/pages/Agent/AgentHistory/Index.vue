@@ -31,6 +31,18 @@ const form = useForm({
 
 const errors = ref<Record<string, string>>({});
 
+const isSingleAgentMode = computed(() => {
+    return props.selected_agent_id !== null && props.selected_agent_id !== '';
+});
+
+const tableKey = computed(() => {
+    return `${isSingleAgentMode.value ? 'daily' : 'summary'}-${props.selected_agent_id || 'all'}-${props.from_date || ''}-${props.to_date || ''}`;
+});
+
+const getRowKey = (item: any, index: number) => {
+    return item.row_key || `${isSingleAgentMode.value ? 'daily' : 'summary'}-${item.agent_id || 'agent'}-${item.date || 'no-date'}-${index}`;
+};
+
 const handleSearch = () => {
     const messages: Record<string, string> = {};
     let valid = true;
@@ -56,8 +68,8 @@ const handleSearch = () => {
     form.get(route('agents.history'), {
         preserveScroll: true,
         replace: true,
-        preserveState: true,
-        only: ['agent_histories', 'from_date', 'to_date', 'selected_agent_id'],
+        preserveState: false,
+        only: ['agent_histories', 'agents', 'from_date', 'to_date', 'selected_agent_id'],
     });
 };
 
@@ -100,7 +112,7 @@ function truncateTwo(num: number | string | null | undefined) {
 const totals = computed(() => {
     const rows = props.agent_histories || [];
 
-    return rows.reduce(
+    const summary = rows.reduce(
         (acc, item) => {
             acc.total_sell += Number(item.total_sell || 0);
             acc.total_commission += Number(item.total_commission || 0);
@@ -126,13 +138,32 @@ const totals = computed(() => {
         }
     );
 
-    if (props.selected_agent_id && rows.length > 0) {
+    if (isSingleAgentMode.value && rows.length > 0) {
         summary.old_balance = Number(rows[0].old_balance || 0);
         summary.total_due = Number(rows[rows.length - 1].total_due || 0);
     }
 
     return summary;
 });
+
+const selectedAgentName = computed(() => {
+    if (!isSingleAgentMode.value) {
+        return '';
+    }
+
+    const historyAgentName = props.agent_histories?.find((item: any) => item.agent_name)?.agent_name;
+
+    if (historyAgentName) {
+        return historyAgentName;
+    }
+
+    const agent = props.agents?.find((item: any) => {
+        return String(item.id) === String(props.selected_agent_id);
+    });
+
+    return agent?.name || '';
+});
+
 </script>
 
 <template>
@@ -146,6 +177,7 @@ const totals = computed(() => {
                     <div class="group">
                         <label for="agent">Select Agent</label>
                         <div class="mt-2"></div>
+
                         <Multiselect
                             v-model="form.agent_id"
                             :options="agents"
@@ -153,12 +185,16 @@ const totals = computed(() => {
                             label="name"
                             placeholder="All Agents"
                             :searchable="true"
+                            :clearOnSelect="false"
                             class="w-full border-2 border-gray-200 px-2 py-1 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
                         />
                     </div>
 
                     <div class="group">
-                        <label for="from" class="mb-1">From Date <span class="text-red-500">*</span></label>
+                        <label for="from" class="mb-1">
+                            From Date <span class="text-red-500">*</span>
+                        </label>
+
                         <input
                             v-model="form.from"
                             type="date"
@@ -166,11 +202,17 @@ const totals = computed(() => {
                             :class="errors.from ? 'border-red-400' : ''"
                             class="mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
                         />
-                        <p class="text-red-500 text-sm mt-1" v-if="errors.from">{{ errors.from }}</p>
+
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.from">
+                            {{ errors.from }}
+                        </p>
                     </div>
 
                     <div class="group">
-                        <label for="to" class="mb-1">To Date <span class="text-red-500">*</span></label>
+                        <label for="to" class="mb-1">
+                            To Date <span class="text-red-500">*</span>
+                        </label>
+
                         <input
                             v-model="form.to"
                             type="date"
@@ -178,11 +220,15 @@ const totals = computed(() => {
                             :class="errors.to ? 'border-red-400' : ''"
                             class="mt-2 w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200"
                         />
-                        <p class="text-red-500 text-sm mt-1" v-if="errors.to">{{ errors.to }}</p>
+
+                        <p class="text-red-500 text-sm mt-1" v-if="errors.to">
+                            {{ errors.to }}
+                        </p>
                     </div>
 
                     <div class="flex items-end gap-3">
                         <button
+                            type="button"
                             @click="handleSearch"
                             class="px-4 cursor-pointer py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-center w-full"
                         >
@@ -219,13 +265,25 @@ const totals = computed(() => {
             <!-- Report Header -->
             <div
                 v-if="agent_histories.length"
-                class="px-4 pb-2  md:items-center md:justify-between gap-3"
+                class="px-4 pb-2 md:items-center md:justify-between gap-3"
             >
                 <div class="text-center">
-                    <h2 class="text-xl font-bold text-gray-800">Agent History Report</h2>
+                   <h2 class="text-xl font-bold text-gray-800">
+                        Agent History Report
+                        <span v-if="selectedAgentName"> - {{ selectedAgentName }}</span>
+                    </h2>
+
                     <p class="text-sm text-gray-500">
                         From <span class="font-medium">{{ form.from }}</span>
                         to <span class="font-medium">{{ form.to }}</span>
+                    </p>
+
+                    <p v-if="isSingleAgentMode" class="text-xs text-gray-500 mt-1">
+                        Date wise report for selected agent
+                    </p>
+
+                    <p v-else class="text-xs text-gray-500 mt-1">
+                        Agent wise summary report
                     </p>
                 </div>
             </div>
@@ -233,12 +291,19 @@ const totals = computed(() => {
             <!-- Table -->
             <div v-if="agent_histories.length" class="p-4">
                 <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm bg-white">
-                    <table class="w-full text-sm text-left min-w-[1400px]">
+                    <table :key="tableKey" class="w-full text-sm text-left min-w-[1400px]">
                         <thead class="bg-gray-100 text-gray-700">
                             <tr>
                                 <th class="px-4 py-3 border-b">SL</th>
-                                <th v-if="selected_agent_id" class="px-4 py-3 border-b">Date</th>
-                                <th v-else class="px-4 py-3 border-b">Agent</th>
+
+                                <th v-if="isSingleAgentMode" class="px-4 py-3 border-b">
+                                    Date & Time
+                                </th>
+
+                                <th v-else class="px-4 py-3 border-b">
+                                    Agent
+                                </th>
+
                                 <th class="px-4 py-3 border-b text-right">Total Sale</th>
                                 <th class="px-4 py-3 border-b text-right">Commission</th>
                                 <th class="px-4 py-3 border-b text-right">Winning Amount</th>
@@ -254,30 +319,110 @@ const totals = computed(() => {
                         <tbody>
                             <tr
                                 v-for="(item, index) in agent_histories"
-                                :key="item.agent_id ?? index"
+                                :key="getRowKey(item, index)"
                                 class="border-t border-gray-200 hover:bg-orange-50/40 transition"
                             >
-                                <td class="px-4 py-3">{{ index + 1 }}</td>
-                                <td v-if="selected_agent_id" class="px-4 py-3 font-medium text-gray-800">
-                                    {{ item.date }}
+                                <td class="px-4 py-3">
+                                    {{ index + 1 }}
                                 </td>
+
+                                <td v-if="isSingleAgentMode" class="px-4 py-3 font-medium text-gray-800">
+                                    {{ item.date_time || item.date }}
+                                </td>
+
                                 <td v-else class="px-4 py-3 font-medium text-gray-800">
                                     <div>{{ item.agent_name }}</div>
-                                    <div v-if="item.agent_address" class="text-xs text-gray-500 mt-1">
+
+                                    <div
+                                        v-if="item.agent_address"
+                                        class="text-xs text-gray-500 mt-1"
+                                    >
                                         {{ item.agent_address }}
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_sell) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_commission) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_win) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_claim) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_posting) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.total_cancel) }}</td>
-                                <td class="px-4 py-3 text-right">{{ truncateTwo(item.old_balance) }}</td>
-                                <td class="px-4 py-3 text-right font-medium">{{ truncateTwo(item.net_amount) }}</td>
-                                <td class="px-4 py-3 text-right font-medium text-indigo-600">{{ truncateTwo(item.total_due) }}</td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_sell) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_commission) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_win) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_claim) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_posting) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.total_cancel) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right">
+                                    {{ truncateTwo(item.old_balance) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right font-medium">
+                                    {{ truncateTwo(item.net_amount) }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right font-medium text-indigo-600">
+                                    {{ truncateTwo(item.total_due) }}
+                                </td>
                             </tr>
                         </tbody>
+
+                        <!-- Optional Total Row -->
+                        <tfoot class="bg-gray-50 font-bold text-gray-800">
+                            <tr>
+                                <td class="px-4 py-3 border-t" colspan="2">
+                                    Total
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_sell) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_commission) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_win) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_claim) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_posting) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.total_cancel) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.old_balance) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right">
+                                    {{ truncateTwo(totals.net_amount) }}
+                                </td>
+
+                                <td class="px-4 py-3 border-t text-right text-indigo-600">
+                                    {{ truncateTwo(totals.total_due) }}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>

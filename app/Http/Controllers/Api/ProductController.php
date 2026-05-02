@@ -20,8 +20,7 @@ class ProductController extends Controller
     }
     public function apiIndex()
     {
-        $products = Product::active()
-            ->orderBy('id', 'desc')
+        $products = Product::orderBy('id', 'desc')
             ->get()
             ->sortBy('order_by')
             ->filter(function ($product) {
