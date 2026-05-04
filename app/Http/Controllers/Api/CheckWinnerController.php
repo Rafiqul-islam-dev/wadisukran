@@ -48,12 +48,12 @@ class CheckWinnerController extends Controller
             if ($summery['total_prize'] >= company_setting()?->max_win_amount) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Congratulations this invoice won. To claim the prize please contact with support team.'
+                    'message' => 'Congratulations! You have won. To claim your prize please contact with the authority via your sales agent.'
                 ], 200);
             } else {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Congratulations this invoice won. and you can claim.',
+                    'message' => 'Congratulations! You have won.' .$summery['total_prize']. ' AED'.' Do you Want to claim.',
                     'data' => $summery['summery'],
                     'total_prize' => $summery['total_prize']
                 ], 200);
@@ -71,7 +71,7 @@ class CheckWinnerController extends Controller
                     } else {
                         return response()->json([
                             'success' => true,
-                            'message' => 'Congratulations! You have won. and you can claim.',
+                            'message' => 'Congratulations! You have won.' .$summery['total_prize']. ' AED'.' Do you Want to claim.',
                             'data' => $summery['summery'],
                             'total_prize' => $summery['total_prize']
                         ], 200);

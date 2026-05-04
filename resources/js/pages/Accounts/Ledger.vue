@@ -45,6 +45,18 @@ const handleSearch = () => {
     });
 }
 
+const handlePdf = () => {
+    if (!form.from_date || !form.to_date) {
+        toast.error('Please select From Date and To Date to generate PDF');
+        return;
+    }
+    const params = new URLSearchParams();
+    if (form.agent) params.append('agent', form.agent);
+    params.append('from_date', form.from_date);
+    params.append('to_date', form.to_date);
+    window.open(route('accounts.ledger-pdf') + '?' + params.toString(), '_blank');
+}
+
 const openModal = (type: 'add' | 'edit' | 'view' = 'add', item: any = null) => {
     modalType.value = type;
     selectedLedger.value = item;
@@ -149,10 +161,14 @@ const submitForm = () => {
                         </label>
                         <Input v-model="form.to_date" type="date" class="w-full" placeholder="mm/dd/yyyy" />
                     </div>
-                    <div class="flex items-center flex-col">
+                    <div class="flex items-center gap-2 flex-col sm:flex-row">
                         <button @click="handleSearch"
                             class="cursor-pointer px-6 py-2 bg-gradient-to-r from-teal-500 to-green-500 text-white rounded-xl hover:from-teal-600 hover:to-green-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
                             Search
+                        </button>
+                        <button @click="handlePdf"
+                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                            PDF
                         </button>
                     </div>
                 </div>
@@ -168,10 +184,6 @@ const submitForm = () => {
                 </div>
             </div>
             <div class="border rounded-lg overflow-y-auto">
-                <button v-print="'#printDiv'"
-                    class="px-4 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
-                    Print
-                </button>
                 <div id="printDiv">
                     <div class="hidden print:block">
                         <div class="mb-4 text-sm flex gap-5">

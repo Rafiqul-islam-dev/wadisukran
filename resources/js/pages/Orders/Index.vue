@@ -348,22 +348,27 @@ function downloadPdf() {
                 <div class="overflow-x-auto max-w-full">
                     <table class="w-full">
                         <thead class="bg-gradient-to-r from-orange-500 to-amber-500 text-white">
-                            <tr>
-                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                                    Invoice No
-                                </th>
+                            <tr class="whitespace-nowrap">
                                 <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                                    User Type
+
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
+                                    SL
                                 </th>
+                                 <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
+                                    Date
+                                </th>
+
+                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                                    Invoice No
+                                </th>
+                                
+                               
                                 <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Vendor
                                 </th>
-                                <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider ">
-                                    Sales Date
-                                </th>
+                               
                                 <th class="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">
                                     Product
                                 </th>
@@ -391,10 +396,8 @@ function downloadPdf() {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            <tr v-for="order in orders.data" :key="order.id"
-                                class="hover:bg-orange-50 transition-colors duration-200">
-                                <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
-                                    order.invoice_no }}</td>
+                            <tr v-for="(order, index) in orders.data" :key="order.id"
+                                class="hover:bg-orange-50 transition-colors duration-200 whitespace-nowrap">
                                 <td class="px-4 py-4 text-sm text-gray-900 flex gap-1">
                                     <span v-if="order.status === 'Printed'"
                                         class="px-2 py-1 bg-green-500 text-xs text-white bg-opacity-40 rounded-lg font-semibold">
@@ -414,21 +417,20 @@ function downloadPdf() {
                                         <Edit class="text-teal-500" />
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 text-sm text-gray-900">
-                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-semibold">
-                                        {{ order.user.user_type }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-4 text-sm text-gray-900">
-                                    <p class="font-medium text-gray-900">{{ order.user.name }}</p>
-                                    <p class="text-teal-600 text-xs mt-1" v-if="order.user?.agent?.username">{{
-                                        order.user.agent.username }}</p>
-                                    <p class="text-red-500 text-xs mt-1 truncate max-w-[180px]"
-                                        v-if="order.user?.address">{{ order.user.address }}</p>
+                                <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {{ index + 1 }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {{ formatDate(order.created_at) }}
                                 </td>
+                                <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
+                                    order.invoice_no }}</td>
+                                
+                               
+                                <td class="px-4 py-4 text-sm text-gray-900">
+                                    <p class="font-medium text-gray-900">{{ order.user.name }}</p>
+                                </td>
+                                
                                 <td class="px-4 py-4 text-sm text-gray-900 font-medium">{{
                                     order.product?.title }} {{ order.product?.product_number }}</td>
                                 <td class="px-4 py-4 text-sm text-gray-900">

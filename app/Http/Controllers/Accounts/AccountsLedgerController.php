@@ -7,6 +7,7 @@ use App\Models\AgentAccount;
 use App\Models\Incentive;
 use App\Models\User;
 use App\Services\AgentAccountService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -152,5 +153,42 @@ class AccountsLedgerController extends Controller
 
         $ledger->update($data);
         return back();
+    }
+
+    public function pdf(Request $request){
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date',
+        ]);
+
+        $agents = User::where('user_type', 'agent')->where('status', 'active')->get();
+        $ledgers = AgentAccount::where('type', 'posting')
+                ->when($request->agent, function($q, $agent){
+                    $q->where('user_id', $agent);
+                })
+                ->when($request->from_date && $request->to_date, function ($q) use ($request) {
+                    $from = Carbon::parse($request->from_date)->startOfDay();
+                    $to   = Carbon::parse($request->to_date)->endOfDay();
+
+                    $q->whereBetween('created_at', [$from, $to]);
+                })
+                ->where('amount', '!=', 0)
+                ->with('user')
+                ->latest()
+                ->get();
+
+        $agent = null;
+        if($request->agent){
+            $agent = User::find($request->agent);
+        }
+
+        $pdf = Pdf::loadView('pdf.ledger', [
+            'ledgers' => $ledgers,
+            'agent' => $agent,
+            'from_date' => $request->from_date,
+            'to_date' => $request->to_date,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('ledger-report.pdf');
     }
 }

@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {
         Route::get('/summery', [AccountsSummeryController::class, 'index'])->name('summery');
         Route::get('/ledger', [AccountsLedgerController::class, 'index'])->name('ledger');
+        Route::get('/ledger-pdf', [AccountsLedgerController::class, 'pdf'])->name('ledger-pdf');
         Route::post('/ledger-store', [AccountsLedgerController::class, 'store'])->name('ledger-store');
         Route::post('/ledger-update/{ledger}', [AccountsLedgerController::class, 'update'])->name('ledger-update');
 
