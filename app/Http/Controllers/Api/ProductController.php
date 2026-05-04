@@ -3,17 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use App\Models\Win;
 use App\Services\ProductService;
-use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class ProductController extends Controller
 {
-    protected $productService;
+    protected ProductService $productService;
     public function __construct(ProductService $productService)
     {
         $this->productService = $productService;
@@ -23,8 +20,10 @@ class ProductController extends Controller
         $products = Product::orderBy('id', 'desc')
             ->get()
             ->sortBy('order_by')
-            ->filter(function ($product) {
-                return $this->productService->checkProductAvailability($product);
+            ->each(function ($product) {
+                if (!$this->productService->checkProductAvailability($product)) {
+                    $product->is_active = false;
+                }
             })
             ->values();
 
@@ -86,23 +85,4 @@ class ProductController extends Controller
         ];
     }
 
-
-    private function getEffectiveDrawDate(Product $product)
-    {
-        if (!$product->is_daily) {
-            return Carbon::parse($product->draw_date);
-        }
-
-        $today = Carbon::today();
-        $drawDate = Carbon::parse($product->draw_date);
-        $drawTime = Carbon::parse($product->draw_time);
-        $currentTime = Carbon::now()->format('H:i');
-
-        if ($today->gt($drawDate) || ($today->eq($drawDate) && $currentTime > $drawTime->format('H:i'))) {
-            $daysDiff = $today->diffInDays($drawDate);
-            $drawDate->addDays($daysDiff + ($currentTime > $drawTime->format('H:i') ? 1 : 0));
-        }
-
-        return $drawDate;
-    }
 }
