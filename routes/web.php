@@ -17,6 +17,7 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\ProductWiseSalesController;
+use App\Http\Controllers\Order\LockTicketController;
 use App\Http\Controllers\Product\CheckWinController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
@@ -117,6 +118,13 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
     Route::get('/check-wins-pdf', [CheckWinController::class, 'checkWinsPdf'])->name('check-wins-pdf');
+
+    Route::get('/lock-tickets', [LockTicketController::class, 'index'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.index');
+    Route::post('/lock-tickets/cancel', [LockTicketController::class, 'cancel'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.cancel');
     Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
     Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
