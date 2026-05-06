@@ -112,4 +112,65 @@ class DrawController extends Controller
         $win->delete();
         return back();
     }
+
+    public function histories_daily(Request $request)
+    {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        $dailyCategory = Category::where('draw_type', 'daily')->first();
+        $products = Product::where('category_id', $dailyCategory?->id)->orderBy('pick_number', 'asc')->get();
+
+        $histories = [];
+
+        if ($startDate && $endDate) {
+            $start = Carbon::parse($startDate);
+            $end = Carbon::parse($endDate);
+            
+            $wins = Win::whereIn('product_id', $products->pluck('id'))
+                ->whereDate('to_time', '>=', $start)
+                ->whereDate('to_time', '<=', $end)
+                ->when($request->start_time, function ($query, $startTime) {
+                    $query->whereTime('to_time', '>=', $startTime);
+                })
+                ->when($request->end_time, function ($query, $endTime) {
+                    $query->whereTime('to_time', '<=', $endTime);
+                })
+                ->get()
+                ->groupBy(function($win) {
+                    return Carbon::parse($win->to_time)->format('Y-m-d');
+                });
+
+            for ($date = $end->copy(); $date->gte($start); $date->subDay()) {
+                $dateStr = $date->format('Y-m-d');
+                $row = [
+                    'date' => $dateStr,
+                    'results' => []
+                ];
+                
+                $dateWins = $wins->get($dateStr, collect());
+                
+                foreach ($products as $product) {
+                    $win = $dateWins->where('product_id', $product->id)->first();
+                    $row['results'][$product->id] = $win ? [
+                        'numbers' => $win->win_number,
+                        'time' => $win->to_time,
+                    ] : null;
+                }
+                
+                $histories[] = $row;
+            }
+        }
+
+        return Inertia::render('Product/Draws/DailyHistory', [
+            'products' => $products,
+            'histories' => $histories,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+            ]
+        ]);
+    }
 }
