@@ -116,60 +116,73 @@ class DrawController extends Controller
     public function histories_daily(Request $request)
     {
         $startDate = $request->start_date;
-        $endDate = $request->end_date;
+        $endDate   = $request->end_date;
+        $drawType  = $request->draw_type ?: 'daily';
 
-        $dailyCategory = Category::where('draw_type', 'daily')->first();
-        $products = Product::where('category_id', $dailyCategory?->id)->orderBy('pick_number', 'asc')->get();
+        $categories          = Category::whereIn('draw_type', ['daily', 'once'])->get(['id', 'name', 'draw_type']);
+        $filteredCategoryIds = $categories->where('draw_type', $drawType)->pluck('id');
+        $products            = Product::whereIn('category_id', $filteredCategoryIds)->orderBy('pick_number', 'asc')->get();
+
+        $company = CompannySetting::first();
 
         $histories = [];
+        $wins      = null;
 
-        if ($startDate && $endDate) {
+        if ($drawType === 'once') {
+            // ── "Once" mode: return individual win rows (like History page) ──
+            $wins = Win::latest()
+                ->whereIn('product_id', $products->pluck('id'))
+                ->when($startDate, function ($q) use ($startDate, $request) {
+                    $q->whereDate('to_time', '>=', Carbon::parse($startDate));
+                })
+                ->when($endDate, function ($q) use ($endDate, $request) {
+                    $q->whereDate('to_time', '<=', Carbon::parse($endDate));
+                })
+                ->when($request->start_time, fn($q, $t) => $q->whereTime('to_time', '>=', $t))
+                ->when($request->end_time,   fn($q, $t) => $q->whereTime('to_time', '<=', $t))
+                ->with('product')
+                ->paginate(15);
+        } elseif ($startDate && $endDate) {
+            // ── "Daily" mode: group by date ──
             $start = Carbon::parse($startDate);
-            $end = Carbon::parse($endDate);
-            
-            $wins = Win::whereIn('product_id', $products->pluck('id'))
+            $end   = Carbon::parse($endDate);
+
+            $winsByDate = Win::whereIn('product_id', $products->pluck('id'))
                 ->whereDate('to_time', '>=', $start)
                 ->whereDate('to_time', '<=', $end)
-                ->when($request->start_time, function ($query, $startTime) {
-                    $query->whereTime('to_time', '>=', $startTime);
-                })
-                ->when($request->end_time, function ($query, $endTime) {
-                    $query->whereTime('to_time', '<=', $endTime);
-                })
+                ->when($request->start_time, fn($q, $t) => $q->whereTime('to_time', '>=', $t))
+                ->when($request->end_time,   fn($q, $t) => $q->whereTime('to_time', '<=', $t))
                 ->get()
-                ->groupBy(function($win) {
-                    return Carbon::parse($win->to_time)->format('Y-m-d');
-                });
+                ->groupBy(fn($win) => Carbon::parse($win->to_time)->format('Y-m-d'));
 
             for ($date = $end->copy(); $date->gte($start); $date->subDay()) {
-                $dateStr = $date->format('Y-m-d');
-                $row = [
-                    'date' => $dateStr,
-                    'results' => []
-                ];
-                
-                $dateWins = $wins->get($dateStr, collect());
-                
+                $dateStr  = $date->format('Y-m-d');
+                $dateWins = $winsByDate->get($dateStr, collect());
+
+                $row = ['date' => $dateStr, 'results' => []];
                 foreach ($products as $product) {
                     $win = $dateWins->where('product_id', $product->id)->first();
-                    $row['results'][$product->id] = $win ? [
-                        'numbers' => $win->win_number,
-                        'time' => $win->to_time,
-                    ] : null;
+                    $row['results'][$product->id] = $win
+                        ? ['numbers' => $win->win_number, 'time' => $win->to_time]
+                        : null;
                 }
-                
                 $histories[] = $row;
             }
         }
 
         return Inertia::render('Product/Draws/DailyHistory', [
-            'products' => $products,
-            'histories' => $histories,
-            'filters' => [
+            'products'   => $products,
+            'histories'  => $histories,
+            'wins'       => $wins,
+            'categories' => $categories,
+            'logoUrl'    => $company?->getLogoUrlAttribute(),
+            'cupIcon'    => static_asset('asset/icon-cup.png'),
+            'filters'    => [
                 'start_date' => $startDate,
-                'end_date' => $endDate,
+                'end_date'   => $endDate,
                 'start_time' => $request->start_time,
-                'end_time' => $request->end_time,
+                'end_time'   => $request->end_time,
+                'draw_type'  => $drawType,
             ]
         ]);
     }

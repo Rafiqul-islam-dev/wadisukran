@@ -4,22 +4,41 @@ import { Input } from '@/components/ui/input';
 import { Head, useForm } from '@inertiajs/vue3';
 import { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { ref } from 'vue';
+import { toast } from 'vue-sonner';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle
+} from '@/components/ui/dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Daily History', href: '/draws/histories-daily' },
 ];
 
-const { products, histories, filters } = defineProps<{
+const { products, histories, wins, filters, logoUrl, cupIcon, categories } = defineProps<{
     products: Array<any>;
     histories: Array<any>;
+    wins: any;          // paginated — only present when draw_type === 'once'
     filters: any;
+    logoUrl: string;
+    cupIcon: string;
+    categories: Array<{ id: number; name: string; draw_type: string }>;
 }>();
+
+const previewModal = ref(false);
+const previewImageUrl = ref<string | null>(null);
+const previewFileName = ref<string>('daily-history.png');
 
 const form = useForm({
     start_date: filters.start_date || '',
     end_date: filters.end_date || '',
     start_time: filters.start_time || '',
-    end_time: filters.end_time || ''
+    end_time: filters.end_time || '',
+    draw_type: filters.draw_type || 'daily',
 });
 
 const formatDate = (date: string) => {
@@ -79,6 +98,351 @@ const handleSearch = () => {
         preserveState: true
     });
 };
+
+// View image for a single win row (once-mode, mirrors History.vue handleDownload)
+const viewImageWin = async (win: any) => {
+    const logoImg = await loadLogo(logoUrl);
+    const cupImg  = await loadLogo(cupIcon);
+
+    const rows = products.map((product) => ({
+        title:         product.title,
+        productNumber: product.product_number ?? null,
+        numbers:       product.id === win.product_id ? parseNumbers(win.win_number) : [],
+    }));
+
+    const resultDate = formatResultDate(win.to_time ?? win.draw_time);
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
+
+    const slug = (win.product?.title + ' ' + (win.product?.product_number ?? '')).trim().replace(/\s+/g, '-');
+    previewImageUrl.value = canvas.toDataURL('image/png');
+    previewFileName.value = `once-result-${slug}-${win.id}.png`;
+    previewModal.value = true;
+};
+
+// ─── Canvas Helpers (Copied from History.vue) ──────────────────────────────────
+const LEFT_PANEL_W = 118;
+const RIGHT_PANEL_W = 210;
+const ROW_HEIGHT = 50;
+const ROW_SPACING = 8;
+const CARD_PADDING = 20;
+const CARD_CORNER = 22;
+
+const formatResultDate = (date: string): string => {
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    const year = d.getFullYear();
+    return `${day} ${month} ${year}`;
+};
+
+function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+}
+
+function drawCardBackground(ctx: CanvasRenderingContext2D, W: number, H: number) {
+    const GRAY_GAP   = 10;
+    const GRAY_LEFT  = LEFT_PANEL_W + 80;
+    const GRAY_TOP   = GRAY_GAP;
+    const GRAY_W     = W - GRAY_LEFT - GRAY_GAP;
+    const GRAY_H     = H - GRAY_GAP * 2;
+    const GRAY_R     = 20;
+
+    ctx.save();
+    drawRoundRect(ctx, 0, 0, W, H, CARD_CORNER);
+    ctx.clip();
+
+    ctx.fillStyle = '#edf0f3';
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.055)';
+    ctx.lineWidth = 1;
+    for (let i = -H * 2; i < W + H * 2; i += 16) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i + H, H);
+        ctx.stroke();
+    }
+
+    ctx.save();
+    drawRoundRect(ctx, GRAY_LEFT, GRAY_TOP, GRAY_W, GRAY_H, GRAY_R);
+
+    const grayGrad = ctx.createLinearGradient(GRAY_LEFT, GRAY_TOP, W, H);
+    grayGrad.addColorStop(0, '#b6c3cc');
+    grayGrad.addColorStop(0.5, '#9db0bb');
+    grayGrad.addColorStop(1, '#8ea2ae');
+    ctx.fillStyle = grayGrad;
+    ctx.fill();
+
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1.2;
+    for (let i = GRAY_LEFT - H * 2; i < W + H * 2; i += 16) {
+        ctx.beginPath();
+        ctx.moveTo(i, GRAY_TOP);
+        ctx.lineTo(i + GRAY_H, GRAY_TOP + GRAY_H);
+        ctx.stroke();
+    }
+    ctx.restore();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.14)';
+    ctx.lineWidth = 2.5;
+    drawRoundRect(ctx, 0, 0, W, H, CARD_CORNER);
+    ctx.stroke();
+}
+
+function drawLeftPanel(ctx: CanvasRenderingContext2D, H: number, logoImg: HTMLImageElement | null, cupImg: HTMLImageElement | null) {
+    const cx = LEFT_PANEL_W / 2;
+    const logoW = 80;
+    const logoH = 80;
+    const logoY = CARD_PADDING + logoH / 2 + 10;
+
+    if (logoImg) {
+        ctx.drawImage(logoImg, cx - logoW / 2, logoY - logoH / 2, logoW, logoH);
+    } else {
+        ctx.beginPath();
+        ctx.arc(cx, logoY, 38, 0, Math.PI * 2);
+        ctx.fillStyle = '#1e3a6e';
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('LOGO', cx, logoY);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    const textY = H * 0.46;
+    ctx.fillStyle = '#0d1a2e';
+    ctx.textAlign = 'center';
+    ['BUY OUR', 'PRODUCT', 'GET COUPON'].forEach((line, i) => {
+        ctx.font = `bold ${i === 2 ? 11 : 12}px Arial, sans-serif`;
+        ctx.fillText(line, cx, textY + i * 17);
+    });
+
+    if (cupImg) {
+        const iconW = 74;
+        const iconH = 82;
+        ctx.drawImage(cupImg, cx - iconW / 2, H * 0.8 - iconH / 2, iconW, iconH);
+    }
+}
+
+function drawCouponBadge(ctx: CanvasRenderingContext2D, title: string, productNumber: string | number | null, x: number, y: number, w: number, h: number) {
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, '#243f7a');
+    grad.addColorStop(1, '#162d5a');
+    ctx.fillStyle = grad;
+    drawRoundRect(ctx, x, y, w, h, h / 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    const cy = y + h / 2;
+    const numStr = productNumber != null ? String(productNumber) : '';
+    const titleFontSize = Math.min(h * 0.36, 15);
+    const numFontSize   = Math.min(h * 0.72, 30);
+
+    ctx.font = `bold ${titleFontSize}px Arial, sans-serif`;
+    const titleW = ctx.measureText(title + (numStr ? ' ' : '')).width;
+    ctx.font = `bold ${numFontSize}px Arial, sans-serif`;
+    const numW = numStr ? ctx.measureText(numStr).width : 0;
+    const totalW = titleW + numW;
+    const startX = x + (w - totalW) / 2;
+
+    ctx.font = `bold ${titleFontSize}px Arial, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(title + (numStr ? ' ' : ''), startX, cy + (numFontSize - titleFontSize) * 0.08);
+
+    if (numStr) {
+        ctx.font = `bold ${numFontSize}px Arial, sans-serif`;
+        ctx.fillText(numStr, startX + titleW, cy);
+    }
+    ctx.textBaseline = 'alphabetic';
+}
+
+function drawWinBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, text: string) {
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 3;
+
+    const grad = ctx.createRadialGradient(cx - r * 0.28, cy - r * 0.28, r * 0.05, cx, cy, r);
+    grad.addColorStop(0, '#f9f9f9');
+    grad.addColorStop(0.65, '#e2e2e2');
+    grad.addColorStop(1, '#c5c5c5');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = `bold ${r * 0.88}px Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cy);
+    ctx.textBaseline = 'alphabetic';
+}
+
+function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string) {
+    const px  = W - RIGHT_PANEL_W + 6;
+    const pw  = RIGHT_PANEL_W - 30;
+    const pcx = px + pw / 2;
+    const BOX_GAP = 8;
+
+    const resH  = 75;
+    const giftH = 65;
+    const timeH = 50;
+    const startY = 100;
+
+    const resY  = startY;
+    const giftY = resY  + resH  + BOX_GAP;
+    const timeY = giftY + giftH + BOX_GAP;
+
+    const resGrad = ctx.createLinearGradient(px, resY, px, resY + resH);
+    resGrad.addColorStop(0, '#243f7a');
+    resGrad.addColorStop(1, '#162d5a');
+    ctx.fillStyle = resGrad;
+    drawRoundRect(ctx, px, resY, pw, resH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${Math.min(resH * 0.3, 20)}px Arial, sans-serif`;
+    ctx.fillText('RESULT', pcx, resY + resH * 0.36);
+    ctx.font = `bold ${Math.min(resH * 0.24, 14)}px Arial, sans-serif`;
+    ctx.fillText(resultDate, pcx, resY + resH * 0.7);
+
+    ctx.fillStyle = '#cc2a2a';
+    drawRoundRect(ctx, px, giftY, pw, giftH, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.min(giftH * 0.3, 13)}px Arial, sans-serif`;
+    ctx.fillText('CURRENT GIFT', pcx, giftY + giftH * 0.33);
+    ctx.font = `bold ${Math.min(giftH * 0.27, 12)}px Arial, sans-serif`;
+    ctx.fillText('AED 500,000', pcx, giftY + giftH * 0.68);
+
+    ctx.fillStyle = '#f4f4f4';
+    drawRoundRect(ctx, px, timeY, pw, timeH, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#0d1a2e';
+    ctx.font = `bold ${Math.min(timeH * 0.28, 13)}px Arial, sans-serif`;
+    ctx.fillText('DRAW TIME', pcx, timeY + timeH * 0.28);
+    ctx.font = `bold ${Math.min(timeH * 0.26, 12)}px Arial, sans-serif`;
+    ctx.fillText('12:00 AM', pcx, timeY + timeH * 0.57);
+    ctx.fillStyle = '#1565c0';
+    ctx.font = `bold ${Math.min(timeH * 0.24, 11)}px Arial, sans-serif`;
+    ctx.fillText('Everyday', pcx, timeY + timeH * 0.84);
+    ctx.textBaseline = 'alphabetic';
+}
+
+function loadLogo(url: string): Promise<HTMLImageElement | null> {
+    return new Promise((resolve) => {
+        if (!url) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+    });
+}
+
+function buildResultCanvas(rows: Array<{ title: string; productNumber: string | number | null; numbers: string[] }>, logoImg: HTMLImageElement | null, cupImg: HTMLImageElement | null, resultDate: string): HTMLCanvasElement {
+    const W = 900;
+    const rowCount = Math.max(rows.length, 1);
+    const contentH = rowCount * ROW_HEIGHT + (rowCount - 1) * ROW_SPACING;
+    const H = Math.max(CARD_PADDING * 2 + contentH, 300);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+
+    drawCardBackground(ctx, W, H);
+    drawLeftPanel(ctx, H, logoImg, cupImg);
+    drawInfoPanel(ctx, W, H, resultDate);
+
+    const BADGE_W = 100;
+    const BADGE_X = LEFT_PANEL_W + 10;
+    const BALL_R = 27;
+    const BALL_PITCH = BALL_R * 2 + 8;
+    const startY = Math.round((H - contentH) / 2);
+
+    rows.forEach((row, i) => {
+        const rowY = startY + i * (ROW_HEIGHT + ROW_SPACING);
+        const BADGE_H = ROW_HEIGHT - 10;
+        drawCouponBadge(ctx, row.title, row.productNumber, BADGE_X, rowY + 5, BADGE_W, BADGE_H);
+        const ballStartX = BADGE_X + BADGE_W + BALL_R + 10;
+        const ballCY = rowY + ROW_HEIGHT / 2;
+
+        if (row.numbers.length === 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.font = 'italic 15px Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('', ballStartX - BALL_R + 5, ballCY);
+            ctx.textBaseline = 'alphabetic';
+        } else {
+            row.numbers.forEach((num, ni) => {
+                drawWinBall(ctx, ballStartX + ni * BALL_PITCH, ballCY, BALL_R, num);
+            });
+        }
+    });
+
+    return canvas;
+}
+
+const viewImage = async (history: any) => {
+    const logoImg = await loadLogo(logoUrl);
+    const cupImg = await loadLogo(cupIcon);
+    
+    // Map all products to ensure they appear in the list, even without results
+    const rows = products.map(product => {
+        const result = history.results[product.id];
+        return {
+            title: product.title,
+            productNumber: product.product_number,
+            numbers: result ? parseNumbers(result.numbers) : []
+        };
+    });
+
+    const resultDate = formatResultDate(history.date);
+    const canvas = buildResultCanvas(rows as any, logoImg, cupImg, resultDate);
+    
+    previewImageUrl.value = canvas.toDataURL('image/png');
+    previewFileName.value = `daily-history-${history.date}.png`;
+    previewModal.value = true;
+};
+
+const confirmDownload = () => {
+    if (!previewImageUrl.value) return;
+    const link = document.createElement('a');
+    link.download = previewFileName.value;
+    link.href = previewImageUrl.value;
+    link.click();
+    previewModal.value = false;
+    toast.success('Image downloaded successfully.');
+};
 </script>
 
 <template>
@@ -91,6 +455,18 @@ const handleSearch = () => {
                     <!-- Filters -->
                     <div class="mb-6">
                         <div class="flex flex-col md:flex-row gap-4 items-end">
+                            <!-- Category Filter -->
+                            <div class="relative flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-3 text-center">Category</label>
+                                <select
+                                    v-model="form.draw_type"
+                                    class="w-full h-12 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option v-for="cat in categories" :key="cat.draw_type" :value="cat.draw_type">
+                                        {{ cat.name }}
+                                    </option>
+                                </select>
+                            </div>
                             <div class="relative flex-1">
                                 <label class="block text-sm font-medium text-gray-700 mb-3 text-center">From Date</label>
                                 <Input v-model="form.start_date" type="date" class="w-full h-12" :class="{'border-red-500': form.errors.start_date}" />
@@ -127,8 +503,8 @@ const handleSearch = () => {
                         </div>
                     </div>
 
-                    <!-- Table -->
-                    <div class="border rounded-lg overflow-x-auto shadow-sm">
+                    <!-- ══ DAILY TABLE (draw_type === 'daily') ══ -->
+                    <div v-if="filters.draw_type !== 'once'" class="border rounded-lg overflow-x-auto shadow-sm">
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="bg-gray-50">
@@ -188,6 +564,7 @@ const handleSearch = () => {
                                         <div class="flex gap-2 justify-center">
                                             <Button
                                                 size="sm"
+                                                @click="viewImage(history)"
                                                 class="bg-indigo-500 hover:bg-indigo-600 text-white p-2 h-9 w-9 rounded-md shadow"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -195,13 +572,65 @@ const handleSearch = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ══ ONCE TABLE (draw_type === 'once') — mirrors History.vue ══ -->
+                    <div v-else class="border rounded-lg overflow-y-auto shadow-sm">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 border-r">SL</th>
+                                    <th class="px-6 py-3 text-sm font-semibold text-gray-700 border-r text-center">Product</th>
+                                    <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 border-r">Date</th>
+                                    <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 border-r">Win Number</th>
+                                    <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr v-if="!wins?.data?.length">
+                                    <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">
+                                        Please select date range to view results.
+                                    </td>
+                                </tr>
+                                <tr v-for="(win, index) in wins?.data" :key="win.id">
+                                    <td class="px-3 text-sm md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
+                                        {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
+                                    </td>
+                                    <td class="px-3 text-sm md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r text-center">
+                                        {{ win?.product?.title }} {{ win?.product?.product_number }}
+                                    </td>
+                                    <td class="px-6 py-4 border-r text-center">
+                                        <p class="text-lg">{{ formatDate(win.to_time) }}</p>
+                                        <p class="font-bold text-md" v-if="win.to_time">{{ formatTime(win.to_time) }}</p>
+                                    </td>
+                                    <td class="px-6 py-4 border-r">
+                                        <div class="flex gap-2 justify-center">
+                                            <div
+                                                v-for="(number, idx) in parseNumbers(win.win_number)"
+                                                :key="idx"
+                                                class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2"
+                                            >
+                                                {{ number }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex gap-2 justify-center">
                                             <Button
-                                                size="sm"
-                                                class="bg-red-500 hover:bg-red-600 text-white p-2 h-9 w-9 rounded-md shadow"
+                                                @click="viewImageWin(win)"
+                                                variant="default"
+                                                size="lg"
+                                                class="cursor-pointer px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
                                                 </svg>
+                                                View
                                             </Button>
                                         </div>
                                     </td>
@@ -213,6 +642,38 @@ const handleSearch = () => {
                 </div>
             </div>
         </div>
+
+        <!-- Preview Dialog -->
+        <Dialog v-model:open="previewModal">
+            <DialogContent class="max-w-6xl max-h-[95vh] overflow-auto w-[95vw]">
+                <DialogHeader>
+                    <DialogTitle>Preview Daily History</DialogTitle>
+                    <DialogDescription>
+                        Review the image before downloading.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <div class="flex justify-center py-4">
+                    <img 
+                        v-if="previewImageUrl" 
+                        :src="previewImageUrl" 
+                        alt="Daily History Preview" 
+                        class="max-w-full h-auto rounded-lg shadow-lg border"
+                    />
+                </div>
+                
+                <DialogFooter class="gap-2">
+                    <Button variant="outline" @click="previewModal = false">Cancel</Button>
+                    <Button 
+                        variant="default" 
+                        @click="confirmDownload"
+                        class="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
+                    >
+                        Download Image
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
 
