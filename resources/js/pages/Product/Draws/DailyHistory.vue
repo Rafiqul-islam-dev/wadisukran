@@ -382,7 +382,7 @@ function buildResultCanvas(rows: Array<{ title: string; productNumber: string | 
     drawLeftPanel(ctx, H, logoImg, cupImg);
     drawInfoPanel(ctx, W, H, resultDate);
 
-    const BADGE_W = 100;
+    const BADGE_W = 120;
     const BADGE_X = LEFT_PANEL_W + 10;
     const BALL_R = 27;
     const BALL_PITCH = BALL_R * 2 + 8;
@@ -415,19 +415,30 @@ function buildResultCanvas(rows: Array<{ title: string; productNumber: string | 
 const viewImage = async (history: any) => {
     const logoImg = await loadLogo(logoUrl);
     const cupImg = await loadLogo(cupIcon);
-    
-    // Map all products to ensure they appear in the list, even without results
-    const rows = products.map(product => {
+    const canvasRows: any[] = [];
+
+    products.forEach(product => {
         const result = history.results[product.id];
-        return {
-            title: product.title,
-            productNumber: product.product_number,
-            numbers: result ? parseNumbers(result.numbers) : []
-        };
+
+        if (Array.isArray(result) && result.length > 0) {
+            result.forEach((res: any) => {
+                canvasRows.push({
+                    title: product.title,
+                    productNumber: product.product_number,
+                    numbers: parseNumbers(res.numbers),
+                });
+            });
+        } else if (result && !Array.isArray(result)) {
+            canvasRows.push({
+                title: product.title,
+                productNumber: product.product_number,
+                numbers: parseNumbers(result.numbers),
+            });
+        }
     });
 
     const resultDate = formatResultDate(history.date);
-    const canvas = buildResultCanvas(rows as any, logoImg, cupImg, resultDate);
+    const canvas = buildResultCanvas(canvasRows, logoImg, cupImg, resultDate);
     
     previewImageUrl.value = canvas.toDataURL('image/png');
     previewFileName.value = `daily-history-${history.date}.png`;
@@ -542,7 +553,25 @@ const confirmDownload = () => {
                                         class="px-4 py-6 border text-center"
                                     >
                                         <div class="flex flex-col items-center gap-2">
-                                            <template v-if="history.results[product.id]">
+                                            <!-- Once product: results is an array of wins -->
+                                            <template v-if="Array.isArray(history.results[product.id]) && history.results[product.id].length > 0">
+                                                <div v-for="(res, ridx) in history.results[product.id]" :key="ridx" class="flex flex-col items-center pb-2 last:pb-0 border-b last:border-b-0 border-gray-100 w-full">
+                                                    <div class="flex gap-2 justify-center flex-nowrap mb-1">
+                                                        <div
+                                                            v-for="(number, idx) in parseNumbers(res.numbers)"
+                                                            :key="idx"
+                                                            class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-center font-bold border-2 border-gray-800 text-gray-900 bg-white shadow-sm"
+                                                        >
+                                                            {{ number }}
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
+                                                        {{ formatTime(res.time) }}
+                                                    </span>
+                                                </div>
+                                            </template>
+                                            <!-- Daily product: results is a single object -->
+                                            <template v-else-if="history.results[product.id] && !Array.isArray(history.results[product.id])">
                                                 <div class="flex gap-2 justify-center flex-nowrap mb-1">
                                                     <div
                                                         v-for="(number, idx) in parseNumbers(history.results[product.id].numbers)"

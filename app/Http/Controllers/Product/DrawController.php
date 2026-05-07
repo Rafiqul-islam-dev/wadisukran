@@ -129,7 +129,6 @@ class DrawController extends Controller
         $wins      = null;
 
         if ($drawType === 'once') {
-            // ── "Once" mode: return individual win rows (like History page) ──
             $wins = Win::latest()
                 ->whereIn('product_id', $products->pluck('id'))
                 ->when($startDate, function ($q) use ($startDate, $request) {
@@ -143,11 +142,17 @@ class DrawController extends Controller
                 ->with('product')
                 ->paginate(15);
         } elseif ($startDate && $endDate) {
-            // ── "Daily" mode: group by date ──
             $start = Carbon::parse($startDate);
             $end   = Carbon::parse($endDate);
 
-            $winsByDate = Win::whereIn('product_id', $products->pluck('id'))
+            // For daily view, load ALL products (daily + once categories) with their category
+            $allCategoryIds = Category::whereIn('draw_type', ['daily', 'once'])->pluck('id');
+            $allProducts    = Product::whereIn('category_id', $allCategoryIds)
+                ->with('category')
+                ->orderBy('pick_number', 'asc')
+                ->get();
+
+            $winsByDate = Win::whereIn('product_id', $allProducts->pluck('id'))
                 ->whereDate('to_time', '>=', $start)
                 ->whereDate('to_time', '<=', $end)
                 ->when($request->start_time, fn($q, $t) => $q->whereTime('to_time', '>=', $t))
@@ -160,14 +165,49 @@ class DrawController extends Controller
                 $dateWins = $winsByDate->get($dateStr, collect());
 
                 $row = ['date' => $dateStr, 'results' => []];
-                foreach ($products as $product) {
-                    $win = $dateWins->where('product_id', $product->id)->first();
-                    $row['results'][$product->id] = $win
-                        ? ['numbers' => $win->win_number, 'time' => $win->to_time]
-                        : null;
+
+                foreach ($allProducts as $product) {
+                    $productWins = $dateWins->where('product_id', $product->id);
+
+                    if ($product->category?->draw_type === 'once') {
+                        // Expected draws = count of items in draw_time JSON field
+                        $drawTimes = is_string($product->getRawOriginal('draw_time'))
+                            ? json_decode($product->getRawOriginal('draw_time'), true)
+                            : (is_array($product->draw_time) ? $product->draw_time : []);
+                        $expectedDraws = count($drawTimes);
+
+                        if ($expectedDraws > 0 && $productWins->count() >= $expectedDraws) {
+                            $row['results'][$product->id] = $productWins->map(fn($w) => [
+                                'numbers' => $w->win_number,
+                                'time'    => $w->to_time,
+                            ])->values()->toArray();
+                        }
+                        // else: product not included — will be filtered out of columns below
+                    } else {
+                        // Daily product: show single win (or null)
+                        $win = $productWins->first();
+                        $row['results'][$product->id] = $win
+                            ? ['numbers' => $win->win_number, 'time' => $win->to_time]
+                            : null;
+                    }
                 }
+
                 $histories[] = $row;
             }
+
+            // Collect once-product IDs that qualified on at least one day
+            $qualifiedOnceIds = collect($histories)
+                ->flatMap(fn($row) => array_keys($row['results']))
+                ->unique()
+                ->values();
+
+            // Filter: keep daily products always; once-products only if they qualified
+            $products = $allProducts->filter(function ($product) use ($qualifiedOnceIds) {
+                if ($product->category?->draw_type === 'once') {
+                    return $qualifiedOnceIds->contains($product->id);
+                }
+                return true;
+            })->values();
         }
 
         return Inertia::render('Product/Draws/DailyHistory', [
