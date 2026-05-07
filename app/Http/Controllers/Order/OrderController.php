@@ -232,6 +232,7 @@ class OrderController extends Controller
             $len             = $numbersStraight->count();
 
             $orders = OrderTicket::query()
+                ->withoutRiskHold()
                 ->whereHas('order', function ($o) use ($request, $from, $to) {
                     $o->where('status', 'Printed')->where('is_claimed', 0)->where('is_winner', 0)->where('product_id', $request->product_id);
                     if ($from) {
@@ -359,6 +360,8 @@ class OrderController extends Controller
 
                     return null;
                 })->filter();
+
+            $orders = app(\App\Services\RiskCapService::class)->applyToWinnerRows($orders, $product);
 
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
@@ -497,6 +500,7 @@ class OrderController extends Controller
             $len             = $numbersStraight->count();
 
             $orders = OrderTicket::query()
+                ->withoutRiskHold()
                 ->whereHas('order', function ($o) use ($request, $from, $to) {
                     $o->where('status', 'Printed')->where('is_claimed', 0)->where('is_winner', 0)->where('product_id', $request->product_id);
                     if ($from) {
@@ -624,6 +628,8 @@ class OrderController extends Controller
 
                     return null;
                 })->filter();
+
+            $orders = app(\App\Services\RiskCapService::class)->applyToWinnerRows($orders, $product);
 
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {

@@ -113,6 +113,7 @@ class DrawService
         $len             = $numbersStraight->count();
 
         $orders = OrderTicket::query()
+            ->withoutRiskHold()
             ->whereHas('order', function ($q) use ($product) {
                 $q->where('status', 'Printed')->where('is_claimed', 0)->where('is_winner', 0)->where('product_id', $product->id);
             })
@@ -198,6 +199,9 @@ class DrawService
 
                 return null;
             })->filter();
+
+        $orders = app(RiskCapService::class)->applyToWinnerRows($orders, $product);
+
         foreach ($orders as $order) {
             OrderTicket::find($order['id'])->update(['is_winner' => 1]);
             Order::find($order['order_id'])->update(['is_winner' => 1]);

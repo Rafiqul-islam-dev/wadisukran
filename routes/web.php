@@ -122,9 +122,21 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::get('/lock-tickets', [LockTicketController::class, 'index'])
         ->middleware('can:show lock tickets')
         ->name('lock-tickets.index');
+    Route::post('/lock-tickets/hold', [LockTicketController::class, 'hold'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.hold');
+    Route::post('/lock-tickets/release', [LockTicketController::class, 'release'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.release');
     Route::post('/lock-tickets/cancel', [LockTicketController::class, 'cancel'])
         ->middleware('can:show lock tickets')
         ->name('lock-tickets.cancel');
+    Route::post('/lock-tickets/apply-risk-cap', [LockTicketController::class, 'applyRiskCap'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.apply-risk-cap');
+    Route::post('/lock-tickets/release-risk-cap', [LockTicketController::class, 'releaseRiskCap'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.release-risk-cap');
     Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
     Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
