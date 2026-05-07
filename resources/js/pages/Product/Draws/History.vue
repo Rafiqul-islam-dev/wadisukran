@@ -709,11 +709,11 @@ const confirmDownload = () => {
                                         <p class="font-bold text-md" v-if="win.draw_time">{{ formatTime(win.draw_time) }}</p>
                                     </td>
                                     <td class="px-6 py-4 border-r">
-                                        <div class="flex gap-2 justify-center">
+                                        <div class="flex gap-2 justify-center flex-nowrap">
                                             <div
                                                 v-for="(number, idx) in parseNumbers(win.win_number)"
                                                 :key="idx"
-                                                class="w-10 h-10 rounded-lg flex flex-col items-center justify-center text-center font-bold border-orange-700 text-black opacity-100 bg-orange-100 border-2"
+                                                class="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-center font-bold border-2 border-gray-800 text-gray-900 bg-white shadow-sm"
                                             >
                                                 {{ number }}
                                             </div>
@@ -722,16 +722,14 @@ const confirmDownload = () => {
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
                                             
-                                            <template v-if="win.publish">
-                                                <Button
-                                                    @click="handleDownload(win)"
-                                                    variant="default"
-                                                    size="sm"
-                                                    class="px-2 py-1 bg-blue-500 text-white hover:bg-blue-600"
-                                                >
-                                                    View
-                                                </Button>
-                                            </template>
+                                            <Button
+                                                @click="handleDownload(win)"
+                                                variant="default"
+                                                size="sm"
+                                                class="px-2 py-1 bg-blue-500 text-white hover:bg-blue-600"
+                                            >
+                                                View
+                                            </Button>
                                             <div class="flex gap-2" v-if="!win.publish">
                                                 <Button
                                                     @click="handlePublish(win.id)"
