@@ -97,7 +97,6 @@ class DrawService
                         $win = $exists_draw;
                     }
                 }
-                $this->updateWinner($win);
             }
         }
         return 'Win created successfully';

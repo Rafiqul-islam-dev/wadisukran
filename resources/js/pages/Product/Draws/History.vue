@@ -23,6 +23,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 const deleteModal = ref(false);
 const deletingHistory = ref<any>(null);
 
+const publishModal = ref(false);
+const publishingHistory = ref<any>(null);
+
 // Preview modal refs
 const previewModal = ref(false);
 const previewImageUrl = ref<string | null>(null);
@@ -98,6 +101,24 @@ const confirmDelete = () => {
         },
         onError: () => {
             toast.error('Something went wrong when deleting History');
+        }
+    });
+};
+
+const handlePublish = (id: any) => {
+    publishingHistory.value = id;
+    publishModal.value = true;
+};
+
+const confirmPublish = () => {
+    router.get(route('draws.histories-publish', publishingHistory.value), {}, {
+        onSuccess: () => {
+            publishingHistory.value = null;
+            publishModal.value = false;
+            toast.success('Draw published successfully.');
+        },
+        onError: () => {
+            toast.error('Something went wrong when publishing Draw');
         }
     });
 };
@@ -662,23 +683,6 @@ const confirmDownload = () => {
                         </div>
                     </div>
 
-                    <!-- Download All Button -->
-                    <div class="flex justify-end mb-4">
-                        <Button
-                            @click="handleDownloadAll"
-                            variant="default"
-                            size="lg"
-                            class="cursor-pointer px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-                            </svg>
-                            View All
-                        </Button>
-                    </div>
-
                     <!-- Table -->
                     <div class="border rounded-lg overflow-y-auto">
                         <table class="w-full">
@@ -693,22 +697,17 @@ const confirmDownload = () => {
                             </thead>
 
                             <tbody class="divide-y">
-                                <tr v-for="(win, index) in wins?.data" :key="index">
-                                    <td class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
-                                        {{ (wins?.current_page - 1) * wins?.per_page + index + 1 }}
+                                <tr v-for="(win, index) in wins.data" :key="win.id" class="group">
+                                    <td class="px-6 py-4 font-medium text-gray-900 border-r">
+                                        {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
                                     </td>
-
-                                    <td class="px-3 text-sm md:text-md md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r text-center">
-                                        {{ win?.product?.title }} {{ win?.product?.product_number }}
+                                    <td class="px-6 py-4 font-medium text-gray-900 border-r text-center">
+                                        {{ win.product?.title }} {{ win.product?.product_number }}
                                     </td>
-
                                     <td class="px-6 py-4 border-r text-center">
                                         <p class="text-lg">{{ formatDate(win.draw_time) }}</p>
-                                        <p class="font-bold text-md" v-if="win.from_time && win.to_time">
-                                            {{ formatTime(win.from_time) }} - {{ formatTime(win.to_time) }}
-                                        </p>
+                                        <p class="font-bold text-md" v-if="win.draw_time">{{ formatTime(win.draw_time) }}</p>
                                     </td>
-
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center">
                                             <div
@@ -720,31 +719,38 @@ const confirmDownload = () => {
                                             </div>
                                         </div>
                                     </td>
-
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
-                                            <Button
-                                                @click="handleDownload(win)"
-                                                variant="default"
-                                                size="lg"
-                                                class="cursor-pointer px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-                                                </svg>
-                                                View
-                                            </Button>
-
-                                            <Button
-                                                v-if="can('draw history delete')"
-                                                @click="deleteHistory(win.id)"
-                                                size="sm"
-                                                class="bg-red-500 hover:bg-red-700 cursor-pointer"
-                                            >
-                                                Delete
-                                            </Button>
+                                            
+                                            <template v-if="win.publish">
+                                                <Button
+                                                    @click="handleDownload(win)"
+                                                    variant="default"
+                                                    size="sm"
+                                                    class="px-2 py-1 bg-blue-500 text-white hover:bg-blue-600"
+                                                >
+                                                    View
+                                                </Button>
+                                            </template>
+                                            <div class="flex gap-2" v-if="!win.publish">
+                                                <Button
+                                                    @click="handlePublish(win.id)"
+                                                    variant="default"
+                                                    size="sm"
+                                                    class="px-2 py-1 bg-green-500 text-white hover:bg-green-600"
+                                                >
+                                                    Publish
+                                                </Button>
+                                                <Button
+                                                    v-if="can('draw history delete')"
+                                                    @click="deleteHistory(win.id)"
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    class="px-2 py-1"
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -805,6 +811,22 @@ const confirmDownload = () => {
                         </svg>
                         Download Now
                     </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Publish Confirmation Dialog -->
+        <Dialog v-model:open="publishModal">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm Publication</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to publish this draw? This will notify winners and update their tickets. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="publishModal = false">Cancel</Button>
+                    <Button variant="default" @click="confirmPublish" class="bg-green-600 hover:bg-green-700">Confirm Publish</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

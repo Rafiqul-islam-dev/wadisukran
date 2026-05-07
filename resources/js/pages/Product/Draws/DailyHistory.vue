@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Input } from '@/components/ui/input';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ref } from 'vue';
@@ -32,6 +32,11 @@ const { products, histories, wins, filters, logoUrl, cupIcon, categories } = def
 const previewModal = ref(false);
 const previewImageUrl = ref<string | null>(null);
 const previewFileName = ref<string>('daily-history.png');
+
+// Publish & Delete modals
+const publishModal = ref(false);
+const deleteModal = ref(false);
+const processingWin = ref<any>(null);
 
 const form = useForm({
     start_date: filters.start_date || '',
@@ -96,6 +101,40 @@ const handleSearch = () => {
         replace: true,
         showProgress: false,
         preserveState: true
+    });
+};
+
+const handlePublish = (win: any) => {
+    processingWin.value = win;
+    publishModal.value = true;
+};
+
+const confirmPublish = () => {
+    if (!processingWin.value) return;
+    router.get(route('draws.histories-publish', processingWin.value.id), {}, {
+        onSuccess: () => {
+            publishModal.value = false;
+            processingWin.value = null;
+            toast.success('Draw published successfully.');
+        },
+        onError: () => toast.error('Failed to publish draw.')
+    });
+};
+
+const handleDelete = (win: any) => {
+    processingWin.value = win;
+    deleteModal.value = true;
+};
+
+const confirmDelete = () => {
+    if (!processingWin.value) return;
+    router.get(route('draws.histories-delete', processingWin.value.id), {}, {
+        onSuccess: () => {
+            deleteModal.value = false;
+            processingWin.value = null;
+            toast.success('Draw deleted successfully.');
+        },
+        onError: () => toast.error('Failed to delete draw.')
     });
 };
 
@@ -565,9 +604,15 @@ const confirmDownload = () => {
                                                             {{ number }}
                                                         </div>
                                                     </div>
-                                                    <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
-                                                        {{ formatTime(res.time) }}
-                                                    </span>
+                                                    <div class="flex flex-col items-center gap-1 group">
+                                                        <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
+                                                            {{ formatTime(res.time) }}
+                                                        </span>
+                                                        <div v-if="!res.publish" class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button @click="handlePublish(res)" class="text-[10px] px-1.5 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 font-bold transition-colors">Publish</button>
+                                                            <button @click="handleDelete(res)" class="text-[10px] px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 font-bold transition-colors">Delete</button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </template>
                                             <!-- Daily product: results is a single object -->
@@ -581,9 +626,15 @@ const confirmDownload = () => {
                                                         {{ number }}
                                                     </div>
                                                 </div>
-                                                <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
-                                                    {{ formatTime(history.results[product.id].time) }}
-                                                </span>
+                                                <div class="flex flex-col items-center gap-1 group">
+                                                    <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
+                                                        {{ formatTime(history.results[product.id].time) }}
+                                                    </span>
+                                                    <div v-if="!history.results[product.id].publish" class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button @click="handlePublish(history.results[product.id])" class="text-[10px] px-1.5 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 font-bold transition-colors">Publish</button>
+                                                        <button @click="handleDelete(history.results[product.id])" class="text-[10px] px-1.5 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 font-bold transition-colors">Delete</button>
+                                                    </div>
+                                                </div>
                                             </template>
                                             <span v-else class="text-gray-300 text-xs">No result</span>
                                         </div>
@@ -626,7 +677,7 @@ const confirmDownload = () => {
                                         Please select date range to view results.
                                     </td>
                                 </tr>
-                                <tr v-for="(win, index) in wins?.data" :key="win.id">
+                                <tr v-for="(win, index) in wins?.data" :key="win.id" class="group">
                                     <td class="px-3 text-sm md:px-6 py-2 md:py-4 font-medium text-gray-900 border-r">
                                         {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
                                     </td>
@@ -650,17 +701,38 @@ const confirmDownload = () => {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
-                                            <Button
-                                                @click="viewImageWin(win)"
-                                                variant="default"
-                                                size="lg"
-                                                class="cursor-pointer px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-                                                </svg>
-                                                View
-                                            </Button>
+                                            <template v-if="win.publish">
+                                                <Button
+                                                    @click="viewImageWin(win)"
+                                                    variant="default"
+                                                    size="sm"
+                                                    class="px-2 py-1 bg-blue-500 text-white hover:bg-blue-600"
+                                                >
+                                                    View
+                                                </Button>
+                                            </template>
+                                            
+                                            <template v-if="!win.publish">
+                                                <div class="flex gap-2 transition-opacity">
+                                                    <Button
+                                                        @click="handlePublish(win)"
+                                                        variant="default"
+                                                        size="sm"
+                                                        class="px-2 py-1 bg-green-500 text-white hover:bg-green-600"
+                                                    >
+                                                        Publish
+                                                    </Button>
+                                                    
+                                                    <Button
+                                                        @click="handleDelete(win)"
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        class="px-2 py-1"
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </div>
+                                            </template>
                                         </div>
                                     </td>
                                 </tr>
@@ -700,6 +772,38 @@ const confirmDownload = () => {
                     >
                         Download Image
                     </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Publish Confirmation Dialog -->
+        <Dialog v-model:open="publishModal">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm Publication</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to publish this draw? This will notify winners and update their tickets. This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="publishModal = false">Cancel</Button>
+                    <Button variant="default" @click="confirmPublish" class="bg-green-600 hover:bg-green-700">Confirm Publish</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete Confirmation Dialog -->
+        <Dialog v-model:open="deleteModal">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm Deletion</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to delete this win record? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteModal = false">Cancel</Button>
+                    <Button variant="destructive" @click="confirmDelete">Confirm Delete</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

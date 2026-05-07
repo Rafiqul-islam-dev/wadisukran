@@ -56,7 +56,10 @@ class DrawController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
+        $hourlyProductIds = Product::where('draw_type', 'hourly')->pluck('id');
+
         $wins = Win::latest()
+            ->whereIn('product_id', $hourlyProductIds)
             ->when($request->product_id, function ($query, $product_id) {
                 $query->where('product_id', $product_id);
             })
@@ -85,7 +88,7 @@ class DrawController extends Controller
             ->with('product')
             ->paginate(10);
         
-        $products = Product::orderBy('title')->get();
+        $products = Product::where('draw_type', 'hourly')->orderBy('title')->get();
         $company = CompannySetting::first();
         
 
@@ -110,6 +113,13 @@ class DrawController extends Controller
             return back()->with('error', 'This draw already claimed some user.');
         }
         $win->delete();
+        return back();
+    }
+
+    public function histories_publish(Win $win)
+    {
+        $win->update(['publish' => 1]);
+        $this->drawService->updateWinner($win);
         return back();
     }
 
@@ -178,8 +188,10 @@ class DrawController extends Controller
 
                         if ($expectedDraws > 0 && $productWins->count() >= $expectedDraws) {
                             $row['results'][$product->id] = $productWins->map(fn($w) => [
+                                'id'      => $w->id,
                                 'numbers' => $w->win_number,
                                 'time'    => $w->to_time,
+                                'publish' => $w->publish,
                             ])->values()->toArray();
                         }
                         // else: product not included — will be filtered out of columns below
@@ -187,7 +199,12 @@ class DrawController extends Controller
                         // Daily product: show single win (or null)
                         $win = $productWins->first();
                         $row['results'][$product->id] = $win
-                            ? ['numbers' => $win->win_number, 'time' => $win->to_time]
+                            ? [
+                                'id'      => $win->id,
+                                'numbers' => $win->win_number, 
+                                'time'    => $win->to_time,
+                                'publish' => $win->publish,
+                            ]
                             : null;
                     }
                 }
