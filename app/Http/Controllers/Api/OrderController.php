@@ -71,7 +71,7 @@ class OrderController extends Controller
             'game_cards.*.selected_numbers.*' => [
                 'required',
                 'numeric',
-                'min:1',
+                'min:0',
                 'max:' . $product->type_number,
                 $product->type_number <= 9 ? 'digits:1' : 'digits:2'
             ],

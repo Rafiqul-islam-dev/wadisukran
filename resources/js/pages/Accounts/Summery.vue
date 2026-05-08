@@ -205,7 +205,7 @@ function truncateTwo(num) {
                             <tr>
                                 <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Other incentives </td>
                                 <td class="border px-3 py-2 text-left">
-                                    0
+                                    {{ truncateTwo(Number(agent.total_incentive || 0)) }}
                                 </td>
                             </tr>
                             <!-- Net Calculation -->
@@ -334,7 +334,7 @@ function truncateTwo(num) {
                         <tr>
                             <td class="border px-3 py-2"><strong class="font-bold">Less:</strong> Other incentives </td>
                             <td class="border px-3 py-2 text-left">
-                                0
+                                {{ Number(agent.total_incentive || 0).toFixed(2) }}
                             </td>
                         </tr>
                         <!-- Net Calculation -->

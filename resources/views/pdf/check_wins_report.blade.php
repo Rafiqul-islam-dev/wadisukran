@@ -6,7 +6,7 @@
         body { font-family: sans-serif; font-size: 11px; }
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { margin: 0; font-size: 18px; }
-        .header h2 { margin: 5px 0; font-size: 14px; }
+        .header h2 { margin: 5px 0; font-size: 25px; }
         .info { margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; }
         tr { page-break-inside: avoid; page-break-after: auto; }
@@ -30,9 +30,9 @@
 </head>
 <body>
     <div class="header">
-        <h1>{{ $company->name }}</h1>
-        <h2>Check Wins Report</h2>
-        <p>From: {{ $from_date }} To: {{ $to_date }}</p>
+        <!-- <h1>{{ $company->name }}</h1> -->
+        <h2>Winning Price Money List for: {{ $agentName ?? '' }}</h2>
+        <p>Date Range: {{ $from_date }} To: {{ $to_date }}</p>
     </div>
 
     <table>
@@ -60,7 +60,7 @@
                         <div class="row-stack">{{ $ticket['prize_name'] }}</div>
                     @endforeach
                 </td>
-                <td>
+                <td width="200px" style="text-align: center;">
                     @foreach($win->check_win['tickets'] as $ticket)
                         <div class="row-stack">
                             @foreach($ticket['selected_numbers'] as $num)

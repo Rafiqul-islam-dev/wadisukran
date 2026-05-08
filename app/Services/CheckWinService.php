@@ -33,6 +33,7 @@ class CheckWinService
             $numbersSorted   = collect($win->win_number)->sort()->values();
             $len             = $numbersStraight->count();
             $orders = OrderTicket::query()
+                ->withoutRiskHold()
                 ->where('order_id', $invoice->id)
                 ->whereHas('order', function ($q) {
                     $q->where('status', 'Printed')->where('is_claimed', 0);
@@ -138,6 +139,9 @@ class CheckWinService
 
                     return null;
                 })->filter();
+
+            $orders = app(RiskCapService::class)->applyStoredWinnerGateForInvoice($orders, $invoice);
+
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
@@ -212,6 +216,7 @@ class CheckWinService
             $numbersSorted   = collect($win->win_number)->sort()->values();
             $len             = $numbersStraight->count();
             $orders = OrderTicket::query()
+                ->withoutRiskHold()
                 ->where('order_id', $invoice->id)
                 ->whereHas('order', function ($q) {
                     $q->where('status', 'Printed')->where('is_claimed', 0);
@@ -317,6 +322,9 @@ class CheckWinService
 
                     return null;
                 })->filter();
+
+            $orders = app(RiskCapService::class)->applyStoredWinnerGateForInvoice($orders, $invoice);
+
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
@@ -431,6 +439,7 @@ class CheckWinService
             $len             = $numbersStraight->count();
 
             $orders = OrderTicket::query()
+                ->withoutRiskHold()
                 ->where('order_id', $invoice->id)
                 ->get()
                 ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $product, $numbersChance) {
@@ -542,6 +551,8 @@ class CheckWinService
 
                     return null;
                 })->filter();
+
+            $orders = app(RiskCapService::class)->applyStoredWinnerGateForInvoice($orders, $invoice);
 
             $summery['tickets'] = $orders;
             foreach ($types as $type) {

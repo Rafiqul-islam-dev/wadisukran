@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Accounts\AccountsLedgerController;
 use App\Http\Controllers\Accounts\AccountsSummeryController;
+use App\Http\Controllers\Accounts\IncentiveController;
 use App\Http\Controllers\Payment\PaymentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Order\OrderController;
 use App\Http\Controllers\Order\ProductWiseSalesController;
+use App\Http\Controllers\Order\LockTicketController;
 use App\Http\Controllers\Product\CheckWinController;
 use App\Http\Controllers\Product\DrawController;
 use App\Http\Controllers\Report\WinnerReportController;
@@ -82,8 +84,14 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     Route::prefix('accounts')->name('accounts.')->middleware('can:show agent list')->group(function () {
         Route::get('/summery', [AccountsSummeryController::class, 'index'])->name('summery');
         Route::get('/ledger', [AccountsLedgerController::class, 'index'])->name('ledger');
+        Route::get('/ledger-pdf', [AccountsLedgerController::class, 'pdf'])->name('ledger-pdf');
         Route::post('/ledger-store', [AccountsLedgerController::class, 'store'])->name('ledger-store');
         Route::post('/ledger-update/{ledger}', [AccountsLedgerController::class, 'update'])->name('ledger-update');
+
+        Route::get('/incentives', [IncentiveController::class, 'index'])->middleware('can:show accounts incentives')->name('incentives');
+        Route::post('/incentives/store', [IncentiveController::class, 'store'])->middleware('can:create incentives')->name('incentives-store');
+        Route::post('/incentives/update/{incentive}', [IncentiveController::class, 'update'])->middleware('can:update incentives')->name('incentives-update');
+        Route::delete('/incentives/delete/{incentive}', [IncentiveController::class, 'destroy'])->middleware('can:delete incentives')->name('incentives-delete');
     });
 
 
@@ -112,6 +120,25 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');
     Route::get('/check-wins-pdf', [CheckWinController::class, 'checkWinsPdf'])->name('check-wins-pdf');
+
+    Route::get('/lock-tickets', [LockTicketController::class, 'index'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.index');
+    Route::post('/lock-tickets/hold', [LockTicketController::class, 'hold'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.hold');
+    Route::post('/lock-tickets/release', [LockTicketController::class, 'release'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.release');
+    Route::post('/lock-tickets/cancel', [LockTicketController::class, 'cancel'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.cancel');
+    Route::post('/lock-tickets/apply-risk-cap', [LockTicketController::class, 'applyRiskCap'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.apply-risk-cap');
+    Route::post('/lock-tickets/release-risk-cap', [LockTicketController::class, 'releaseRiskCap'])
+        ->middleware('can:show lock tickets')
+        ->name('lock-tickets.release-risk-cap');
     Route::post('/check-win', [CheckWinController::class, 'check_win'])->name('check-win');
     Route::post('/claim-win', [CheckWinController::class, 'claim_win'])->name('claim-win');
 
@@ -126,6 +153,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('probable-wins')->name('probable-wins.')->middleware('can:show probable wins')->group(function () {
         Route::get('/', [OrderController::class, 'probableWins'])->name('index');
+        Route::get('/pdf', [OrderController::class, 'probableWinsPdf'])->name('pdf');
     });
 
     Route::prefix('customers')->name('customers.')->middleware('can:show customers')->group(function () {

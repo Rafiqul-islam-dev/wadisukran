@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CompannySetting;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\CheckWinService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -27,8 +28,8 @@ class CheckWinController extends Controller
                 ->when($request->product_id, function($q, $product){
                     $q->where('product_id', $product);
                 })
-                ->when($request->invoice_no, function($q, $invoice){
-                    $q->where('invoice_no', $invoice);
+                ->when($request->user_id, function($q, $userId){
+                    $q->where('user_id', $userId);
                 })
                 ->when($request->from_date, function ($q, $from_date) {
                     $q->whereDate('created_at', '>=', $from_date);
@@ -62,12 +63,15 @@ class CheckWinController extends Controller
 
         $products = Product::active()->get();
 
+        $agents = User::whereHas('agent')->select('id', 'name')->get();
+
         $totalPrice = $wins->getCollection()->sum(fn ($item) => $item->check_win['total_prize'] ?? 0);
 
         return Inertia::render('CheckWin/Index', [
             'wins' => $wins,
             'products' => $products,
-            'filters' => $request->only(['product_id', 'invoice_no', 'from_date', 'to_date', 'from_time', 'to_time']),
+            'agents' => $agents,
+            'filters' => $request->only(['product_id', 'user_id', 'from_date', 'to_date', 'from_time', 'to_time']),
             'totalPrice' => $totalPrice
         ]);
     }
@@ -78,8 +82,8 @@ class CheckWinController extends Controller
                 ->when($request->product_id, function($q, $product){
                     $q->where('product_id', $product);
                 })
-                ->when($request->invoice_no, function($q, $invoice){
-                    $q->where('invoice_no', $invoice);
+                ->when($request->user_id, function($q, $userId){
+                    $q->where('user_id', $userId);
                 })
                 ->when($request->from_date, function ($q, $from_date) {
                     $q->whereDate('created_at', '>=', $from_date);
@@ -116,12 +120,15 @@ class CheckWinController extends Controller
         $fromDateTime = $request->from_date ? ($request->from_time ? $request->from_date . ' ' . $request->from_time : $request->from_date) : '-';
         $toDateTime = $request->to_date ? ($request->to_time ? $request->to_date . ' ' . $request->to_time : $request->to_date) : '-';
 
+        $agentName = $request->user_id ? User::find($request->user_id)?->name : null;
+
         $pdf = Pdf::loadView('pdf.check_wins_report', [
             'wins' => $wins,
             'company' => $company,
             'from_date' => $fromDateTime,
             'to_date' => $toDateTime,
-            'totalPrice' => $totalPrice
+            'totalPrice' => $totalPrice,
+            'agentName' => $agentName
         ]);
 
         return $pdf->stream('check_wins_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');

@@ -221,6 +221,19 @@ const matchTypes = computed(() => {
     return options;
 });
 
+const headingTitle = computed(() => {
+    const pickNumbers = filter.value.pick_number?.filter((n: string | number | null) => n !== null && n !== '').join('') || '';
+    const matchType = matchTypes.value.find(m => m.value === filter.value.match_type)?.label || '';
+
+    if (!pickNumbers) return '';
+
+    let title = `Prize Summary For Number ${pickNumbers}`;
+    if (matchType) {
+        title += ` (${matchType})`;
+    }
+    return title;
+});
+
 const groupedOrders = computed(() => {
     if (!orders || !orders.length) return [];
     
@@ -257,6 +270,30 @@ const formattedDate = computed(() => {
         hour12: true
     };
     return date.toLocaleDateString('en-US', options);
+});
+
+const formatMatchType = (matchType: any) => {
+    if (!matchType) return '';
+
+    return String(matchType).replace(/\s+\d+$/, '');
+};
+
+const pdfUrl = computed(() => {
+    const params = new URLSearchParams();
+    if (filter.value.product_id) params.append('product_id', filter.value.product_id);
+    if (filter.value.match_type) params.append('match_type', filter.value.match_type);
+    if (filter.value.date_from) params.append('date_from', filter.value.date_from);
+    if (filter.value.time_from) params.append('time_from', filter.value.time_from);
+    if (filter.value.date_to) params.append('date_to', filter.value.date_to);
+    if (filter.value.time_to) params.append('time_to', filter.value.time_to);
+    if (filter.value.pick_number && filter.value.pick_number.length > 0) {
+        filter.value.pick_number.forEach((num: string | number | null, index: number) => {
+            if (num !== null && num !== '') {
+                params.append(`pick_number[${index}]`, String(num));
+            }
+        });
+    }
+    return route('probable-wins.pdf') + '?' + params.toString();
 });
 
 </script>
@@ -331,7 +368,7 @@ const formattedDate = computed(() => {
                     <p class="text-red-500 text-sm mt-1 text-center font-bold" v-if="errors.pick_number">{{
                         errors.pick_number }}</p>
                     <div class="text-center mt-3 flex gap-3 justify-center">
-                        <button @click="generateRandomNumbers"
+                        <button v-if="!product.is_active" @click="generateRandomNumbers"
                             class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition cursor-pointer">
                             Generate Random Numbers
                         </button>
@@ -353,10 +390,13 @@ const formattedDate = computed(() => {
                 </div>
             </div>
 
-            <button v-if="orders?.length > 0" v-print="'#printDiv'"
-                class="px-4 mb-2 cursor-pointer py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
-                Print
-            </button>
+            <a v-if="orders?.length > 0" :href="pdfUrl" target="_blank"
+                class="px-4 mb-2 cursor-pointer py-1 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-sm hover:from-red-600 hover:to-rose-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center inline-flex">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+                PDF
+            </a>
             <div id="printDiv">
                 <div class="hidden print:block">
                     <div class="mb-4 text-sm flex gap-5">
@@ -372,18 +412,22 @@ const formattedDate = computed(() => {
                     </div>
 
                     <div class="text-center mb-4">
-                        <h2 class="text-xl font-bold">Winner Statement</h2>
+                        <h2 class="text-xl font-bold">{{ headingTitle || 'Winner Statement' }}</h2>
                         <p class="text-sm text-gray-600">
                             Statement Date: <strong>{{ formattedDate }}</strong>
                         </p>
                     </div>
+                </div>
+                <!-- Heading for screen view -->
+                <div v-if="headingTitle && orders?.length > 0" class="mb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <h2 class="text-lg font-bold text-gray-800">{{ headingTitle }}</h2>
                 </div>
                 <!-- Table View -->
                 <div class="bg-white rounded-2xl print:rounded-none shadow-lg overflow-hidden border border-gray-100">
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                <tr>
+                                <tr class="whitespace-nowrap">
                                     <th
                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                         Match Type
@@ -404,7 +448,7 @@ const formattedDate = computed(() => {
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 <tr v-for="(win, index) in summary" :key="index"
-                                    class="hover:bg-gray-50 transition-colors duration-200">
+                                    class="hover:bg-gray-50 transition-colors duration-200 whitespace-nowrap">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ win.match_type }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">
                                         <p>{{ win.winners }}</p>
@@ -452,7 +496,7 @@ const formattedDate = computed(() => {
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead>
-                                <tr class="bg-gradient-to-r from-gray-50 to-orange-50 border-b-2 border-orange-100">
+                                <tr class="bg-gradient-to-r from-gray-50 to-orange-50 border-b-2 border-orange-100 whitespace-nowrap">
                                     <th
                                         class="px-2 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                         #
@@ -497,7 +541,7 @@ const formattedDate = computed(() => {
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <tr v-for="(group, index) in groupedOrders" :key="index"
-                                    class="hover:bg-orange-50 transition-colors duration-200 group">
+                                    class="hover:bg-orange-50 transition-colors duration-200 group whitespace-nowrap">
 
                                     <!-- SL -->
                                     <td class="px-2 py-4 align-top">
@@ -516,10 +560,11 @@ const formattedDate = computed(() => {
                                         <div class="mt-2">{{ group.created_at }}</div>
                                     </td>
                                     <td class="py-4 align-top">
-                                        <div v-for="(item, i) in group.items" :key="'types-' + i" class="mb-2 last:mb-0 min-h-[32px] flex items-center">
-                                            <div class="flex gap-2">
-                                                <span v-for="type in item.types" :key="type">{{ type }}</span>
-                                            </div>
+                                        <div v-for="(item, i) in group.items" :key="'match-' + i" class="mb-2 last:mb-0 min-h-[32px] flex items-center">
+                                            <span
+                                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold">
+                                                 {{ formatMatchType(item.match_type) }}
+                                            </span>
                                         </div>
                                     </td>
 
