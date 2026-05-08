@@ -149,12 +149,15 @@ const saveDraw = () => {
         .filter(Boolean);
 
     form.post(route('draws.store'), {
-        preserveState: false,
+        preserveState: true,
         onSuccess: () => {
+            form.reset();
+            clearAll();
             toast.success('Draw stored successfully.');
         },
-        onError: () => {
-            toast.error('Something went wrong storing draw.');
+        onError: (errors) => {
+            const firstError = Object.values(errors)[0];
+            toast.error(firstError || 'Something went wrong storing draw.');
         }
     });
 }

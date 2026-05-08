@@ -7,6 +7,7 @@ use App\Models\OrderTicket;
 use App\Models\Product;
 use App\Models\Win;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class DrawService
 {
@@ -49,6 +50,28 @@ class DrawService
                     }
                 }
                 else if($productData->draw_type === 'once'){
+                    $newWinNumbers = $product['numbers'];
+                    $newLastNumber = count($newWinNumbers) > 0 ? $newWinNumbers[count($newWinNumbers) - 1] : null;
+
+                    if ($newLastNumber !== null) {
+                        $existingWins = Win::where('product_id', $product['id'])
+                            ->whereDate('to_time', Carbon::parse($data['to_time'])->toDateString())
+                            ->get();
+
+                        foreach ($existingWins as $existingWin) {
+                            $existingNumbers = $existingWin->win_number;
+                            $existingLastNumber = is_array($existingNumbers) && count($existingNumbers) > 0
+                                ? $existingNumbers[count($existingNumbers) - 1]
+                                : null;
+
+                            if ($existingLastNumber !== null && (string)$existingLastNumber === (string)$newLastNumber) {
+                                throw ValidationException::withMessages([
+                                    'products' => ["The last number ({$newLastNumber}) of product '{$productData->title} {$productData->product_number}' has already been drawn for this product today."]
+                                ]);
+                            }
+                        }
+                    }
+
                     $exists_draw = Win::where('product_id', $product['id'])->whereDate('created_at', Carbon::parse($data['to_time'])->toDateTimeString())->first();
                     if(!$exists_draw){
                         $draw_times = json_decode($productData->draw_time, true);
