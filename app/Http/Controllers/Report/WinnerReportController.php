@@ -52,6 +52,8 @@ class WinnerReportController extends Controller
 
         $products = Product::active()->get();
 
+        // dd($wins);
+
         return Inertia::render('Report/WinnerReport', [
             'wins' => $wins,
             'products' => $products,
@@ -59,43 +61,49 @@ class WinnerReportController extends Controller
         ]);
     }
 
-    public function winnerReportPdf(Request $request)
-    {
-        $wins = Order::where('is_winner', 1)
-            ->where('is_claimed', 0)
-            ->when($request->product_id, function ($q, $product) {
-                $q->where('product_id', $product);
-            })
-            ->when($request->invoice_no, function ($q, $invoice) {
-                $q->where('invoice_no', $invoice);
-            })
-            ->when($request->from_date, function ($q, $from_date) {
-                $q->whereDate('created_at', '>=', $from_date);
-            })
-            ->when($request->to_date, function ($q, $to_date) {
-                $q->whereDate('created_at', '<=', $to_date);
-            })
-            ->with(['user', 'product', 'user.agent', 'tickets'])
-            ->latest()
-            ->get();
+public function winnerReportPdf(Request $request)
+{
+    $wins = Order::where('is_winner', 1)
+        ->where('is_claimed', 0)
+        ->when($request->product_id, function ($q, $product) {
+            $q->where('product_id', $product);
+        })
+        ->when($request->invoice_no, function ($q, $invoice) {
+            $q->where('invoice_no', $invoice);
+        })
+        ->when($request->from_date, function ($q, $from_date) {
+            $q->whereDate('created_at', '>=', $from_date);
+        })
+        ->when($request->to_date, function ($q, $to_date) {
+            $q->whereDate('created_at', '<=', $to_date);
+        })
+        ->with(['user', 'product', 'user.agent', 'tickets'])
+        ->latest()
+        ->get();
 
-        $wins = $wins->map(function ($item) {
-            $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
-            $item->check_win = $check_win;
-            return $item;
-        })->filter(function ($item) {
-            return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
-        })->values();
+    $wins = $wins->map(function ($item) {
+        $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
+        $item->check_win = $check_win;
+        return $item;
+    })->filter(function ($item) {
+        return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
+    })->values();
 
-        $company = CompannySetting::firstOrFail();
+    $company = CompannySetting::firstOrFail();
 
-        $pdf = Pdf::loadView('pdf.winner_report', [
-            'wins' => $wins,
-            'company' => $company,
-            'from_date' => $request->from_date ?? '-',
-            'to_date' => $request->to_date ?? '-'
-        ]);
+    $pdf = Pdf::loadView('pdf.winner_report', [
+        'wins' => $wins,
+        'company' => $company,
+        'from_date' => $request->from_date ?? '-',
+        'to_date' => $request->to_date ?? '-'
+    ])
+    ->setPaper('a4', 'landscape')
+    ->setOptions([
+        'isHtml5ParserEnabled' => true,
+        'isRemoteEnabled' => true,
+        'defaultFont' => 'DejaVu Sans',
+    ]);
 
-        return $pdf->download('winner_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
-    }
+    return $pdf->download('winner_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
+}
 }

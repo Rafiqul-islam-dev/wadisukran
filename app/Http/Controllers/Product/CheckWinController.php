@@ -129,6 +129,12 @@ class CheckWinController extends Controller
             'to_date' => $toDateTime,
             'totalPrice' => $totalPrice,
             'agentName' => $agentName
+        ])
+        ->setPaper('a4', 'landscape')
+        ->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
         ]);
 
         return $pdf->stream('check_wins_report_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');

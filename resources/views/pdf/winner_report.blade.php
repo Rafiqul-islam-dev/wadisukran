@@ -8,7 +8,7 @@
         .header h1 { margin: 0; }
         .info { margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th, td { border: 1px solid #ddd; padding: 3px; text-align: left; vertical-align: top; font-size: 14px; }
         th { background-color: #f2f2f2; }
         .circle { 
             display: inline-block; 
@@ -37,11 +37,11 @@
                 <th>SI</th>
                 <th>Date</th>
                 <th>Invoice No</th>
+                <th>Agent Name</th>
                 <th>Type</th>
                 <th>Description</th>
                 <th>Number</th>
                 <th>Price (AED)</th>
-                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -50,10 +50,11 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $win->created_at->format('d M Y h:i A') }}</td>
                 <td>{{ $win->invoice_no }}</td>
+                <td>{{ $win->user->name ?? '-' }}</td>
                 <td>{{ $win->product->title ?? '' }} {{ $win->product->product_number ?? '' }}</td>
                 <td>
                     @foreach($win->check_win['tickets'] as $ticket)
-                        <div class="row-stack">{{ $ticket['prize_name'] }}</div>
+                        <div class="row-stack">{{ $ticket['prize_name'] }} Winner</div>
                     @endforeach
                 </td>
                 <td>
@@ -66,13 +67,6 @@
                     @endforeach
                 </td>
                 <td>AED {{ $win->check_win['total_prize'] }}</td>
-                <td>
-                    @if($win->is_claimed == 0)
-                        Not Claimed
-                    @else
-                        Claimed
-                    @endif
-                </td>
             </tr>
             @endforeach
         </tbody>

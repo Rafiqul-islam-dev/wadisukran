@@ -222,6 +222,10 @@ const formatDateTime = (d: string) => {
                                                     </th>
                                                     <th
                                                         class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                                        Agent Name
+                                                    </th>
+                                                    <th
+                                                        class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                                         Type
                                                     </th>
                                                     <th
@@ -253,6 +257,9 @@ const formatDateTime = (d: string) => {
                                                     </td>
                                                     <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap align-top">
                                                         {{ win.invoice_no }}
+                                                    </td>
+                                                    <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium align-top">
+                                                        {{ win?.user?.name ?? '-' }}
                                                     </td>
                                                     <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap font-medium align-top">
                                                         {{ win?.product?.title }} {{ win?.product?.product_number }}
