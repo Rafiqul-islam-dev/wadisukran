@@ -113,7 +113,6 @@ const mainNavItems: NavItem[] = [
                 permission: 'show check winners'
             },
             {
-                title: 'Hourly History',
                 title: 'Lock Ticket',
                 href: '/lock-tickets',
                 icon: Lock,
