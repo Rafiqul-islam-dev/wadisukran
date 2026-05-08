@@ -17,16 +17,19 @@ use App\Http\Resources\ProductOrderResource;
 use App\Services\AgentAccountService;
 use App\Services\OrderService;
 use App\Services\CheckWinService;
+use App\Services\ProductService;
 
 class OrderController extends Controller
 {
     protected $orderService;
     protected $checkWinService;
+    protected $productService;
 
-    public function __construct(OrderService $orderService, CheckWinService $checkWinService)
+    public function __construct(OrderService $orderService, CheckWinService $checkWinService, ProductService $productService)
     {
         $this->orderService = $orderService;
         $this->checkWinService = $checkWinService;
+        $this->productService = $productService;
     }
 
     public function orderStore(Request $request)
@@ -52,6 +55,11 @@ class OrderController extends Controller
         if ($product->is_active != 1) {
             return response()->json([
                 'message' => 'Product is not active',
+            ], 403);
+        }
+        if (!$this->productService->checkProductAvailability($product)) {
+            return response()->json([
+                'message' => 'Sorry! The product you are selecting is currently unavailable. Please try again later',
             ], 403);
         }
         $validator = Validator::make($request->all(), [

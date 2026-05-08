@@ -113,6 +113,7 @@ const mainNavItems: NavItem[] = [
                 permission: 'show check winners'
             },
             {
+                title: 'Hourly History',
                 title: 'Lock Ticket',
                 href: '/lock-tickets',
                 icon: Lock,
@@ -121,6 +122,12 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Draw History',
                 href: '/draws/histories',
+                icon: History,
+                permission: 'show draw history'
+            },
+            {
+                title: 'Daily Draw History',
+                href: '/draws/histories-daily',
                 icon: History,
                 permission: 'show draw history'
             }
