@@ -56,8 +56,8 @@ class DrawController extends Controller
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
-        $hourlyProductIds = Product::where('draw_type', 'hourly')->pluck('id');
-
+        $categories = Category::whereIn('draw_type', ['hourly'])->pluck('id')->toArray();
+        $hourlyProductIds = Product::whereIn('category_id', $categories)->pluck('id');
         $wins = Win::latest()
             ->whereIn('product_id', $hourlyProductIds)
             ->when($request->product_id, function ($query, $product_id) {

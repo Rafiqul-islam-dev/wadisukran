@@ -196,20 +196,52 @@ class DrawService
                         }
                     }
                 } else {
-                    $matchCount = $ticketNumbers->intersect($numbersStraight)->count();
+                    if ((int)$product->product_number === 9) {
+                        $matchCount = $ticketNumbers->zip($numbersStraight)
+                            ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                            ->count();
+                        $matchedNumbers = $ticketNumbers->take($matchCount);
+                    } else if ((int)$product->product_number === 2) {
+                        $matchCount = $ticketNumbers->reverse()->values()
+                            ->zip($numbersStraight->reverse()->values())
+                            ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                            ->count();
+                        $matchedNumbers = $ticketNumbers->reverse()->take($matchCount);
+                    } else {
+                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                        $matchCount = $matchedNumbers->count();
+                    }
                     $numberPrizes = $product->prizes
                         ->sortByDesc('name');
 
 
                     foreach ($numberPrizes as $prize) {
-                        $key = 'Number ' . (int) $prize->name;
+                        $key = is_numeric($prize->name) ? 'Number ' . $prize->name : $prize->name;
                         $data[$key] = false;
 
                         if ($isNumberWinner) continue;
 
-                        if ($matchCount === (int) $prize->name) {
-                            $data[$key] = true;
-                            $isNumberWinner = true;
+                        $prizeNameLower = strtolower($prize->name);
+                        if ($prizeNameLower === 'platinum') {
+                            if ($matchCount === 1 && in_array($matchedNumbers->first(), [25, 26, 27])) {
+                                $data[$key] = true;
+                                $isNumberWinner = true;
+                            }
+                        } else if ($prizeNameLower === 'golden') {
+                            if ($matchCount === 1 && in_array($matchedNumbers->first(), [5, 6, 7])) {
+                                $data[$key] = true;
+                                $isNumberWinner = true;
+                            }
+                        } else if ($prizeNameLower === 'normal') {
+                            if ($matchCount === 1 && !in_array($matchedNumbers->first(), [25, 26, 27, 5, 6, 7])) {
+                                $data[$key] = true;
+                                $isNumberWinner = true;
+                            }
+                        } else {
+                            if ($matchCount === (int) $prize->name) {
+                                $data[$key] = true;
+                                $isNumberWinner = true;
+                            }
                         }
                     }
                 }

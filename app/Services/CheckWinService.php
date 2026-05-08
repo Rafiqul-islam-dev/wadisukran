@@ -95,8 +95,21 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
-                        $matchCount = $matchedNumbers->count();
+                        if ((int)$product->product_number === 9) {
+                            $matchCount = $ticketNumbers->zip($numbersStraight)
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->take($matchCount);
+                        } else if ((int)$product->product_number === 2) {
+                            $matchCount = $ticketNumbers->reverse()->values()
+                                ->zip($numbersStraight->reverse()->values())
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->reverse()->take($matchCount);
+                        } else {
+                            $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                            $matchCount = $matchedNumbers->count();
+                        }
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
@@ -278,8 +291,21 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
-                        $matchCount = $matchedNumbers->count();
+                        if ((int)$product->product_number === 9) {
+                            $matchCount = $ticketNumbers->zip($numbersStraight)
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->take($matchCount);
+                        } else if ((int)$product->product_number === 2) {
+                            $matchCount = $ticketNumbers->reverse()->values()
+                                ->zip($numbersStraight->reverse()->values())
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->reverse()->take($matchCount);
+                        } else {
+                            $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                            $matchCount = $matchedNumbers->count();
+                        }
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
@@ -502,8 +528,21 @@ class CheckWinService
                             }
                         }
                     } else {
-                        $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
-                        $matchCount = $matchedNumbers->count();
+                        if ((int)$product->product_number === 9) {
+                            $matchCount = $ticketNumbers->zip($numbersStraight)
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->take($matchCount);
+                        } else if ((int)$product->product_number === 2) {
+                            $matchCount = $ticketNumbers->reverse()->values()
+                                ->zip($numbersStraight->reverse()->values())
+                                ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                                ->count();
+                            $matchedNumbers = $ticketNumbers->reverse()->take($matchCount);
+                        } else {
+                            $matchedNumbers = $ticketNumbers->intersect($numbersStraight);
+                            $matchCount = $matchedNumbers->count();
+                        }
                         $numberPrizes = $product->prizes
                             ->sortByDesc('name');
 
