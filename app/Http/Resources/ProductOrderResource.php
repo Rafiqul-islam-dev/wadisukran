@@ -31,11 +31,11 @@ class ProductOrderResource extends JsonResource
             'sales_date' => $this->created_at ? \Carbon\Carbon::parse($this->created_at)->format('Y-m-d H:i:s') : 'N/A',
             // 'game_cards' => $this->game_cards ?? [],
             'game_cards' => $this->tickets->map(function ($ticket) {
-                    return [
-                        'selected_numbers' =>  implode(',', $ticket->selected_numbers),
-                        'selected_play_types' => $ticket->selected_play_types,
-                    ];
-                }),
+                return [
+                    'selected_numbers' => $ticket->selected_numbers ?? [],
+                    'selected_play_types' => $ticket->selected_play_types ?? [],
+                ];
+            })->values(),
             'big_prize' => $this->product?->prizes ? $this->product->prizes->max('prize') : null
         ];
     }
