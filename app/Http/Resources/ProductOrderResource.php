@@ -32,8 +32,15 @@ class ProductOrderResource extends JsonResource
             // 'game_cards' => $this->game_cards ?? [],
             'game_cards' => $this->tickets->map(function ($ticket) {
                 return [
-                    'selected_numbers' => $ticket->selected_numbers ?? [],
-                    'selected_play_types' => $ticket->selected_play_types ?? [],
+                    'selected_numbers' => collect($ticket->selected_numbers ?? [])
+                        ->map(fn ($number) => (string) $number)
+                        ->values()
+                        ->all(),
+
+                    'selected_play_types' => collect($ticket->selected_play_types ?? [])
+                        ->map(fn ($type) => (string) $type)
+                        ->values()
+                        ->all(),
                 ];
             })->values(),
             'big_prize' => $this->product?->prizes ? $this->product->prizes->max('prize') : null
