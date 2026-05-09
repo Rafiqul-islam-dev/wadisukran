@@ -52,7 +52,7 @@ const isExpanded = (items?: NavItem[]) => {
                     <!-- Dropdown -->
                     <Collapsible v-else class="group/collapsible" :default-open="isExpanded(item.items)">
                         <CollapsibleTrigger as-child>
-                            <SidebarMenuButton :class="{ 'bg-muted font-semibold': isExpanded(item.items) }">
+                            <SidebarMenuButton :class="{ 'bg-muted font-semibold bg-gray-300/50': isExpanded(item.items) }">
                                 <component :is="item.icon" v-if="item.icon" />
                                 <span class="font-bold">{{ item.title }}</span>
                                 <ChevronRight
@@ -66,9 +66,9 @@ const isExpanded = (items?: NavItem[]) => {
                                     <div v-if="auth_permissions.includes(subItem.permission)">
                                         <SidebarMenuSubButton as-child
                                             :class="{ 'bg-gray-300/50': isActive(subItem.href) }">
-                                            <Link :href="subItem.href">
+                                            <Link :href="subItem.href" class="text-white">
                                                 <component :is="subItem.icon" v-if="subItem.icon" />
-                                                <span>{{ subItem.title }}</span>
+                                                <span >{{ subItem.title }}</span>
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </div>

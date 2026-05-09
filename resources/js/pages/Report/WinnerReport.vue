@@ -196,7 +196,7 @@ const formatDateTime = (d: string) => {
                                             </button>
                                             <button @click="downloadPdf"
                                                 class="cursor-pointer px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
-                                                Print
+                                                PDF
                                             </button>
                                         </div>
                                     </div>

@@ -11,6 +11,6 @@ const {company_setting} = usePage().props;
         <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
     </div>
     <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold">{{ company_setting?.name ?? "WADI SHUKRAN" }}</span>
+        <span class="mb-0.5 truncate leading-tight font-semibold text-white">{{ company_setting?.name ?? "WADI SHUKRAN" }}</span>
     </div>
 </template>
