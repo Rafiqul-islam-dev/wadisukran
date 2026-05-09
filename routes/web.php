@@ -153,6 +153,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
 
     Route::prefix('probable-wins')->name('probable-wins.')->middleware('can:show probable wins')->group(function () {
         Route::get('/', [OrderController::class, 'probableWins'])->name('index');
+        Route::get('/suggestions', [OrderController::class, 'probableWinSuggestions'])->name('suggestions');
         Route::get('/pdf', [OrderController::class, 'probableWinsPdf'])->name('pdf');
     });
 
