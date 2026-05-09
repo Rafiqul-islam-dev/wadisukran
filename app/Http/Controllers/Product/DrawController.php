@@ -128,6 +128,50 @@ class DrawController extends Controller
         return back();
     }
 
+    public function histories_delete_all($date)
+    {
+        $allProducts = Product::whereHas('category', function ($q) {
+            $q->whereIn('draw_type', ['daily', 'once']);
+        })->with('category')->get();
+
+        $winsByDate = Win::whereDate('to_time', $date)
+            ->whereIn('product_id', $allProducts->pluck('id'))
+            ->where('publish', 0)
+            ->get();
+
+        foreach ($allProducts as $product) {
+            $productWins = $winsByDate->where('product_id', $product->id);
+
+            if ($productWins->isEmpty()) continue;
+
+            $shouldDelete = false;
+
+            if ($product->category?->draw_type === 'once') {
+                $drawTimes = is_string($product->getRawOriginal('draw_time'))
+                    ? json_decode($product->getRawOriginal('draw_time'), true)
+                    : (is_array($product->draw_time) ? $product->draw_time : []);
+                $expectedDraws = count($drawTimes);
+
+                if ($expectedDraws > 0 && $productWins->count() >= $expectedDraws) {
+                    $shouldDelete = true;
+                }
+            } else {
+                // Daily product
+                $shouldDelete = true;
+            }
+
+            if ($shouldDelete) {
+                foreach ($productWins as $win) {
+                    if ($win->claims->count() === 0) {
+                        $win->delete();
+                    }
+                }
+            }
+        }
+
+        return back();
+    }
+
     public function histories_daily(Request $request)
     {
         $startDate = $request->start_date;

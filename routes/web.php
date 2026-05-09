@@ -116,6 +116,7 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('histories', [DrawController::class, 'histories'])->name('histories');
         Route::get('histories/delete/{win}', [DrawController::class, 'histories_delete'])->name('histories-delete');
         Route::get('histories/publish/{win}', [DrawController::class, 'histories_publish'])->name('histories-publish');
+        Route::get('histories/delete-all/{date}', [DrawController::class, 'histories_delete_all'])->name('histories-delete-all');
         Route::get('histories-daily', [DrawController::class, 'histories_daily'])->name('histories_daily');
     });
     Route::get('/check-wins', [CheckWinController::class, 'index'])->name('check-wins');

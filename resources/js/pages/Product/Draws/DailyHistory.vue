@@ -36,7 +36,9 @@ const previewFileName = ref<string>('daily-history.png');
 // Publish & Delete modals
 const publishModal = ref(false);
 const deleteModal = ref(false);
+const deleteAllModal = ref(false);
 const processingWin = ref<any>(null);
+const processingDate = ref<string | null>(null);
 
 const form = useForm({
     start_date: filters.start_date || '',
@@ -136,6 +138,40 @@ const confirmDelete = () => {
         },
         onError: () => toast.error('Failed to delete draw.')
     });
+};
+
+const handleDeleteAll = (date: string) => {
+    processingDate.value = date;
+    deleteAllModal.value = true;
+};
+
+const confirmDeleteAll = () => {
+    if (!processingDate.value) return;
+    router.get(route('draws.histories-delete-all', processingDate.value), {}, {
+        onSuccess: () => {
+            deleteAllModal.value = false;
+            processingDate.value = null;
+            toast.success('All unpublished draws for the day deleted successfully.');
+        },
+        onError: () => toast.error('Failed to delete draws.')
+    });
+};
+
+const isDeletable = (history: any) => {
+    // Collect all result objects/arrays present in history.results
+    // (Backend filters out 'once' products that are not yet complete)
+    const allResults = Object.values(history.results).filter(res => res !== null);
+    if (allResults.length === 0) return false;
+
+    // Check if ANY result is published
+    const anyPublished = allResults.some((res: any) => {
+        if (Array.isArray(res)) {
+            return res.some((w: any) => w.publish);
+        }
+        return res.publish;
+    });
+
+    return !anyPublished;
 };
 
 // View image for a single win row (once-mode, mirrors History.vue handleDownload)
@@ -652,6 +688,18 @@ const confirmDownload = () => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </Button>
+
+                                            <Button
+                                                v-if="isDeletable(history)"
+                                                size="sm"
+                                                @click="handleDeleteAll(history.date)"
+                                                class="bg-red-500 hover:bg-red-600 text-white p-2 h-9 w-9 rounded-md shadow"
+                                                title="Delete All Unpublished"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -802,6 +850,22 @@ const confirmDownload = () => {
                 <DialogFooter>
                     <Button variant="outline" @click="deleteModal = false">Cancel</Button>
                     <Button variant="destructive" @click="confirmDelete">Confirm Delete</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Delete All Confirmation Dialog -->
+        <Dialog v-model:open="deleteAllModal">
+            <DialogContent class="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Confirm Bulk Deletion</DialogTitle>
+                    <DialogDescription>
+                        Are you sure you want to delete all unpublished win records for this day ({{ processingDate }})? This action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" @click="deleteAllModal = false">Cancel</Button>
+                    <Button variant="destructive" @click="confirmDeleteAll">Confirm Delete All</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
