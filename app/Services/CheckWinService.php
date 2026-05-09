@@ -20,6 +20,7 @@ class CheckWinService
         $product = Product::find($invoice->product_id);
 
         $win = Win::where('product_id', $invoice->product_id)
+            ->where('publish', 1)
             ->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])
             ->first();
 
@@ -214,6 +215,7 @@ class CheckWinService
         $product = Product::find($invoice->product_id);
         $invoiceDate = Carbon::parse($invoice->created_at)->toDateString();
         $wins = Win::where('product_id', $invoice->product_id)
+            ->where('publish', 1)
             ->whereDate('from_time', $invoiceDate)
             ->orderBy('to_time')
             ->get();
@@ -416,7 +418,7 @@ class CheckWinService
     public function ClaimWin(string $invoice) : string
     {
         $invoice = Order::where('invoice_no', $invoice)->first();
-        $win = Win::where('product_id', $invoice->product_id)->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])->first();
+        $win = Win::where('product_id', $invoice->product_id)->where('publish', 1)->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])->first();
         $check_summery = $this->CheckWinByInvoice($invoice->invoice_no);
         if($check_summery['total_prize'] <= 0){
             if($invoice->product->draw_type === 'once'){
@@ -450,6 +452,7 @@ class CheckWinService
         $invoice = Order::where('invoice_no', $invoice)->first();
 
         $win = Win::where('product_id', $invoice->product_id)
+            ->where('publish', 1)
             ->whereRaw('? BETWEEN from_time AND to_time', [$invoice->created_at])
             ->first();
         $summery = [];

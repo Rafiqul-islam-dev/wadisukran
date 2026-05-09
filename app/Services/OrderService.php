@@ -25,6 +25,7 @@ class OrderService
         $agent = Agent::where('user_id', $data['user_id'])->first();
         $qr_code = $this->qrCodeService->generateQrCodeWithInvoice($invoiceNumber);
         $draw_number = Win::where('product_id', $data['product_id'])
+            ->where('publish', 1)
             ->max('draw_number') + 1;
 
         $customer = $this->customerService->getCustomerByPhone($data['phone'] ?? null);
