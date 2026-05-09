@@ -410,7 +410,7 @@ function drawWinBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: n
     ctx.textBaseline = 'alphabetic';
 }
 
-function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string) {
+function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string, drawTime: string = '12:00 AM') {
     const px  = W - RIGHT_PANEL_W + 6;
     const pw  = RIGHT_PANEL_W - 30;
     const pcx = px + pw / 2;
@@ -423,7 +423,7 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
 
     // ── Position at top with 200px margin ──
     const totalH = resH + BOX_GAP + giftH + BOX_GAP + timeH;
-    const startY = 100;
+    const startY = (H - (resH + giftH + timeH + 2 * BOX_GAP)) / 2;
 
     const resY  = startY;
     const giftY = resY  + resH  + BOX_GAP;
@@ -474,7 +474,7 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
     ctx.font = `bold ${Math.min(timeH * 0.28, 13)}px Arial, sans-serif`;
     ctx.fillText('DRAW TIME', pcx, timeY + timeH * 0.28);
     ctx.font = `bold ${Math.min(timeH * 0.26, 12)}px Arial, sans-serif`;
-    ctx.fillText('12:00 AM', pcx, timeY + timeH * 0.57);
+    ctx.fillText(drawTime, pcx, timeY + timeH * 0.57);
     ctx.fillStyle = '#1565c0';
     ctx.font = `bold ${Math.min(timeH * 0.24, 11)}px Arial, sans-serif`;
     ctx.fillText('Everyday', pcx, timeY + timeH * 0.84);
@@ -497,12 +497,13 @@ function buildResultCanvas(
     rows: Array<{ title: string; productNumber: string | number | null; numbers: string[] }>,
     logoImg: HTMLImageElement | null,
     cupImg: HTMLImageElement | null,
-    resultDate: string
+    resultDate: string,
+    drawTime?: string
 ): HTMLCanvasElement {
     const W = 900;
     const rowCount = Math.max(rows.length, 1);
     const contentH = rowCount * ROW_HEIGHT + (rowCount - 1) * ROW_SPACING;
-    const H = Math.max(CARD_PADDING * 2 + contentH, 300);
+    const H = 600;
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -511,7 +512,7 @@ function buildResultCanvas(
 
     drawCardBackground(ctx, W, H);
     drawLeftPanel(ctx, H, logoImg, cupImg);
-    drawInfoPanel(ctx, W, H, resultDate);
+    drawInfoPanel(ctx, W, H, resultDate, drawTime);
 
     // Center rows
     const BADGE_W = 100;
@@ -558,7 +559,7 @@ const handleDownload = async (win: any) => {
 
     const cupImg = await loadLogo(cupIcon || '/public/assets/cup-icon.png');
     const resultDate = formatResultDate(win.draw_time);
-    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate, win.formatted_time);
 
     const fileName = `draw-result-${(win.product?.title+" "+win.product?.product_number ?? 'product').replace(/\s+/g, '-')}-${win.id}.png`;
     
@@ -589,7 +590,13 @@ const handleDownloadAll = async () => {
     const cupImg = await loadLogo(cupIcon || '/public/assets/cup-icon.png');
     const latestWin = allWins[0];
     const resultDate = filters.start_date ? formatResultDate(filters.start_date) : formatResultDate(latestWin.draw_time);
-    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
+    
+    let drawTime = '12:00 AM';
+    if (latestWin.formatted_time) {
+        drawTime = latestWin.formatted_time;
+    }
+
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate, drawTime);
 
     const fileName = `draw-results-all-${Date.now()}.png`;
     

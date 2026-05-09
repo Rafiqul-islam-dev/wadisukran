@@ -186,7 +186,7 @@ const viewImageWin = async (win: any) => {
     }));
 
     const resultDate = formatResultDate(win.to_time ?? win.draw_time);
-    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate);
+    const canvas = buildResultCanvas(rows, logoImg, cupImg, resultDate, win.formatted_time);
 
     const slug = (win.product?.title + ' ' + (win.product?.product_number ?? '')).trim().replace(/\s+/g, '-');
     previewImageUrl.value = canvas.toDataURL('image/png');
@@ -373,7 +373,7 @@ function drawWinBall(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: n
     ctx.textBaseline = 'alphabetic';
 }
 
-function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string) {
+function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resultDate: string, drawTime: string = '12:00 AM') {
     const px  = W - RIGHT_PANEL_W + 6;
     const pw  = RIGHT_PANEL_W - 30;
     const pcx = px + pw / 2;
@@ -382,7 +382,7 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
     const resH  = 75;
     const giftH = 65;
     const timeH = 50;
-    const startY = 100;
+    const startY = (H - (resH + giftH + timeH + 2 * BOX_GAP)) / 2;
 
     const resY  = startY;
     const giftY = resY  + resH  + BOX_GAP;
@@ -424,7 +424,7 @@ function drawInfoPanel(ctx: CanvasRenderingContext2D, W: number, H: number, resu
     ctx.font = `bold ${Math.min(timeH * 0.28, 13)}px Arial, sans-serif`;
     ctx.fillText('DRAW TIME', pcx, timeY + timeH * 0.28);
     ctx.font = `bold ${Math.min(timeH * 0.26, 12)}px Arial, sans-serif`;
-    ctx.fillText('12:00 AM', pcx, timeY + timeH * 0.57);
+    ctx.fillText(drawTime, pcx, timeY + timeH * 0.57);
     ctx.fillStyle = '#1565c0';
     ctx.font = `bold ${Math.min(timeH * 0.24, 11)}px Arial, sans-serif`;
     ctx.fillText('Everyday', pcx, timeY + timeH * 0.84);
@@ -442,11 +442,11 @@ function loadLogo(url: string): Promise<HTMLImageElement | null> {
     });
 }
 
-function buildResultCanvas(rows: Array<{ title: string; productNumber: string | number | null; numbers: string[] }>, logoImg: HTMLImageElement | null, cupImg: HTMLImageElement | null, resultDate: string): HTMLCanvasElement {
+function buildResultCanvas(rows: Array<{ title: string; productNumber: string | number | null; numbers: string[] }>, logoImg: HTMLImageElement | null, cupImg: HTMLImageElement | null, resultDate: string, drawTime?: string): HTMLCanvasElement {
     const W = 900;
     const rowCount = Math.max(rows.length, 1);
     const contentH = rowCount * ROW_HEIGHT + (rowCount - 1) * ROW_SPACING;
-    const H = Math.max(CARD_PADDING * 2 + contentH, 300);
+    const H = 600;
 
     const canvas = document.createElement('canvas');
     canvas.width = W;
@@ -455,9 +455,9 @@ function buildResultCanvas(rows: Array<{ title: string; productNumber: string | 
 
     drawCardBackground(ctx, W, H);
     drawLeftPanel(ctx, H, logoImg, cupImg);
-    drawInfoPanel(ctx, W, H, resultDate);
+    drawInfoPanel(ctx, W, H, resultDate, drawTime);
 
-    const BADGE_W = 120;
+    const BADGE_W = 160;
     const BADGE_X = LEFT_PANEL_W + 10;
     const BALL_R = 27;
     const BALL_PITCH = BALL_R * 2 + 8;
@@ -509,11 +509,32 @@ const viewImage = async (history: any) => {
                 productNumber: product.product_number,
                 numbers: parseNumbers(result.numbers),
             });
+        } else {
+            canvasRows.push({
+                title: product.title,
+                productNumber: product.product_number,
+                numbers: [],
+            });
         }
     });
 
     const resultDate = formatResultDate(history.date);
-    const canvas = buildResultCanvas(canvasRows, logoImg, cupImg, resultDate);
+    
+    let drawTime = '12:00 AM';
+    for (const pid in history.results) {
+        const res = history.results[pid];
+        if (Array.isArray(res) && res.length > 0) {
+            if (res[0].formatted_time) {
+                drawTime = res[0].formatted_time;
+                break;
+            }
+        } else if (res && !Array.isArray(res) && res.formatted_time) {
+            drawTime = res.formatted_time;
+            break;
+        }
+    }
+
+    const canvas = buildResultCanvas(canvasRows, logoImg, cupImg, resultDate, drawTime);
     
     previewImageUrl.value = canvas.toDataURL('image/png');
     previewFileName.value = `daily-history-${history.date}.png`;

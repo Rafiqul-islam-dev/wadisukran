@@ -174,8 +174,8 @@ class DrawController extends Controller
 
     public function histories_daily(Request $request)
     {
-        $startDate = $request->start_date;
-        $endDate   = $request->end_date;
+        $startDate = $request->start_date ?: Carbon::today()->toDateString();
+        $endDate   = $request->end_date   ?: Carbon::today()->toDateString();
         $drawType  = $request->draw_type ?: 'daily';
 
         $categories          = Category::whereIn('draw_type', ['daily', 'once'])->get(['id', 'name', 'draw_type']);
@@ -205,7 +205,7 @@ class DrawController extends Controller
                     $win->formatted_time = Carbon::parse($win->to_time)->format('h:i A');
                     return $win;
                 });
-        } elseif ($startDate && $endDate) {
+        } else {
             $start = Carbon::parse($startDate);
             $end   = Carbon::parse($endDate);
 
@@ -227,6 +227,10 @@ class DrawController extends Controller
             for ($date = $end->copy(); $date->gte($start); $date->subDay()) {
                 $dateStr  = $date->format('Y-m-d');
                 $dateWins = $winsByDate->get($dateStr, collect());
+
+                if ($dateWins->isEmpty()) {
+                    continue;
+                }
 
                 $row = [
                     'date' => $dateStr, 
