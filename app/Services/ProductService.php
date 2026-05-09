@@ -131,6 +131,7 @@ class ProductService
             $yesterdayEnd   = Carbon::yesterday()->endOfDay();
 
             $prev_win = Win::where('product_id', $product->id)
+                ->where('publish', 1)
                 ->whereBetween('to_time', [$yesterdayStart, $yesterdayEnd])
                 ->exists();
 
@@ -146,6 +147,7 @@ class ProductService
             $prevHourEnd   = Carbon::now()->subHour()->endOfHour();
 
             $prev_win = Win::where('product_id', $product->id)
+                ->where('publish', 1)
                 ->whereBetween('to_time', [$prevHourStart, $prevHourEnd])
                 ->exists();
 

@@ -86,7 +86,12 @@ class DrawController extends Controller
                 }
             })
             ->with('product')
-            ->paginate(10);
+            ->paginate(10)
+            ->through(function ($win) {
+                $win->formatted_date = Carbon::parse($win->draw_time)->format('F d, Y');
+                $win->formatted_time = Carbon::parse($win->draw_time)->format('h:i A');
+                return $win;
+            });
         
         $products = Product::where('draw_type', 'hourly')->orderBy('title')->get();
         $company = CompannySetting::first();
@@ -123,6 +128,50 @@ class DrawController extends Controller
         return back();
     }
 
+    public function histories_delete_all($date)
+    {
+        $allProducts = Product::whereHas('category', function ($q) {
+            $q->whereIn('draw_type', ['daily', 'once']);
+        })->with('category')->get();
+
+        $winsByDate = Win::whereDate('to_time', $date)
+            ->whereIn('product_id', $allProducts->pluck('id'))
+            ->where('publish', 0)
+            ->get();
+
+        foreach ($allProducts as $product) {
+            $productWins = $winsByDate->where('product_id', $product->id);
+
+            if ($productWins->isEmpty()) continue;
+
+            $shouldDelete = false;
+
+            if ($product->category?->draw_type === 'once') {
+                $drawTimes = is_string($product->getRawOriginal('draw_time'))
+                    ? json_decode($product->getRawOriginal('draw_time'), true)
+                    : (is_array($product->draw_time) ? $product->draw_time : []);
+                $expectedDraws = count($drawTimes);
+
+                if ($expectedDraws > 0 && $productWins->count() >= $expectedDraws) {
+                    $shouldDelete = true;
+                }
+            } else {
+                // Daily product
+                $shouldDelete = true;
+            }
+
+            if ($shouldDelete) {
+                foreach ($productWins as $win) {
+                    if ($win->claims->count() === 0) {
+                        $win->delete();
+                    }
+                }
+            }
+        }
+
+        return back();
+    }
+
     public function histories_daily(Request $request)
     {
         $startDate = $request->start_date;
@@ -150,7 +199,12 @@ class DrawController extends Controller
                 ->when($request->start_time, fn($q, $t) => $q->whereTime('to_time', '>=', $t))
                 ->when($request->end_time,   fn($q, $t) => $q->whereTime('to_time', '<=', $t))
                 ->with('product')
-                ->paginate(15);
+                ->paginate(15)
+                ->through(function ($win) {
+                    $win->formatted_date = Carbon::parse($win->to_time)->format('F d, Y');
+                    $win->formatted_time = Carbon::parse($win->to_time)->format('h:i A');
+                    return $win;
+                });
         } elseif ($startDate && $endDate) {
             $start = Carbon::parse($startDate);
             $end   = Carbon::parse($endDate);
@@ -174,7 +228,11 @@ class DrawController extends Controller
                 $dateStr  = $date->format('Y-m-d');
                 $dateWins = $winsByDate->get($dateStr, collect());
 
-                $row = ['date' => $dateStr, 'results' => []];
+                $row = [
+                    'date' => $dateStr, 
+                    'formatted_date' => $date->format('F d, Y'),
+                    'results' => []
+                ];
 
                 foreach ($allProducts as $product) {
                     $productWins = $dateWins->where('product_id', $product->id);
@@ -191,6 +249,7 @@ class DrawController extends Controller
                                 'id'      => $w->id,
                                 'numbers' => $w->win_number,
                                 'time'    => $w->to_time,
+                                'formatted_time' => Carbon::parse($w->to_time)->format('h:i A'),
                                 'publish' => $w->publish,
                             ])->values()->toArray();
                         }
@@ -203,6 +262,7 @@ class DrawController extends Controller
                                 'id'      => $win->id,
                                 'numbers' => $win->win_number, 
                                 'time'    => $win->to_time,
+                                'formatted_time' => Carbon::parse($win->to_time)->format('h:i A'),
                                 'publish' => $win->publish,
                             ]
                             : null;

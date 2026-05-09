@@ -71,7 +71,10 @@ class OrderController extends Controller
                 });
         }
         $totalPriceSum = (clone $orders)->sum('total_price');
-        $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->paginate(10);
+        $orders = $orders->with(['user', 'product', 'user.agent', 'tickets'])->latest()->paginate(10)->through(function ($order) {
+            $order->formatted_date = $order->created_at->format('d M, Y h:i:s A');
+            return $order;
+        });
         $users = User::where('user_type', 'agent')->select('id', 'name')->get();
         $company = CompannySetting::firstOrFail();
         $categories = $this->categoryService->activeCategories();

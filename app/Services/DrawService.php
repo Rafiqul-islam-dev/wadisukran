@@ -19,7 +19,7 @@ class DrawService
                 $productData = Product::find($product['id']);
 
                 if ($productData->draw_type === 'daily') {
-                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('created_at', Carbon::parse($data['to_time'])->toDateString())->first();
+                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('to_time', Carbon::parse($data['to_time'])->toDateString())->first();
                     if (!$exists_draw) {
                         $fromTime = Carbon::parse($data['to_time'])->startOfDay();
                         $win = Win::create([
@@ -34,7 +34,7 @@ class DrawService
                         $win = $exists_draw;
                     }
                 } else if($productData->draw_type === 'hourly') {
-                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('created_at', Carbon::parse($data['to_time'])->toDateTimeString())->first();
+                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('to_time', Carbon::parse($data['to_time'])->toDateTimeString())->first();
                     if(!$exists_draw){
                         $win = Win::create([
                             'product_id' => $product['id'],
@@ -72,7 +72,7 @@ class DrawService
                         }
                     }
 
-                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('created_at', Carbon::parse($data['to_time'])->toDateTimeString())->first();
+                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('to_time', Carbon::parse($data['to_time'])->toDateTimeString())->first();
                     if(!$exists_draw){
                         $draw_times = json_decode($productData->draw_time, true);
 

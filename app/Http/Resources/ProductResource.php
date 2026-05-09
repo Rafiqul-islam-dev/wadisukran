@@ -24,6 +24,7 @@ class ProductResource extends JsonResource
             $endOfHour   = Carbon::now()->endOfHour();
 
             $exists_win = Win::where('product_id', $this->id)
+                ->where('publish', 1)
                 ->whereBetween('to_time', [$startOfHour, $endOfHour])
                 ->first();
 

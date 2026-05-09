@@ -226,6 +226,10 @@ class WinnerReportAgentController extends Controller
             $item->check_win = $checkWin;
             $item->claim_user = $item->claim?->claim_user?->name;
             $item->claimed_at = $item->claim?->created_at;
+
+            $item->formatted_created_at = $item->created_at->format('d M, Y h:i:s A');
+            $item->formatted_claimed_at = $item->claimed_at ? Carbon::parse($item->claimed_at)->format('d M, Y h:i:s A') : '-';
+
             return $item;
         })->filter(function ($item) {
             return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;

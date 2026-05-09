@@ -43,6 +43,7 @@ class WinnerReportController extends Controller
         $filteredCollection = $wins->getCollection()->map(function ($item) {
             $check_win = $this->checkWinService->checkWinOrderTicketsByInvoice($item->invoice_no);
             $item->check_win = $check_win;
+            $item->formatted_created_at = $item->created_at->format('d M, Y h:i:s A');
             return $item;
         })->filter(function ($item) {
             return isset($item->check_win['total_prize']) && $item->check_win['total_prize'] > 0;
