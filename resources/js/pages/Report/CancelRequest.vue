@@ -302,7 +302,7 @@ function closeModal() {
                                 :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                                  <td class="px-6 py-4 whitespace-nowrap">
                                     <!-- Display only the time part of cancel_at -->
-                                    <span class="font-semibold text-orange-600">{{ order.cancel_at ? formatTime(order.cancel_at) : 'N/A' }}</span>
+                                    <span class="font-semibold text-orange-600">{{ order.formatted_cancel_time }}</span>
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -314,7 +314,7 @@ function closeModal() {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-700">
-                                    {{ formatDate(order.created_at) }}
+                                    {{ order.formatted_created_at }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span

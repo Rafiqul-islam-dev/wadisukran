@@ -613,7 +613,7 @@ const confirmDownload = () => {
     if (previewWinData.value) {
         const win = previewWinData.value;
         const numbers = parseNumbers(win.win_number).join(', ') || 'N/A';
-        const message = `Draw result ready.\nProduct: ${win.product?.title+" "+win.product?.product_number ?? 'N/A'}\nDate: ${formatDate(win.draw_time)}\nDraw Time: 12:00 AM\nWin Number: ${numbers}`;
+        const message = `Draw result ready.\nProduct: ${win.product?.title+" "+win.product?.product_number ?? 'N/A'}\nDate: ${win.formatted_date}\nDraw Time: ${win.formatted_time}\nWin Number: ${numbers}`;
         openWhatsAppChat(message);
     }
     
@@ -705,8 +705,8 @@ const confirmDownload = () => {
                                         {{ win.product?.title }} {{ win.product?.product_number }}
                                     </td>
                                     <td class="px-6 py-4 border-r text-center">
-                                        <p class="text-lg">{{ formatDate(win.draw_time) }}</p>
-                                        <p class="font-bold text-md" v-if="win.draw_time">{{ formatTime(win.draw_time) }}</p>
+                                        <p class="text-lg">{{ win.formatted_date }}</p>
+                                        <p class="font-bold text-md" v-if="win.formatted_time">{{ win.formatted_time }}</p>
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center flex-nowrap">

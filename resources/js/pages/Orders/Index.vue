@@ -421,7 +421,7 @@ function downloadPdf() {
                                     {{ index + 1 }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-600 whitespace-nowrap">
-                                    {{ formatDate(order.created_at) }}
+                                    {{ order.formatted_date }}
                                 </td>
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900">{{
                                     order.invoice_no }}</td>

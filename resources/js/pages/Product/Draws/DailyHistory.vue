@@ -583,7 +583,7 @@ const confirmDownload = () => {
                                     </td>
 
                                     <td class="px-4 py-6 text-center text-sm font-medium text-gray-700 border whitespace-nowrap">
-                                        {{ formatDate(history.date) }}
+                                        {{ history.formatted_date }}
                                     </td>
 
                                     <td 
@@ -606,7 +606,7 @@ const confirmDownload = () => {
                                                     </div>
                                                     <div class="flex flex-col items-center gap-1 group">
                                                         <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
-                                                            {{ formatTime(res.time) }}
+                                                            {{ res.formatted_time }}
                                                         </span>
                                                         <div v-if="!res.publish" class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <button @click="handlePublish(res)" class="text-[10px] px-1.5 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 font-bold transition-colors">Publish</button>
@@ -628,7 +628,7 @@ const confirmDownload = () => {
                                                 </div>
                                                 <div class="flex flex-col items-center gap-1 group">
                                                     <span class="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded shadow-sm">
-                                                        {{ formatTime(history.results[product.id].time) }}
+                                                        {{ history.results[product.id].formatted_time }}
                                                     </span>
                                                     <div v-if="!history.results[product.id].publish" class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button @click="handlePublish(history.results[product.id])" class="text-[10px] px-1.5 py-0.5 bg-green-500 text-white rounded hover:bg-green-600 font-bold transition-colors">Publish</button>
@@ -685,8 +685,8 @@ const confirmDownload = () => {
                                         {{ win?.product?.title }} {{ win?.product?.product_number }}
                                     </td>
                                     <td class="px-6 py-4 border-r text-center">
-                                        <p class="text-lg">{{ formatDate(win.to_time) }}</p>
-                                        <p class="font-bold text-md" v-if="win.to_time">{{ formatTime(win.to_time) }}</p>
+                                        <p class="text-lg">{{ win.formatted_date }}</p>
+                                        <p class="font-bold text-md" v-if="win.formatted_time">{{ win.formatted_time }}</p>
                                     </td>
                                     <td class="px-6 py-4 border-r">
                                         <div class="flex gap-2 justify-center flex-nowrap">

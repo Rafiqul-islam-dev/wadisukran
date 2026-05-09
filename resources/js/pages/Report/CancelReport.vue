@@ -280,7 +280,7 @@ function closeModal() {
                                 class="hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 transition-all duration-200"
                                 :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
                                  <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="font-semibold text-orange-600">{{ formatTime(order.cancel_approve_at) }}</span>
+                                    <span class="font-semibold text-orange-600">{{ order.formatted_cancel_approve_time }}</span>
                                 </td>
                                  <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="font-semibold text-orange-600">{{ order.cancel_approve?.name || 'N/A' }}</span>
@@ -295,7 +295,7 @@ function closeModal() {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-gray-700">
-                                    {{ formatDate(order.created_at) }}
+                                    {{ order.formatted_created_at }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span
@@ -420,7 +420,7 @@ function closeModal() {
                                                     <div>
                                                         <p class="text-sm text-gray-600">Draw Date</p>
                                                         <p class="font-semibold">
-                                                            {{ formatDate(selectedOrder.product?.draw_date) }}
+                                                            {{ selectedOrder.product?.formatted_draw_date }}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -529,7 +529,7 @@ function closeModal() {
                                                 <div class="p-4 bg-gray-50 rounded-xl">
                                                     <p class="text-sm text-gray-600">Sales Date</p>
                                                     <p class="font-semibold text-lg">
-                                                        {{ formatDate(selectedOrder.sales_date) }}
+                                                        {{ selectedOrder.formatted_sales_date }}
                                                     </p>
                                                 </div>
                                                 <div class="p-4 bg-gray-50 rounded-xl">
@@ -632,7 +632,7 @@ function closeModal() {
                                             <div class="p-4 bg-white rounded-xl shadow-sm">
                                                 <p class="text-sm text-gray-600">
                                                     {{ selectedOrder.product?.title }} {{ selectedOrder.product?.product_number }} Big Prize on
-                                                    {{ formatDate(selectedOrder.sales_date) }}
+                                                    {{ selectedOrder.formatted_sales_date }}
                                                 </p>
                                                 <p class="text-2xl font-bold text-yellow-600 mt-2">
                                                     <!-- {{ getBigPrize(selectedOrder) }} -->

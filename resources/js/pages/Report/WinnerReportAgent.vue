@@ -365,7 +365,7 @@ const extractNumbers = (order: any): string[] => {
                                 <tbody class="divide-y">
                                     <tr v-for="(order, idx) in modalRows" :key="order.id" class="hover:bg-gray-50">
                                         <td class="p-3">{{ idx + 1 }}</td>
-                                        <td class="p-3">{{ formatDate(order.created_at) }}</td>
+                                        <td class="p-3">{{ order.formatted_created_at }}</td>
                                         <td class="p-3 font-medium">{{ order.invoice_no }}</td>
                                         <td class="p-3">{{ order.product?.title+" "+order.product?.product_number ?? '-' }}</td>
                                         <td class="p-3">{{ order.description ?? 'winner' }}</td>
@@ -385,8 +385,7 @@ const extractNumbers = (order: any): string[] => {
                                         </td>
                                         <td class="p-3 uppercase text-gray-700" v-if="modalClaimedFilter == 1">{{ order?.claim_user }}</td>
                                         <td class="p-3" v-if="modalClaimedFilter == 1">
-                                            {{ order.is_claimed ? formatDateTime(order.claimed_at) :
-                                            '-' }}
+                                            {{ order.formatted_claimed_at }}
                                         </td>
                                     </tr>
 

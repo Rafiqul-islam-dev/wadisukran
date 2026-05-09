@@ -34,7 +34,11 @@ class AccountsLedgerController extends Controller
                 ->where('amount', '!=', 0)
                 ->with('user')
                 ->latest()
-                ->paginate(10);
+                ->paginate(10)
+                ->through(function ($ledger) {
+                    $ledger->formatted_date = $ledger->created_at->format('d M, Y');
+                    return $ledger;
+                });
 
         $agent = null;
         if($request->agent){

@@ -279,7 +279,7 @@ const formatDateTime = (d: string) => {
                                     {{ (wins.current_page - 1) * wins.per_page + index + 1 }}
                                 </td>
                                 <td class="px-4 py-4 text-sm text-gray-900 whitespace-nowrap align-top">
-                                    {{ formatDateTime(win.created_at) }}
+                                    {{ win.formatted_date }}
                                 </td>
                                 <td class="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap align-top">
                                     {{ win.invoice_no }}
