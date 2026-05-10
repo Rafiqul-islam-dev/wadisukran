@@ -1338,7 +1338,7 @@ class OrderController extends Controller
                         }
                     }
 
-                    if (isset($ticketTypes['Chance'])) {
+                    if (in_array('Chance', $ticketTypes, true)) {
                         $matchCount = $ticketNumbers->reverse()
                             ->values()
                             ->zip($numbersChance)
