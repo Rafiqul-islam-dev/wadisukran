@@ -1849,7 +1849,7 @@ class OrderController extends Controller
                                 $data[$type->name] = $isRumbleWinner;
                             }
                         }
-                        if (isset($ticketTypes['Chance'])) {
+                       if (in_array('Chance', $ticketTypes, true)) {
                             $matchCount = $ticketNumbers->reverse()
                                 ->values()
                                 ->zip($numbersChance)

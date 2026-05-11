@@ -67,7 +67,7 @@
     </div>
 
     <!-- Summary Table View -->
-    <div class="section-title">{{ $headingTitle ?: 'Probable Winner Statement' }}<</div>
+    <div class="section-title">{{ $headingTitle ?: 'Probable Winner Statement' }}</div>
     <table>
         <thead>
             <tr>
