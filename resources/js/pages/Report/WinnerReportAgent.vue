@@ -141,20 +141,6 @@ const formatDateTime = (d: string) => {
     const dt = new Date(d)
     return dt.toLocaleString()
 }
-const extractNumbers = (order: any): string[] => {
-    const t = order?.tickets?.[0]
-    if (!t) return []
-
-    if (Array.isArray(t.selected_numbers)) {
-        return t.selected_numbers.map((n: any) => String(n))
-    }
-    try {
-        const parsed = JSON.parse(t.selected_numbers)
-        if (Array.isArray(parsed)) return parsed.map((n: any) => String(n))
-    } catch (e) { }
-
-    return []
-}
 </script>
 
 <template>
@@ -321,9 +307,9 @@ const extractNumbers = (order: any): string[] => {
             leave-active-class="transition-opacity duration-200" enter-from-class="opacity-0"
             leave-to-class="opacity-0">
             <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-                <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden">
+                <div class="bg-white w-full max-w-6xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
                     <!-- header -->
-                    <div class="flex items-center justify-between px-6 py-4 border-b">
+                    <div class="flex items-center justify-between px-6 py-4 border-b shrink-0">
                         <div>
                             <h3 class="text-lg font-bold text-gray-900">{{ modalTitle }}</h3>
                             <p class="text-sm text-gray-500" v-if="modalPageInfo?.total">
@@ -337,7 +323,7 @@ const extractNumbers = (order: any): string[] => {
                     </div>
 
                     <!-- body -->
-                    <div class="p-4">
+                    <div class="p-4 overflow-y-auto flex-1">
                         <div v-if="isLoadingModal" class="py-10 text-center text-gray-600">
                             Loading...
                         </div>
@@ -368,14 +354,22 @@ const extractNumbers = (order: any): string[] => {
                                         <td class="p-3">{{ order.formatted_created_at }}</td>
                                         <td class="p-3 font-medium">{{ order.invoice_no }}</td>
                                         <td class="p-3">{{ order.product?.title+" "+order.product?.product_number ?? '-' }}</td>
-                                        <td class="p-3">{{ order.description ?? 'winner' }}</td>
+                                        <td class="p-3">
+                                            <div class="flex flex-col gap-2">
+                                                <div v-for="ticket in order.check_win?.tickets" :key="'desc-'+ticket.id" class="h-7 flex items-center text-sm text-gray-600 whitespace-nowrap capitalize">
+                                                    {{ ticket.prize_name }}
+                                                </div>
+                                            </div>
+                                        </td>
 
                                         <td class="p-3">
-                                            <div class="flex flex-wrap gap-1">
-                                                <span v-for="(n, i) in extractNumbers(order)" :key="i"
-                                                    class="w-7 h-7 rounded-full border flex items-center justify-center text-xs font-semibold text-gray-700">
-                                                    {{ n }}
-                                                </span>
+                                            <div class="flex flex-col gap-2">
+                                                <div v-for="ticket in order.check_win?.tickets" :key="'num-'+ticket.id" class="h-7 flex items-center gap-1">
+                                                    <span v-for="(n, i) in ticket.selected_numbers" :key="i"
+                                                        class="w-7 h-7 rounded-full border flex items-center justify-center text-xs font-semibold text-gray-700">
+                                                        {{ n }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
 
@@ -413,7 +407,7 @@ const extractNumbers = (order: any): string[] => {
                     </div>
 
                     <!-- footer -->
-                    <div class="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                    <div class="px-6 py-4 border-t bg-gray-50 flex justify-end shrink-0">
                         <button @click="closeModal" class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
                             Close
                         </button>
