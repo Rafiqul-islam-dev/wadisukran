@@ -195,6 +195,7 @@
                         <th>Date</th>
                         <th>Invoice No</th>
                         <th>Product</th>
+                        <th>Match Type</th>
                         <th>Raffle Ticket</th>
                         <th>Prize({{ $company->currency }})</th>
                         @if ($claimed == 1)
@@ -206,19 +207,23 @@
                 <tbody>
                     @php $rowIndex = 1; @endphp
                     @foreach ($lists as $list)
-                        @if (isset($list['tickets']) && count($list['tickets']) > 0)
-                            @foreach ($list['tickets'] as $ticketIndex => $ticket)
+                        @php $winningTickets = $list['check_win']['tickets'] ?? []; @endphp
+                        @if (count($winningTickets) > 0)
+                            @foreach ($winningTickets as $ticketIndex => $ticket)
                                 <tr>
                                     @if ($ticketIndex === 0)
-                                        <td class="text-center" rowspan="{{ count($list['tickets']) }}">
+                                        <td class="text-center" rowspan="{{ count($winningTickets) }}">
                                             {{ $rowIndex }}</td>
-                                        <td rowspan="{{ count($list['tickets']) }}">
+                                        <td rowspan="{{ count($winningTickets) }}">
                                             {{ \Carbon\Carbon::parse($list['created_at'])->format('d M, Y H:i A') }}
                                         </td>
-                                        <td rowspan="{{ count($list['tickets']) }}">{{ $list['invoice_no'] }}</td>
-                                        <td rowspan="{{ count($list['tickets']) }}">{{ $list['product']['title'] }}
+                                        <td rowspan="{{ count($winningTickets) }}">{{ $list['invoice_no'] }}</td>
+                                        <td rowspan="{{ count($winningTickets) }}">{{ $list['product']['title'] }}
                                         </td>
                                     @endif
+                                    <td>
+                                        {{ $ticket['prize_name'] ?? 'Winner' }}
+                                    </td>
                                     <td>
                                         @if (isset($ticket['selected_numbers']) && count($ticket['selected_numbers']) > 0)
                                             @foreach ($ticket['selected_numbers'] as $number)
@@ -229,13 +234,13 @@
                                         @endif
                                     </td>
                                     @if ($ticketIndex === 0)
-                                        <td rowspan="{{ count($list['tickets']) }}">
+                                        <td rowspan="{{ count($winningTickets) }}">
                                             {{ $list['check_win']['total_prize'] ?? '' }}</td>
                                         @if ($claimed == 1)
-                                            <td rowspan="{{ count($list['tickets']) }}">
+                                            <td rowspan="{{ count($winningTickets) }}">
                                                 {{ $list['claim_user'] ?? '' }}
                                             </td>
-                                            <td rowspan="{{ count($list['tickets']) }}">
+                                            <td rowspan="{{ count($winningTickets) }}">
                                                 {{ \Carbon\Carbon::parse($list['claimed_at'])->format('d M, Y H:i A') }}
                                             </td>
                                         @endif
