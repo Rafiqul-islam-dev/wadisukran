@@ -50,34 +50,30 @@ class DrawService
                     }
                 }
                 else if($productData->draw_type === 'once'){
-                    $newWinNumbers = $product['numbers'];
-                    $newLastNumber = count($newWinNumbers) > 0 ? $newWinNumbers[count($newWinNumbers) - 1] : null;
+                    $draw_times = json_decode($productData->draw_time, true);
+                    $toTime = Carbon::parse($data['to_time']);
+                    $toOnlyTimeStr = $toTime->format('H:i');
 
-                    if ($newLastNumber !== null) {
-                        $existingWins = Win::where('product_id', $product['id'])
-                            ->whereDate('to_time', Carbon::parse($data['to_time'])->toDateString())
-                            ->get();
-
-                        foreach ($existingWins as $existingWin) {
-                            $existingNumbers = $existingWin->win_number;
-                            $existingLastNumber = is_array($existingNumbers) && count($existingNumbers) > 0
-                                ? $existingNumbers[count($existingNumbers) - 1]
-                                : null;
-
-                            if ($existingLastNumber !== null && (string)$existingLastNumber === (string)$newLastNumber) {
-                                throw ValidationException::withMessages([
-                                    'products' => ["The last number ({$newLastNumber}) of product '{$productData->title} {$productData->product_number}' has already been drawn for this product today."]
-                                ]);
-                            }
-                        }
+                    if (!in_array($toOnlyTimeStr, $draw_times)) {
+                        throw ValidationException::withMessages([
+                            'products' => ["The draw time ({$toOnlyTimeStr}) is not valid for product '{$productData->title} {$productData->product_number}'. Available times: " . implode(', ', $draw_times)]
+                        ]);
                     }
 
-                    $exists_draw = Win::where('product_id', $product['id'])->whereDate('to_time', Carbon::parse($data['to_time'])->toDateTimeString())->first();
-                    if(!$exists_draw){
-                        $draw_times = json_decode($productData->draw_time, true);
+                    $existingWinsCount = Win::where('product_id', $product['id'])
+                            ->whereDate('to_time', $toTime->toDateString())
+                            ->count();
 
-                        $toTime = Carbon::parse($data['to_time']);
-                        $toOnly = Carbon::createFromFormat('H:i', $toTime->format('H:i'));
+                    if ($existingWinsCount >= count($draw_times)) {
+                        throw ValidationException::withMessages([
+                            'products' => ["Maximum draw limit reached for product '{$productData->title} {$productData->product_number}' today."]
+                        ]);
+                    }
+
+                    $exists_draw = Win::where('product_id', $product['id'])->where('to_time', $toTime->toDateTimeString())->first();
+
+                    if (!$exists_draw) {
+                        $toOnly = Carbon::createFromFormat('H:i', $toOnlyTimeStr);
 
                         $closestPrevious = null;
                         $greatestTime = null;
@@ -99,12 +95,11 @@ class DrawService
                             $fromTime = Carbon::parse(
                                 $toTime->toDateString() . ' ' . $closestPrevious->format('H:i:s')
                             );
-                        } else if($greatestTime) {
+                        } else if ($greatestTime) {
                             $fromTime = Carbon::parse(
                                 $toTime->toDateString() . ' ' . $greatestTime->format('H:i:s')
                             );
-                        }
-                        else{
+                        } else {
                             $fromTime = Carbon::parse($data['to_time'])->addSecond(1);
                         }
                         $win = Win::create([
