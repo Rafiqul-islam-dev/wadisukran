@@ -153,6 +153,11 @@ function updateStatus() {
 }
 
 function downloadPdf() {
+    if (!filter.value.date_from || !filter.value.date_to) {
+        alert('Please select From Date and To Date before generating PDF.');
+        return;
+    }
+
     const queryParams = new URLSearchParams({
         btn: 'search',
         user_id: filter.value.user_id || '',
@@ -165,7 +170,8 @@ function downloadPdf() {
         product_id: filter.value.product_id || '',
         invoice_no: filter.value.invoice_no || '',
     });
-    window.location.href = route('orders.print') + '?' + queryParams.toString();
+
+    window.open(route('orders.print') + '?' + queryParams.toString(), '_blank');
 }
 
 </script>
@@ -321,7 +327,7 @@ function downloadPdf() {
                 <div class="flex items-center justify-end gap-3 pt-2 border-t-2 border-gray-100">
                     <button @click="downloadPdf"
                         class="px-4 py-2 cursor-pointer bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-sm hover:from-green-600 hover:to-emerald-600 transition-all duration-200 font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 text-center">
-                        Print
+                        PDF
                     </button>
                     <button @click="resetFilters"
                         class="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2">
