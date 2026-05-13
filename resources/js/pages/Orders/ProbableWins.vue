@@ -24,7 +24,7 @@ const { filters, products, product_prizes, product, summary, orders } = definePr
     product_prizes: Array<any>;
     product: Array<any>;
 }>();
-
+console.log(orders)
 
 const filter = ref({
     user_id: filters?.user_id ?? '',
@@ -259,6 +259,7 @@ const groupedOrders = computed(() => {
     
     return Array.from(map.values()).sort((a, b) => b.total_win_amount - a.total_win_amount);
 });
+
 
 const formattedDate = computed(() => {
     const date = new Date(now());

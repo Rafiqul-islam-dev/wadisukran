@@ -1701,40 +1701,9 @@ class OrderController extends Controller
                 }
             }
 
-            $orders->transform(function ($order) use ($summery) {
-                $order['win_amount'] = 0;
-                $order['match_type'] = null;
+            $orders = $this->attachProbableWinAmounts($orders, $summery);
 
-                if (!empty($order['Straight']) && $order['Straight'] === true) {
-                    $order['win_amount'] = $summery['Straight']['prize_per_winner'] ?? 0;
-                    $order['match_type'] = 'Straight';
-                }
-
-                if (!empty($order['Rumble']) && $order['Rumble'] === true) {
-                    $order['win_amount'] = $summery['Rumble']['prize_per_winner'] ?? 0;
-                    $order['match_type'] = 'Rumble';
-                }
-
-                // Chance types
-                foreach ($summery as $key => $sum) {
-                    if (str_starts_with($key, 'Chance') && !empty($order[$key]) && $order[$key] === true) {
-                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
-                        $order['match_type'] = $key;
-                    }
-                }
-                // Number types
-                foreach ($summery as $key => $sum) {
-                    if (str_contains($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
-                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
-                        $order['match_type'] = $key;
-                    }
-                }
-
-                return $order;
-            });
         }
-
-        // return $summery;
         return Inertia::render('Orders/ProbableWins', [
             'products' => $products,
             'filters' => request()->only([
