@@ -161,13 +161,13 @@ class OrderController extends Controller
         $company = CompannySetting::firstOrFail();
 
         $pdf = Pdf::loadView('pdf.daily_sales', [
-            'orders' => $orders,
-            'company' => $company,
-            'totalPriceSum' => $totalPriceSum,
-            'filters' => $request->only(['date_from', 'date_to', 'time_from', 'time_to'])
-        ]);
+                'orders' => $orders,
+                'company' => $company,
+                'totalPriceSum' => $totalPriceSum,
+                'filters' => $request->only(['date_from', 'date_to', 'time_from', 'time_to'])
+            ]);
 
-        return $pdf->download('daily_sales_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
+            return $pdf->stream('daily_sales_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf');
     }
 
     protected function product_prizes($product_id)
@@ -1665,6 +1665,7 @@ class OrderController extends Controller
 
             $orders = app(\App\Services\RiskCapService::class)->applyToWinnerRows($orders, $product);
 
+
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
@@ -1715,6 +1716,21 @@ class OrderController extends Controller
                     $order['match_type'] = 'Rumble';
                 }
 
+                if (!empty($order['platinum']) && $order['platinum'] === true) {
+                    $order['win_amount'] = $summery['platinum']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Platinum';
+                }
+
+                if (!empty($order['normal']) && $order['normal'] === true) {
+                    $order['win_amount'] = $summery['normal']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Normal';
+                }
+
+                 if (!empty($order['golden']) && $order['golden'] === true) {
+                    $order['win_amount'] = $summery['golden']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Golden';
+                }
+
                 // Chance types
                 foreach ($summery as $key => $sum) {
                     if (str_starts_with($key, 'Chance') && !empty($order[$key]) && $order[$key] === true) {
@@ -1729,6 +1745,9 @@ class OrderController extends Controller
                         $order['match_type'] = $key;
                     }
                 }
+
+                
+
 
                 return $order;
             });

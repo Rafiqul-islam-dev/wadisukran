@@ -31,25 +31,61 @@ class DrawController extends Controller
             'filters' => request()->only(['category_id'])
         ]);
     }
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'date' => ['required', 'date'],
-            'time' => ['required', 'date_format:H:i'],
 
-            'products' => ['required', 'array', 'min:1'],
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'date' => ['required', 'date'],
+        'time' => ['required', 'date_format:H:i'],
+        'products' => ['required', 'array', 'min:1'],
+        'products.*.id' => ['required', 'integer', 'exists:products,id'],
+        'products.*.numbers' => ['required', 'array'],
+        'products.*.numbers.*' => ['string'],
+    ]);
 
-            'products.*.id' => ['required', 'integer', 'exists:products,id'],
-            'products.*.numbers' => ['required', 'array'],
-            'products.*.numbers.*' => ['string']
-        ]);
-        $toTime = Carbon::createFromFormat('Y-m-d H:i', $validated['date'] . ' ' . $validated['time']);
-        $toTime->second(59);
-        $data['to_time'] = $toTime->toDateTimeString(); // Format it as a string 'Y-m-d H:i:s'
-        $data['products'] = $validated['products'];
-        $this->drawService->createWin($data);
-        return back();
+    $toTime = Carbon::createFromFormat('Y-m-d H:i', $validated['date'] . ' ' . $validated['time']);
+    $toTime->second(59);
+
+    $submittedProducts = $validated['products'];
+
+    $activeProducts = []; 
+    $inActiveProducts = []; 
+    $inactiveProductsToSave = [];
+
+    foreach ($submittedProducts as $item) {
+        $product = Product::find($item['id']);
+
+        if ($product && $product->is_active == 1) {
+            $activeProducts[] = $product->title . ' ' . ($product->product_number ?? '');
+        } else {
+            $inActiveProducts[] = $product->title . ' ' . ($product->product_number ?? '');
+            $inactiveProductsToSave[] = $item;
+        }
     }
+
+    if (count($activeProducts) > 0) {
+        $message = "Please at first Inactive Your product.\n\nActive Products: " . implode(', ', $activeProducts);
+
+        if (count($inactiveProductsToSave) > 0) {
+            $data['to_time'] = $toTime->toDateTimeString();
+            $data['products'] = $inactiveProductsToSave;
+            $this->drawService->createWin($data);
+
+            return back()->with([
+                'warning' => $message,
+                'success' => 'Draw saved successfully for Inactive products ' . implode(', ', $inActiveProducts) . '. Do not save Active products: ' . implode(', ', $activeProducts)
+            ]);
+        } else {
+            return back()->with('error', $message);
+        }
+    }
+
+    $data['to_time'] = $toTime->toDateTimeString();
+    $data['products'] = $inactiveProductsToSave;
+    $this->drawService->createWin($data);
+
+    return back()->with('success', 'Draw stored successfully.');
+}
 
     public function histories(Request $request)
     {

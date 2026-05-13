@@ -134,33 +134,32 @@ const handleSearch = () => {
 const saveDraw = () => {
     form.products = products
         .map((p: any) => {
-            const numbers = (drawNumbers[p.id] ?? [])
-                .filter((n) => n !== '');     // remove empty inputs
-                // do not convert to number to preserve leading zeros
-
-            // return null if no numbers
+            const numbers = (drawNumbers[p.id] ?? []).filter((n) => n !== '');
             if (numbers.length === 0) return null;
-
-            return {
-                id: p.id,
-                numbers,
-            };
+            return { id: p.id, numbers };
         })
         .filter(Boolean);
 
+    if (form.products.length === 0) {
+        toast.error('Please enter at least one product number.');
+        return;
+    }
+
     form.post(route('draws.store'), {
         preserveState: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
             form.reset();
             clearAll();
-            toast.success('Draw stored successfully.');
+
+            if (page.props.flash?.success) toast.success(page.props.flash.success);
+            if (page.props.flash?.warning) toast.warning(page.props.flash.warning, { duration: 10000 });
+            if (page.props.flash?.error) toast.error(page.props.flash.error, { duration: 10000 });
         },
         onError: (errors) => {
-            const firstError = Object.values(errors)[0];
-            toast.error(firstError || 'Something went wrong storing draw.');
+            toast.error(Object.values(errors)[0] || 'Something went wrong.');
         }
     });
-}
+};
 
 const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
     event.preventDefault();
@@ -267,9 +266,9 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
                                     <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700 border-r">
                                         Numbers
                                     </th>
-                                    <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+                                    <!-- <th class="px-6 py-3 text-center text-sm font-semibold text-gray-700">
                                         Action
-                                    </th>
+                                    </th> -->
                                 </tr>
                             </thead>
                             <tbody class="divide-y">
@@ -302,7 +301,7 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
                                         </div>
                                     </td>
 
-                                    <td class="px-6 py-4">
+                                    <!-- <td class="px-6 py-4">
                                         <div class="flex gap-2 justify-center">
                                             <Button variant="outline" size="sm" @click="generateForProduct(product)">
                                                 Generate
@@ -312,7 +311,7 @@ const handlePaste = (product: any, index: number, event: ClipboardEvent) => {
                                                 Copy
                                             </Button>
                                         </div>
-                                    </td>
+                                    </td> -->
                                 </tr>
                             </tbody>
                         </table>
