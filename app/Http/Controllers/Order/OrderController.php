@@ -1665,7 +1665,6 @@ class OrderController extends Controller
 
             $orders = app(\App\Services\RiskCapService::class)->applyToWinnerRows($orders, $product);
 
-
             foreach ($types as $type) {
                 if (is_numeric($type->name)) {
                     $name = 'Number ' . $type->name;
@@ -1702,9 +1701,55 @@ class OrderController extends Controller
                 }
             }
 
-            $orders = $this->attachProbableWinAmounts($orders, $summery);
+            $orders->transform(function ($order) use ($summery) {
+                $order['win_amount'] = 0;
+                $order['match_type'] = null;
 
+                if (!empty($order['Straight']) && $order['Straight'] === true) {
+                    $order['win_amount'] = $summery['Straight']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Straight';
+                }
+
+                if (!empty($order['Rumble']) && $order['Rumble'] === true) {
+                    $order['win_amount'] = $summery['Rumble']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Rumble';
+                }
+
+                 if (!empty($order['platinum']) && $order['platinum'] === true) {
+                    $order['win_amount'] = $summery['platinum']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Platinum';
+                }
+
+                if (!empty($order['normal']) && $order['normal'] === true) {
+                    $order['win_amount'] = $summery['normal']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Normal';
+                }
+
+                 if (!empty($order['golden']) && $order['golden'] === true) {
+                    $order['win_amount'] = $summery['golden']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Golden';
+                }
+
+                // Chance types
+                foreach ($summery as $key => $sum) {
+                    if (str_starts_with($key, 'Chance') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+                // Number types
+                foreach ($summery as $key => $sum) {
+                    if (str_contains($key, 'Number') && !empty($order[$key]) && $order[$key] === true) {
+                        $order['win_amount'] = $sum['prize_per_winner'] ?? 0;
+                        $order['match_type'] = $key;
+                    }
+                }
+
+                return $order;
+            });
         }
+
+        // return $summery;
         return Inertia::render('Orders/ProbableWins', [
             'products' => $products,
             'filters' => request()->only([
@@ -1722,7 +1767,6 @@ class OrderController extends Controller
             'orders' => $orders?->where('win_amount', '>', 0)?->sortByDesc('win_amount')->values()
         ]);
     }
-
     public function probableWinsPdf(Request $request)
     {
         $from = null;
@@ -1955,6 +1999,21 @@ class OrderController extends Controller
                 if (!empty($order['Rumble']) && $order['Rumble'] === true) {
                     $order['win_amount'] = $summery['Rumble']['prize_per_winner'] ?? 0;
                     $order['match_type'] = 'Rumble';
+                }
+
+                if (!empty($order['platinum']) && $order['platinum'] === true) {
+                    $order['win_amount'] = $summery['platinum']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Platinum';
+                }
+
+                if (!empty($order['normal']) && $order['normal'] === true) {
+                    $order['win_amount'] = $summery['normal']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Normal';
+                }
+
+                 if (!empty($order['golden']) && $order['golden'] === true) {
+                    $order['win_amount'] = $summery['golden']['prize_per_winner'] ?? 0;
+                    $order['match_type'] = 'Golden';
                 }
 
                 // Chance types
