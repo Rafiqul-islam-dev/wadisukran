@@ -260,39 +260,35 @@ class OrderController extends Controller
         $candidateNumbers = $this->probableWinSuggestionPrintedCandidateNumbers($product, $preparedTickets);
         $riskCaps = $this->fastProbableRiskCaps($preparedTickets['group_keys'] ?? [], $product->id);
 
-        $allSuggestions = $candidateNumbers
-                ->map(function (array $pickNumbers) use ($product, $preparedTickets, $types, $targetAmount, $riskCaps) {
-                    $calculation = $this->calculateFastProbableSuggestion(
-                        $product,
-                        $preparedTickets['tickets'],
-                        $pickNumbers,
-                        $types,
-                        true,
-                        $riskCaps
-                    );
+        $suggestions = $candidateNumbers
+            ->map(function (array $pickNumbers) use ($product, $preparedTickets, $types, $targetAmount, $riskCaps) {
+                $calculation = $this->calculateFastProbableSuggestion(
+                    $product,
+                    $preparedTickets['tickets'],
+                    $pickNumbers,
+                    $types,
+                    true,
+                    $riskCaps
+                );
 
-                    $totalAmount = (float) $calculation['total_amount'];
+                $totalAmount = (float) $calculation['total_amount'];
 
-                    return [
-                        'pick_number' => $pickNumbers,
-                        'number_text' => implode('', $pickNumbers),
-                        'summary' => $calculation['summary'],
-                        'winner_count' => (int) $calculation['winner_count'],
-                        'total_amount' => round($totalAmount, 2),
-                        'difference' => round(abs($targetAmount - $totalAmount), 2),
-                        'is_over_budget' => $targetAmount > 0 && $totalAmount > $targetAmount,
-                    ];
-                })
-                ->filter(function ($suggestion) use ($targetAmount) {
-                    return $targetAmount <= 0 || (float) $suggestion['total_amount'] <= $targetAmount;
-                })
-                ->sortBy(function ($suggestion) use ($targetAmount) {
-                    return abs($targetAmount - (float) $suggestion['total_amount']);
-                })
-                ->take(2)
-                ->values();
-
-            $suggestions = $allSuggestions;
+                return [
+                    'pick_number' => $pickNumbers,
+                    'number_text' => implode('', $pickNumbers),
+                    'summary' => $calculation['summary'],
+                    'winner_count' => (int) $calculation['winner_count'],
+                    'total_amount' => round($totalAmount, 2),
+                    'difference' => round(abs($targetAmount - $totalAmount), 2),
+                    'is_over_budget' => $targetAmount > 0 && $totalAmount > $targetAmount,
+                ];
+            })
+            ->filter(function ($suggestion) use ($targetAmount) {
+                return $targetAmount <= 0 || (float) $suggestion['total_amount'] <= $targetAmount;
+            })
+            ->sortByDesc('total_amount')
+            ->take(2)
+            ->values();
 
         return response()->json([
             'status' => true,
@@ -505,7 +501,7 @@ class OrderController extends Controller
         return $candidates->values();
     }
 
-    private function probableWinSuggestionCandidateNumbers(Product $product, array $preparedTickets, int $maxCandidates = 90): Collection
+    private function probableWinSuggestionCandidateNumbers(Product $product, array $preparedTickets, int $maxCandidates = 150): Collection
     {
         $pickNumber = max(1, (int) $product->pick_number);
         $typeNumber = max(1, (int) $product->type_number);
@@ -1234,6 +1230,35 @@ class OrderController extends Controller
             ->when($to, fn ($query) => $query->where('created_at', '<=', $to));
     }
 
+    // private function probableWinsTicketQuery(Request $request, ?Carbon $from = null, ?Carbon $to = null)
+    // {
+    //     $matchType = ProductPrize::find($request->match_type);
+
+    //     return OrderTicket::query()
+    //         ->withoutRiskHold()
+    //         ->whereHas('order', function ($query) use ($request, $from, $to) {
+    //             $query->where('status', 'Printed')
+    //                 ->where('is_claimed', 0)
+    //                 ->where('is_winner', 0)
+    //                 ->where('product_id', $request->product_id);
+
+    //             if ($from) {
+    //                 $query->where('created_at', '>=', $from);
+    //             }
+
+    //             if ($to) {
+    //                 $query->where('created_at', '<=', $to);
+    //             }
+    //         })
+    //         ->when($request->match_type, function ($query) use ($matchType, $request) {
+    //             if ($request->match_type === 'Chance') {
+    //                 $query->whereJsonContains('selected_play_types', 'Chance');
+    //             } elseif ($matchType) {
+    //                 $query->whereJsonContains('selected_play_types', $matchType->name);
+    //             }
+    //         });
+    // }
+
     private function probableWinsTicketQuery(Request $request, ?Carbon $from = null, ?Carbon $to = null)
     {
         $matchType = ProductPrize::find($request->match_type);
@@ -1242,8 +1267,6 @@ class OrderController extends Controller
             ->withoutRiskHold()
             ->whereHas('order', function ($query) use ($request, $from, $to) {
                 $query->where('status', 'Printed')
-                    ->where('is_claimed', 0)
-                    ->where('is_winner', 0)
                     ->where('product_id', $request->product_id);
 
                 if ($from) {
@@ -1254,12 +1277,11 @@ class OrderController extends Controller
                     $query->where('created_at', '<=', $to);
                 }
             })
-            ->when($request->match_type, function ($query) use ($matchType, $request) {
-                if ($request->match_type === 'Chance') {
-                    $query->whereJsonContains('selected_play_types', 'Chance');
-                } elseif ($matchType) {
-                    $query->whereJsonContains('selected_play_types', $matchType->name);
-                }
+            ->when($matchType, function ($query) use ($matchType) {
+                $query->whereJsonContains(
+                    'selected_play_types',
+                    ucfirst(strtolower($matchType->name))
+                );
             });
     }
 
