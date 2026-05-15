@@ -29,3 +29,5 @@ yarn-error.log
 /public/banners/*
 /public/test.html
 # /index.html
+temp_auto_push.bat
+temp_interactive_push.bat

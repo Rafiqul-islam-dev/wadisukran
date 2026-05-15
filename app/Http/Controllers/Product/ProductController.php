@@ -25,7 +25,7 @@ class ProductController extends Controller
     public function index()
     {
         $categories = Category::where('status', 1)->orderBy('name')->get();
-        $products = Product::latest()->with(['category', 'prizes:id,product_id,type,name,prize,chance_number'])->paginate(10);
+        $products = Product::orderBy('order_by', 'asc')->with(['category', 'prizes:id,product_id,type,name,prize,chance_number'])->paginate(10);
 
         $products->getCollection()->transform(function ($item) {
             $item->draw_time = $item->draw_time ? json_decode($item->draw_time) : null;
