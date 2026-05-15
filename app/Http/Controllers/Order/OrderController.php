@@ -260,32 +260,39 @@ class OrderController extends Controller
         $candidateNumbers = $this->probableWinSuggestionPrintedCandidateNumbers($product, $preparedTickets);
         $riskCaps = $this->fastProbableRiskCaps($preparedTickets['group_keys'] ?? [], $product->id);
 
-        $suggestions = $candidateNumbers
-            ->map(function (array $pickNumbers) use ($product, $preparedTickets, $types, $targetAmount, $riskCaps) {
-                $calculation = $this->calculateFastProbableSuggestion(
-                    $product,
-                    $preparedTickets['tickets'],
-                    $pickNumbers,
-                    $types,
-                    true,
-                    $riskCaps
-                );
+        $allSuggestions = $candidateNumbers
+                ->map(function (array $pickNumbers) use ($product, $preparedTickets, $types, $targetAmount, $riskCaps) {
+                    $calculation = $this->calculateFastProbableSuggestion(
+                        $product,
+                        $preparedTickets['tickets'],
+                        $pickNumbers,
+                        $types,
+                        true,
+                        $riskCaps
+                    );
 
-                $totalAmount = (float) $calculation['total_amount'];
+                    $totalAmount = (float) $calculation['total_amount'];
 
-                return [
-                    'pick_number' => $pickNumbers,
-                    'number_text' => implode('', $pickNumbers),
-                    'summary' => $calculation['summary'],
-                    'winner_count' => (int) $calculation['winner_count'],
-                    'total_amount' => round($totalAmount, 2),
-                    'difference' => round(abs($targetAmount - $totalAmount), 2),
-                    'is_over_budget' => $targetAmount > 0 && $totalAmount > $targetAmount,
-                ];
-            })
-            ->sort($this->probableSuggestionSorter($targetAmount))
-            ->take(2)
-            ->values();
+                    return [
+                        'pick_number' => $pickNumbers,
+                        'number_text' => implode('', $pickNumbers),
+                        'summary' => $calculation['summary'],
+                        'winner_count' => (int) $calculation['winner_count'],
+                        'total_amount' => round($totalAmount, 2),
+                        'difference' => round(abs($targetAmount - $totalAmount), 2),
+                        'is_over_budget' => $targetAmount > 0 && $totalAmount > $targetAmount,
+                    ];
+                })
+                ->filter(function ($suggestion) use ($targetAmount) {
+                    return $targetAmount <= 0 || (float) $suggestion['total_amount'] <= $targetAmount;
+                })
+                ->sortBy(function ($suggestion) use ($targetAmount) {
+                    return abs($targetAmount - (float) $suggestion['total_amount']);
+                })
+                ->take(2)
+                ->values();
+
+            $suggestions = $allSuggestions;
 
         return response()->json([
             'status' => true,
