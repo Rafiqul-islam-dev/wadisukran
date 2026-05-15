@@ -257,38 +257,72 @@ class OrderController extends Controller
         // Accuracy rule: suggestions are generated only from numbers that exist in
         // Printed tickets for this product/date/time filter. No random outside number
         // is used, so "Use Number" + normal Probable Wins Search will match.
-        $candidateNumbers = $this->probableWinSuggestionPrintedCandidateNumbers($product, $preparedTickets);
+        $candidateLimit = $this->probableSuggestionCandidateLimit(count($preparedTickets['tickets']));
+
+        $printedCandidates = $this->probableWinSuggestionPrintedCandidateNumbers($product, $preparedTickets);
+
+        $smartCandidates = $this->probableWinSuggestionCandidateNumbers(
+            $product,
+            $preparedTickets,
+            $candidateLimit
+        );
+
+        $candidateNumbers = $printedCandidates
+            ->merge($smartCandidates)
+            ->unique(fn ($numbers) => implode('|', $numbers))
+            ->values();
+
         $riskCaps = $this->fastProbableRiskCaps($preparedTickets['group_keys'] ?? [], $product->id);
 
-        $suggestions = $candidateNumbers
-            ->map(function (array $pickNumbers) use ($product, $preparedTickets, $types, $targetAmount, $riskCaps) {
-                $calculation = $this->calculateFastProbableSuggestion(
-                    $product,
-                    $preparedTickets['tickets'],
-                    $pickNumbers,
-                    $types,
-                    true,
-                    $riskCaps
-                );
+        $checkedCount = 0;
+        $bestSuggestions = [];
 
-                $totalAmount = (float) $calculation['total_amount'];
+        foreach ($candidateNumbers as $pickNumbers) {
+            $checkedCount++;
 
-                return [
-                    'pick_number' => $pickNumbers,
-                    'number_text' => implode('', $pickNumbers),
-                    'summary' => $calculation['summary'],
-                    'winner_count' => (int) $calculation['winner_count'],
-                    'total_amount' => round($totalAmount, 2),
-                    'difference' => round(abs($targetAmount - $totalAmount), 2),
-                    'is_over_budget' => $targetAmount > 0 && $totalAmount > $targetAmount,
-                ];
-            })
-            ->filter(function ($suggestion) use ($targetAmount) {
-                return $targetAmount <= 0 || (float) $suggestion['total_amount'] <= $targetAmount;
-            })
-            ->sortByDesc('total_amount')
-            ->take(2)
-            ->values();
+            $calculation = $this->calculateFastProbableSuggestion(
+                $product,
+                $preparedTickets['tickets'],
+                $pickNumbers,
+                $types,
+                true,
+                $riskCaps
+            );
+
+            $totalAmount = (float) $calculation['total_amount'];
+
+            // Zero payable suggestion dorkar nai.
+            if ($totalAmount <= 0) {
+                continue;
+            }
+
+            // Target er beshi hole suggestion show korbe na.
+            if ($targetAmount > 0 && $totalAmount > $targetAmount) {
+                continue;
+            }
+
+            $bestSuggestions[] = [
+                'pick_number' => $pickNumbers,
+                'number_text' => implode('', $pickNumbers),
+                'summary' => $calculation['summary'],
+                'winner_count' => (int) $calculation['winner_count'],
+                'total_amount' => round($totalAmount, 2),
+                'difference' => round(abs($targetAmount - $totalAmount), 2),
+                'is_over_budget' => false,
+            ];
+
+            usort($bestSuggestions, function ($a, $b) {
+                if ($a['total_amount'] == $b['total_amount']) {
+                    return $b['winner_count'] <=> $a['winner_count'];
+                }
+
+                return $b['total_amount'] <=> $a['total_amount'];
+            });
+
+            $bestSuggestions = array_slice($bestSuggestions, 0, 2);
+        }
+
+        $suggestions = collect($bestSuggestions)->values();
 
         return response()->json([
             'status' => true,
@@ -332,24 +366,31 @@ class OrderController extends Controller
             return $a['difference'] <=> $b['difference'];
         };
     }
+    
 
     private function probableSuggestionCandidateLimit(int $ticketCount): int
     {
-        // The old suggestion waited because it tested too many candidate numbers.
-        // These limits are enough for a helper suggestion and keep the request fast.
-        if ($ticketCount >= 10000) {
-            return 45;
+        /**
+         * Full 100000 candidates live server e slow hoy.
+         * Ei smart limit diye 1-3 second er moddhe suggestion ashbe.
+         */
+        if ($ticketCount <= 100) {
+            return 1500;
         }
 
-        if ($ticketCount >= 5000) {
-            return 55;
+        if ($ticketCount <= 500) {
+            return 1200;
         }
 
-        if ($ticketCount >= 1500) {
-            return 70;
+        if ($ticketCount <= 2000) {
+            return 800;
         }
 
-        return 90;
+        if ($ticketCount <= 10000) {
+            return 500;
+        }
+
+        return 300;
     }
 
     private function probableWinCandidateNumbers(Product $product, Collection $tickets): Collection
