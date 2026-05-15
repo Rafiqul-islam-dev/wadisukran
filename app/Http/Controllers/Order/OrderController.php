@@ -1220,8 +1220,8 @@ class OrderController extends Controller
     {
         return Order::query()
             ->where('status', 'Printed')
-            ->where('is_claimed', 0)
-            ->where('is_winner', 0)
+            // ->where('is_claimed', 0)
+            // ->where('is_winner', 0)
             ->where('product_id', $request->product_id)
             ->when($from, fn ($query) => $query->where('created_at', '>=', $from))
             ->when($to, fn ($query) => $query->where('created_at', '<=', $to));
