@@ -70,39 +70,11 @@ class DrawService
                         ]);
                     }
 
-                    $exists_draw = Win::where('product_id', $product['id'])->where('to_time', $toTime->toDateTimeString())->first();
+                    $exists_draw = Win::where('product_id', $product['id'])->where('to_time', $toTime->toDateTimeString())->whereDate('to_time', $toTime->toDateString())->first();
 
                     if (!$exists_draw) {
-                        $toOnly = Carbon::createFromFormat('H:i', $toOnlyTimeStr);
-
-                        $closestPrevious = null;
-                        $greatestTime = null;
-
-                        foreach ($draw_times as $time) {
-                            $drawTime = Carbon::createFromFormat('H:i', $time);
-                            if (!$greatestTime || $drawTime->gt($greatestTime)) {
-                                $greatestTime = $drawTime;
-                            }
-
-                            if ($drawTime->lt($toOnly)) {
-                                if (!$closestPrevious || $drawTime->gt($closestPrevious)) {
-                                    $closestPrevious = $drawTime;
-                                }
-                            }
-                        }
-
-                        if ($closestPrevious) {
-                            $fromTime = Carbon::parse(
-                                $toTime->toDateString() . ' ' . $closestPrevious->format('H:i:s')
-                            );
-                        } else if ($greatestTime) {
-                            $fromTime = Carbon::parse(
-                                $toTime->toDateString() . ' ' . $greatestTime->format('H:i:s')
-                            );
-                        } else {
-                            $fromTime = Carbon::parse($data['to_time'])->addSecond(1);
-                        }
-                        $win = Win::create([
+                        $fromTime = $toTime->copy()->startOfDay();
+                        Win::create([
                             'product_id' => $product['id'],
                             'from_time' => $fromTime,
                             'to_time' => $data['to_time'],
@@ -129,12 +101,17 @@ class DrawService
         $numbersSorted   = collect($win->win_number)->sort()->values();
         $len             = $numbersStraight->count();
 
+        $from_time = $win->from_time;
+        if($product->category?->draw_type == 'once'){
+            $from_time = Carbon::parse($win->from_time)->copy()->startOfDay();
+        }
+
         $orders = OrderTicket::query()
             ->withoutRiskHold()
             ->whereHas('order', function ($q) use ($product) {
                 $q->where('status', 'Printed')->where('is_claimed', 0)->where('is_winner', 0)->where('product_id', $product->id);
             })
-            ->whereBetween('created_at', [$win->from_time, $win->to_time])
+            ->whereBetween('created_at', [$from_time, $win->to_time])
             ->get()
             ->map(function ($order) use ($numbersStraight, $numbersSorted, $len, $product, $numbersChance) {
                 $data = ['id' => $order->id, 'selected_numbers' => $order->selected_numbers, 'order_id' => $order->order_id];
@@ -149,16 +126,16 @@ class DrawService
                 $ticketNumbers = collect($order->selected_numbers)->values();
                 if ($product->prize_type === 'bet') {
                     foreach ($product->prizes->whereIn('name', ['Straight', 'Rumble']) as $type) {
-                        if ($type->name === 'Straight' & in_array('Straight', $ticketTypes, true)) {
+                        if ($type->name == 'Straight' & in_array('Straight', $ticketTypes, true)) {
                             $isStraightWinner =
-                                $ticketNumbers->count() === $len &&
-                                $ticketNumbers->all() === $numbersStraight->all();
+                                $ticketNumbers->count() == $len &&
+                                $ticketNumbers->all() == $numbersStraight->all();
                             $data[$type->name] = $isStraightWinner;
-                        } else if ($type->name === 'Rumble' && in_array('Rumble', $ticketTypes, true)) {
+                        } else if ($type->name == 'Rumble' && in_array('Rumble', $ticketTypes, true)) {
                             if ($isStraightWinner == false) {
                                 $isRumbleWinner =
-                                    $ticketNumbers->count() === $len &&
-                                    $ticketNumbers->sort()->values()->all() === $numbersSorted->all();
+                                    $ticketNumbers->count() == $len &&
+                                    $ticketNumbers->sort()->values()->all() == $numbersSorted->all();
                             }
                             $data[$type->name] = $isRumbleWinner;
                         }
@@ -167,7 +144,7 @@ class DrawService
                         $matchCount = $ticketNumbers->reverse()
                             ->values()
                             ->zip($numbersChance)
-                            ->takeWhile(fn($pair) => (string)$pair[0] === (string)$pair[1])
+                            ->takeWhile(fn($pair) => (string)$pair[0] == (string)$pair[1])
                             ->count();
 
                         $chancePrizes = $product->prizes
@@ -248,9 +225,7 @@ class DrawService
 
                 return null;
             })->filter();
-
         $orders = app(RiskCapService::class)->applyToWinnerRows($orders, $product);
-
         foreach ($orders as $order) {
             OrderTicket::find($order['id'])->update(['is_winner' => 1]);
             Order::find($order['order_id'])->update(['is_winner' => 1]);
