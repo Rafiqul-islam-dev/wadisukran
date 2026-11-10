@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(php artisan route:list*)",
+      "Bash(php artisan test*)",
+      "Bash(php artisan migrate:status*)",
+      "Bash(php artisan about*)",
+      "Bash(php artisan tinker --execute*)",
+      "Bash(vendor/bin/pint --test*)",
+      "Bash(vendor/bin/pest*)",
+      "Bash(composer test*)",
+      "Bash(composer validate*)",
+      "Bash(npm run lint*)",
+      "Bash(npm run format:check*)",
+      "Bash(npx vue-tsc*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Read(./storage/logs/**)",
+      "Edit(./vendor/**)",
+      "Edit(./node_modules/**)",
+      "Edit(./composer.lock)",
+      "Edit(./package-lock.json)",
+      "Bash(php artisan migrate:fresh*)",
+      "Bash(php artisan migrate:reset*)",
+      "Bash(php artisan db:wipe*)",
+      "Bash(php artisan db:seed*)",
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(rm -rf*)"
+    ]
+  }
+}

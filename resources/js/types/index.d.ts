@@ -18,6 +18,8 @@ export interface NavItem {
     disabled?: boolean;
     external?: boolean;
     permission?: string;
+    /** Show this group if the user holds ANY child permission, not only the group's own. */
+    showIfAnyChild?: boolean;
 }
 
 export type AppPageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {

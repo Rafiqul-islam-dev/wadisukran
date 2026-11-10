@@ -4,7 +4,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BarChart, BarChart3, Book, CheckCheck, Download, Folder, Gift, History, Key, LayoutGrid, List, Lock, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
+import { BarChart, BarChart3, Book, CheckCheck, Download, FileSignature, Folder, Gift, History, Key, LayoutGrid, List, Lock, Option, Shield, Shuffle, Trash, User, UserCircle, UserCog, Users, Wallet, Wind } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const page_path = usePage().url;
@@ -18,6 +18,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Agent',
         icon: Users,
+        showIfAnyChild: true,
         items: [
             {
                 title: 'Agent List',
@@ -36,6 +37,12 @@ const mainNavItems: NavItem[] = [
                 href: '/agents/history',
                 icon: History,
                 permission: 'show agent history'
+            },
+            {
+                title: 'Registration & Agreement',
+                href: '/agents/registrations',
+                icon: FileSignature,
+                permission: 'show sales point registrations'
             },
         ],
         permission: 'show agent list'

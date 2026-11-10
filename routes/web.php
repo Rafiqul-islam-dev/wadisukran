@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Agent\AgentController;
 use App\Http\Controllers\Agent\AgentHistoryController;
+use App\Http\Controllers\Agent\SalesPointRegistrationController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Role\RoleController;
 use App\Http\Controllers\Banner\AppBannerController;
@@ -65,6 +66,24 @@ Route::middleware(['auth', 'verified', 'isActive'])->group(function () {
         Route::get('/restore/{user}', [UserController::class, 'restore_user'])->middleware('can:user restore')->name('restore');
         Route::delete('/permanent-delete/{user}', [UserController::class, 'permanent_delete_user'])->middleware('can:user permanent delete')->name('permanent-delete');
     });
+    // Sales Point Registration & Agreement (own permissions; NOT under `show agent list`).
+    // Declared before the `agents` group so `agents/registrations/*` is never shadowed.
+    Route::prefix('agents/registrations')->name('agents.registrations.')->group(function () {
+        Route::get('/', [SalesPointRegistrationController::class, 'index'])->middleware('can:show sales point registrations')->name('index');
+        Route::get('/create', [SalesPointRegistrationController::class, 'create'])->middleware('can:create sales point registration')->name('create');
+        Route::get('/duplicates', [SalesPointRegistrationController::class, 'duplicates'])->middleware('can:create sales point registration')->name('duplicates');
+        Route::post('/store', [SalesPointRegistrationController::class, 'store'])->middleware('can:create sales point registration')->name('store');
+        Route::post('/update/{registration}', [SalesPointRegistrationController::class, 'update'])->middleware('can:update sales point registration')->whereNumber('registration')->name('update');
+        Route::delete('/delete/{registration}', [SalesPointRegistrationController::class, 'destroy'])->middleware('can:delete sales point registration')->whereNumber('registration')->name('destroy');
+        Route::post('/{registration}/approve', [SalesPointRegistrationController::class, 'approve'])->middleware('can:approve sales point registration')->whereNumber('registration')->name('approve');
+        Route::post('/{registration}/reject', [SalesPointRegistrationController::class, 'reject'])->middleware('can:approve sales point registration')->whereNumber('registration')->name('reject');
+        Route::post('/{registration}/regenerate-pdf', [SalesPointRegistrationController::class, 'regeneratePdf'])->middleware('can:approve sales point registration')->whereNumber('registration')->name('regenerate-pdf');
+        Route::get('/{registration}/pdf', [SalesPointRegistrationController::class, 'pdf'])->middleware('can:download sales point agreement')->whereNumber('registration')->name('pdf');
+        Route::get('/{registration}/edit', [SalesPointRegistrationController::class, 'edit'])->middleware('can:update sales point registration')->whereNumber('registration')->name('edit');
+        Route::get('/{registration}/files/{kind}', [SalesPointRegistrationController::class, 'file'])->middleware('can:show sales point registrations')->whereNumber('registration')->name('file');
+        Route::get('/{registration}', [SalesPointRegistrationController::class, 'show'])->middleware('can:show sales point registrations')->whereNumber('registration')->name('show');
+    });
+
     // Agent Management Routes
     Route::prefix('agents')->name('agents.')->middleware('can:show agent list')->group(function () {
         Route::get('/', [AgentController::class, 'index'])->name('index');

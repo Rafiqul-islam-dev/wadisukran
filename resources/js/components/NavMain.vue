@@ -28,6 +28,15 @@ const isActive = (href?: string) => {
         props.currentPath.startsWith(href + '?')
 }
 
+// A group is visible if the user has its own permission OR any child's permission
+// (so a user can be given a single menu such as "Registration & Agreement" without the whole group).
+const canSee = (item: NavItem) => {
+    const perms = auth_permissions as string[]
+    if (perms.includes(item.permission as string)) return true
+    // opt-in per group (item.showIfAnyChild) so other groups keep their original visibility rules
+    return !!item.showIfAnyChild && !!item.items?.some((child) => perms.includes(child.permission as string))
+}
+
 const isExpanded = (items?: NavItem[]) => {
     if (!items) return false
     return items.some(item => isActive(item.href))
@@ -40,7 +49,7 @@ const isExpanded = (items?: NavItem[]) => {
         <SidebarGroupLabel>Platform</SidebarGroupLabel>
         <SidebarMenu>
             <template v-for="item in items" :key="item.title">
-                <SidebarMenuItem v-if="auth_permissions.includes(item.permission)">
+                <SidebarMenuItem v-if="canSee(item)">
                     <!-- Single item -->
                     <SidebarMenuButton v-if="!item.items" as-child :class="{ 'bg-gray-300/50': isActive(item.href) }">
                         <Link :href="item.href">

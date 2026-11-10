@@ -53,6 +53,16 @@ return [
             'visibility' => 'public',
         ],
 
+        // Private disk: NOT web-accessible. Used for sensitive uploads (ID/licence scans,
+        // signatures, generated agreements). Serve only through permission-guarded controllers.
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'visibility' => 'private',
+            'throw' => true, // a failed write of a signed record must never be silent
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
